@@ -1,4 +1,4 @@
--- Powerlifting Coach Platform - Database Schema
+-- Power Routine - Database Schema
 -- Run this in Supabase SQL Editor
 
 -- Enable UUID extension

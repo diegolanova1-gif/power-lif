@@ -8,5 +8,5 @@ export function generatePassword(length = 10) {
 
 // Message the coach pastes into WhatsApp for the athlete
 export function credentialsText(email: string, password: string) {
-  return `Powerlifting Coach\nIngreso: ${window.location.origin}/login?as=alumno\nEmail: ${email}\nContraseña: ${password}`
+  return `Power Routine\nIngreso: ${window.location.origin}/login?as=alumno\nEmail: ${email}\nContraseña: ${password}`
 }

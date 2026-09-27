@@ -75,7 +75,7 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ as
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Powerlifting Coach</CardTitle>
+          <CardTitle className="text-2xl font-bold">Power Routine</CardTitle>
           <CardDescription>{isAthlete ? 'Ingreso de alumnos' : 'Ingreso de coaches'}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

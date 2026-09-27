@@ -58,7 +58,7 @@ export default async function AthleteLayout({
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-8">
               <Link href="/athlete" className="text-xl font-bold text-gray-900">
-                Powerlifting Coach
+                Power Routine
               </Link>
               <nav className="hidden md:flex items-center gap-1">
                 {navigation.map((item) => (

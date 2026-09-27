@@ -41,7 +41,7 @@ export default async function Home() {
     <div className="min-h-screen bg-gray-50">
       <header className="border-b bg-white">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Powerlifting Coach</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Power Routine</h1>
           <nav className="flex items-center gap-4">
             <Link href="/login">
               <Button variant="ghost">Iniciar sesión</Button>
@@ -125,7 +125,7 @@ export default async function Home() {
 
       <footer className="border-t bg-white py-8">
         <div className="mx-auto max-w-7xl px-4 text-center text-gray-500 text-sm">
-          Powerlifting Coach · Hecho para entrenadores
+          Power Routine · Hecho para entrenadores
         </div>
       </footer>
     </div>

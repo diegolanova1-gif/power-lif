@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Powerlifting Coach Platform",
-  description: "Plataforma para coaches de powerlifting - gestión de atletas, rutinas y tracking de cargas",
+  title: "Power Routine",
+  description: "Plataforma para coaches de gimnasio - gestión de alumnos, rutinas semanales y seguimiento de progreso",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

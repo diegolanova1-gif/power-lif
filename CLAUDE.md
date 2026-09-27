@@ -3,7 +3,7 @@
 # CLAUDE.md — Power Routine
 
 > Plataforma SaaS multi-tenant para coaches de gimnasio: rutinas semanales por alumno, seguimiento, rankings de progreso por team y landing con embudo hacia WhatsApp.
-> Nombre real: **Power Routine** (durante el desarrollo se llamó "Powerlifting Coach"; la UI todavía muestra ese nombre — ver Paso 6).
+> Nombre real: **Power Routine** (durante el desarrollo se llamó "Powerlifting Coach"; la UI ya usa el nombre nuevo).
 >
 > **Proyecto independiente:** no comparte stack, convenciones ni infraestructura con otros proyectos de Diego (Mooven/WOKI).
 >
@@ -170,8 +170,8 @@ Cada paso: alcance → criterio de terminado → modelo recomendado. Un paso a l
 ### Paso 5 — Detalles de seguimiento · `/model sonnet`
 - Nota del coach por ejercicio; motivo al "No pude completarlo" (¿obligatorio?); gráfico de peso por ejercicio para accesorios.
 
-### Paso 6 — Renombrar a Power Routine · Haiku (subagente)
-- Textos de UI, título, metadata; revisar portada y emails.
+### Paso 6 — Renombrar a Power Routine · ✅ hecho
+- Textos de UI (portada, login, headers de dashboard), `<title>`/metadata, copiado de contraseña al portapapeles, comentario de `schema.sql`. `README.md` sin tocar (doc interno, no visible a usuarios).
 
 ---
 
