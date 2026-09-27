@@ -10,7 +10,7 @@ import { Dumbbell, Calendar, Clock, ArrowRight, CheckCircle, Loader2 } from 'luc
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { weekdayName } from '@/lib/weekdays'
-import { formatReps } from '@/lib/validations/routine'
+import { formatReps, scheduleForWeek } from '@/lib/validations/routine'
 
 interface TodayWorkout {
   athlete_routine: {
@@ -87,7 +87,7 @@ export default function AthleteTodayPage() {
       }
 
       // Find today's day in schedule
-      const todaySchedule = structure.schedule.find(
+      const todaySchedule = scheduleForWeek(structure, routine.current_week).find(
         (d: any) => d.day === routine.current_day
       )
 

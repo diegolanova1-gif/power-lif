@@ -27,7 +27,13 @@ export const routineStructureSchema = z.object({
   weeks: z.number().int().min(1).max(52),
   progression: z.enum(['linear', 'undulating', 'block', 'conjugate', 'custom']),
   goal: z.enum(['hypertrophy', 'strength', 'powerlifting', 'bulk', 'cut', 'general']).optional(),
+  // Week 1 (and every week without its own plan)
   schedule: z.array(routineDaySchema).min(1).max(7),
+  // Weeks whose content differs from week 1 (same training days, different exercises/loads)
+  week_plans: z.array(z.object({
+    week: z.number().int().min(2).max(52),
+    schedule: z.array(routineDaySchema).min(1).max(7),
+  })).optional(),
   deload_weeks: z.array(z.number().int().min(1).max(52)).optional(),
 })
 
@@ -63,4 +69,9 @@ export const ROUTINE_GOALS: Record<NonNullable<RoutineStructure['goal']>, string
 
 export function formatReps(e: { reps: number; reps_max?: number }) {
   return e.reps_max && e.reps_max > e.reps ? `${e.reps}-${e.reps_max}` : String(e.reps)
+}
+
+/** Schedule the athlete follows in a given week (week plan if any, else week 1) */
+export function scheduleForWeek(structure: RoutineStructure, week: number) {
+  return structure.week_plans?.find(p => p.week === week)?.schedule ?? structure.schedule
 }

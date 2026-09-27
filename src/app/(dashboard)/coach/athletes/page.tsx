@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
-import { Plus, UserPlus, Search, Loader2, MoreHorizontal, Edit, Trash2, Dumbbell, LayoutTemplate, BarChart, KeyRound } from 'lucide-react'
+import { Plus, UserPlus, Search, Loader2, MoreHorizontal, Edit, Trash2, Dumbbell, LayoutTemplate, BarChart, KeyRound, ClipboardCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import { CreateAthleteDialog } from '@/components/coach/create-athlete-dialog'
 import { ResetPasswordDialog } from '@/components/coach/reset-password-dialog'
@@ -202,7 +202,9 @@ export default function AthletesPage() {
                             </span>
                           )}
                         </div>
-                        <span className="font-medium">{athlete.full_name || 'Sin nombre'}</span>
+                        <Link href={`/coach/athletes/${athlete.id}`} className="font-medium hover:text-primary hover:underline">
+                          {athlete.full_name || 'Sin nombre'}
+                        </Link>
                       </TableCell>
                       <TableCell>{athlete.email}</TableCell>
                       <TableCell>
@@ -234,6 +236,10 @@ export default function AthletesPage() {
                             <MoreHorizontal className="h-4 w-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuItem render={<Link href={`/coach/athletes/${athlete.id}`} />}>
+                              <ClipboardCheck className="mr-2 h-4 w-4" />
+                              Ver seguimiento
+                            </DropdownMenuItem>
                             <DropdownMenuItem render={<Link href={`/coach/routines/new?athlete=${athlete.id}`} />}>
                               <Plus className="mr-2 h-4 w-4" />
                               Nueva rutina personalizada

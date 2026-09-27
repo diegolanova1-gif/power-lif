@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { CheckCircle2, Loader2, RotateCcw } from 'lucide-react'
@@ -13,6 +14,7 @@ import { replyToFeedback, deleteFeedbackMedia } from '@/actions/feedback'
 
 export interface ReviewItem {
   id: string
+  athleteId: string
   athleteName: string
   exerciseName: string
   week: number
@@ -59,7 +61,9 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
       <CardHeader className="pb-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="font-semibold text-gray-900">{item.athleteName}</p>
+            <Link href={`/coach/athletes/${item.athleteId}?week=${item.week}&day=${item.day}`} className="font-semibold text-gray-900 hover:text-primary hover:underline">
+              {item.athleteName}
+            </Link>
             <p className="text-sm text-gray-500">
               {item.exerciseName} · Semana {item.week}, {weekdayName(item.day)} ·{' '}
               {new Date(item.updatedAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}

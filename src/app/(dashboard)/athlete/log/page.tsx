@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 import { ExerciseFeedback } from '@/components/athlete/exercise-feedback'
 import { ExerciseLogCard, type LoggedSet, type Prescription } from '@/components/athlete/exercise-log-card'
 import { weekdayName, weekdayShort } from '@/lib/weekdays'
-import type { RoutineStructure } from '@/lib/validations/routine'
+import { scheduleForWeek, type RoutineStructure } from '@/lib/validations/routine'
 
 interface DayData {
   week: number
@@ -41,7 +41,8 @@ async function loadWorkout(supabase: Supabase) {
   const structure = (routine?.routine as unknown as { structure: RoutineStructure } | null)?.structure
   if (!routine || !structure?.schedule?.length) return null
 
-  const exerciseIds = [...new Set(structure.schedule.flatMap(d => d.exercises.map(e => e.exercise_id)))]
+  const allSchedules = [structure.schedule, ...(structure.week_plans ?? []).map(p => p.schedule)]
+  const exerciseIds = [...new Set(allSchedules.flatMap(s => s.flatMap(d => d.exercises.map(e => e.exercise_id))))]
   const [{ data: exercises }, { data: sets }, { data: history }, { data: estimates }] = await Promise.all([
     supabase.from('exercises').select('id, name').in('id', exerciseIds),
     supabase
@@ -62,9 +63,8 @@ async function loadWorkout(supabase: Supabase) {
   const nameById = new Map(exercises?.map(e => [e.id, e.name as string]) ?? [])
 
   // One entry per session across all weeks, so prev/next can move between weeks
-  const sortedSchedule = [...structure.schedule].sort((a, b) => a.day - b.day)
   const days: DayData[] = Array.from({ length: structure.weeks || 1 }, (_, i) => i + 1).flatMap(week =>
-    sortedSchedule.map(d => ({
+    [...scheduleForWeek(structure, week)].sort((a, b) => a.day - b.day).map(d => ({
       week,
       day: d.day,
       name: d.name,

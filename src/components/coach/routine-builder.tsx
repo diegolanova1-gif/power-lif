@@ -16,7 +16,7 @@ import { createExercise, type CreateExerciseInput } from '@/actions/exercises'
 import { ExerciseCombobox } from '@/components/coach/exercise-combobox'
 import { WEEKDAYS, weekdayName } from '@/lib/weekdays'
 import { cn } from '@/lib/utils'
-import { routineStructureSchema, formatReps, ROUTINE_GOALS, type RoutineStructure } from '@/lib/validations/routine'
+import { routineStructureSchema, formatReps, scheduleForWeek, ROUTINE_GOALS, type RoutineStructure } from '@/lib/validations/routine'
 import { NewExerciseDialog } from '@/components/coach/new-exercise-dialog'
 import { RoutineStartPicker, type RoutineTemplate, type StartChoice } from '@/components/coach/routine-start-picker'
 
@@ -94,8 +94,8 @@ function parseReps(text: string): { reps: number; reps_max?: number } | null {
   return max && max > reps ? { reps, reps_max: max } : { reps }
 }
 
-function toBuilderDays(structure: RoutineStructure): BuilderDay[] {
-  return structure.schedule.map(d => ({
+function toBuilderDays(schedule: RoutineStructure['schedule']): BuilderDay[] {
+  return schedule.map(d => ({
     day: d.day,
     name: d.name,
     exercises: [...d.exercises]
@@ -108,6 +108,34 @@ function toBuilderDays(structure: RoutineStructure): BuilderDay[] {
         rpe_target: e.rpe_target,
         rest_seconds: e.rest_seconds,
       })),
+  }))
+}
+
+const cloneDays = (days: BuilderDay[]) => days.map(d => ({ ...d, exercises: d.exercises.map(e => ({ ...e })) }))
+
+// Every week explicit in the builder (weeks without a plan repeat week 1)
+function toBuilderWeeks(structure: RoutineStructure): BuilderDay[][] {
+  return Array.from({ length: structure.weeks || 1 }, (_, i) => toBuilderDays(scheduleForWeek(structure, i + 1)))
+}
+
+function toStructureSchedule(days: BuilderDay[]): RoutineStructure['schedule'] {
+  return sortDays(days).map(d => ({
+    day: d.day,
+    name: d.name.trim() || weekdayName(d.day),
+    exercises: d.exercises.map((ex, order) => ({
+      exercise_id: ex.exercise_id,
+      sets: ex.sets,
+      ...parseReps(ex.repsText)!,
+      // intensity = readable text the athlete pages display
+      ...(ex.load_value !== undefined && {
+        load_type: ex.load_type,
+        load_value: ex.load_value,
+        intensity: formatLoad(ex.load_type, ex.load_value),
+      }),
+      ...(ex.rpe_target !== undefined && { rpe_target: ex.rpe_target }),
+      ...(ex.rest_seconds !== undefined && { rest_seconds: ex.rest_seconds }),
+      order,
+    })),
   }))
 }
 
@@ -136,45 +164,100 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
   const [name, setName] = useState(routine?.name ?? '')
   const [description, setDescription] = useState(routine?.description ?? '')
   const [goal, setGoal] = useState<Goal | undefined>(initial?.goal)
-  const [weeks, setWeeks] = useState(initial?.weeks ?? 4)
   const [progression, setProgression] = useState<RoutineStructure['progression']>(initial?.progression ?? 'linear')
   const [deloadWeeks, setDeloadWeeks] = useState(initial?.deload_weeks?.join(', ') ?? '')
-  const [schedule, setSchedule] = useState<BuilderDay[]>(
-    initial ? toBuilderDays(initial) : []
-  )
+  // One schedule per week; training days are the same in every week
+  const [weeksData, setWeeksData] = useState<BuilderDay[][]>(initial ? toBuilderWeeks(initial) : [[]])
+  const [currentWeek, setCurrentWeek] = useState(0)
   const [saving, setSaving] = useState(false)
   const [exercises, setExercises] = useState(initialExercises)
+
+  const weeks = weeksData.length
+  const schedule = weeksData[currentWeek] ?? []
+
+  // Edits apply to the week being viewed
+  function setSchedule(updater: (prev: BuilderDay[]) => BuilderDay[]) {
+    setWeeksData(prev => prev.map((w, i) => (i === currentWeek ? updater(w) : w)))
+  }
+
+  // Structural changes (which weekdays) apply to every week
+  function setAllWeeks(updater: (prev: BuilderDay[], weekIndex: number) => BuilderDay[]) {
+    setWeeksData(prev => prev.map((w, i) => sortDays(updater(w, i))))
+  }
 
   function start(choice: StartChoice) {
     setName(choice.name)
     setDescription(choice.description)
     if (choice.structure) {
       setGoal(choice.structure.goal)
-      setWeeks(choice.structure.weeks)
       setProgression(choice.structure.progression)
       setDeloadWeeks(choice.structure.deload_weeks?.join(', ') ?? '')
-      setSchedule(toBuilderDays(choice.structure))
+      setWeeksData(toBuilderWeeks(choice.structure))
     } else {
-      setSchedule([])
+      setWeeksData([[]])
     }
+    setCurrentWeek(0)
     setStarted(true)
     window.scrollTo({ top: 0 })
   }
 
-  function updateDay(index: number, patch: Partial<BuilderDay>) {
-    setSchedule(prev => sortDays(prev.map((d, i) => (i === index ? { ...d, ...patch } : d))))
+  // --- Weeks ---
+
+  function duplicateWeekToNext() {
+    const copy = cloneDays(schedule)
+    const nextIndex = currentWeek + 1
+    if (nextIndex < weeks) {
+      if (!confirm(`¿Reemplazar la semana ${nextIndex + 1} con una copia de la semana ${currentWeek + 1}?`)) return
+      setWeeksData(prev => prev.map((w, i) => (i === nextIndex ? copy : w)))
+    } else {
+      if (weeks >= 52) {
+        toast.error('Máximo 52 semanas')
+        return
+      }
+      setWeeksData(prev => [...prev, copy])
+    }
+    setCurrentWeek(nextIndex)
+    toast.success(`Semana ${currentWeek + 1} copiada a la semana ${nextIndex + 1}. Ahora ajusta lo que cambie.`)
   }
 
-  // Weekday chips: tapping a day adds or removes its session
+  function copyWeekToRemaining() {
+    const remaining = weeks - currentWeek - 1
+    if (remaining <= 0) return
+    if (!confirm(`¿Copiar la semana ${currentWeek + 1} a las ${remaining} semanas siguientes? Se reemplaza su contenido.`)) return
+    setWeeksData(prev => prev.map((w, i) => (i > currentWeek ? cloneDays(schedule) : w)))
+    toast.success(`Copiada a las semanas ${currentWeek + 2} a ${weeks}`)
+  }
+
+  function removeWeek() {
+    if (weeks === 1) return
+    if (!confirm(`¿Eliminar la semana ${currentWeek + 1}?`)) return
+    setWeeksData(prev => prev.filter((_, i) => i !== currentWeek))
+    setCurrentWeek(i => Math.max(0, i - 1))
+  }
+
+  // --- Days ---
+
+  function updateDay(index: number, patch: Partial<BuilderDay>) {
+    const fromDay = schedule[index].day
+    if (patch.day !== undefined && patch.day !== fromDay) {
+      // Moving a weekday moves it in every week
+      const toDay = patch.day
+      setAllWeeks(w => w.map(d => (d.day === fromDay ? { ...d, day: toDay } : d)))
+      return
+    }
+    setSchedule(prev => prev.map((d, i) => (i === index ? { ...d, ...patch } : d)))
+  }
+
+  // Weekday chips: tapping a day adds or removes its session (in every week)
   function toggleWeekday(day: number) {
     const existing = schedule.find(d => d.day === day)
     if (!existing) {
-      setSchedule(prev => sortDays([...prev, { day, name: '', exercises: [emptyExercise()] }]))
+      setAllWeeks(w => [...w, { day, name: '', exercises: [emptyExercise()] }])
       return
     }
-    const hasContent = existing.exercises.some(e => e.exercise_id)
-    if (hasContent && !confirm(`¿Quitar el ${weekdayName(day)} y sus ejercicios?`)) return
-    setSchedule(prev => prev.filter(d => d.day !== day))
+    const hasContent = weeksData.some(w => w.find(d => d.day === day)?.exercises.some(e => e.exercise_id))
+    if (hasContent && !confirm(`¿Quitar el ${weekdayName(day)} y sus ejercicios de todas las semanas?`)) return
+    setAllWeeks(w => w.filter(d => d.day !== day))
   }
 
   function removeDay(index: number) {
@@ -182,16 +265,18 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
   }
 
   function duplicateDay(index: number) {
-    const source = schedule[index]
+    const sourceDay = schedule[index].day
     const used = new Set(schedule.map(d => d.day))
-    const next = [...DAY_NUMBERS.filter(n => n > source.day), ...DAY_NUMBERS].find(n => !used.has(n))
+    const next = [...DAY_NUMBERS.filter(n => n > sourceDay), ...DAY_NUMBERS].find(n => !used.has(n))
     if (!next) {
       toast.error('Ya entrena los 7 días')
       return
     }
-    setSchedule(prev =>
-      sortDays([...prev, { day: next, name: source.name, exercises: source.exercises.map(e => ({ ...e })) }])
-    )
+    // Each week gets a copy of its own version of the source day
+    setAllWeeks(w => {
+      const source = w.find(d => d.day === sourceDay)
+      return source ? [...w, { day: next, name: source.name, exercises: source.exercises.map(e => ({ ...e })) }] : w
+    })
     toast.success(`Copiado al ${weekdayName(next)}`)
   }
 
@@ -233,26 +318,30 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
-    if (schedule.length === 0) {
+    if (weeksData[0].length === 0) {
       toast.error('Elige al menos un día de entrenamiento')
       return
     }
-    if (new Set(schedule.map(d => d.day)).size !== schedule.length) {
-      toast.error('Hay días repetidos en la semana')
-      return
-    }
-    if (schedule.some(d => d.exercises.some(ex => !ex.exercise_id))) {
-      toast.error('Selecciona un ejercicio en cada fila')
-      return
-    }
-    if (schedule.some(d => d.exercises.some(ex => ex.load_type === 'percent' && (ex.load_value ?? 0) > 110))) {
-      toast.error('El % de RM no puede superar 110%')
-      return
-    }
-    const badReps = schedule.flatMap(d => d.exercises).find(ex => !parseReps(ex.repsText))
-    if (badReps) {
-      toast.error(`Reps "${badReps.repsText}" no válidas: escribe un número (10) o un rango (8-12)`)
-      return
+    // Validate every week, pointing at the first problem
+    for (const [w, days] of weeksData.entries()) {
+      const where = weeks > 1 ? ` (semana ${w + 1})` : ''
+      const all = days.flatMap(d => d.exercises)
+      if (all.some(ex => !ex.exercise_id)) {
+        setCurrentWeek(w)
+        toast.error(`Elige un ejercicio en cada recuadro${where}`)
+        return
+      }
+      if (all.some(ex => ex.load_type === 'percent' && (ex.load_value ?? 0) > 110)) {
+        setCurrentWeek(w)
+        toast.error(`El % de RM no puede superar 110%${where}`)
+        return
+      }
+      const badReps = all.find(ex => !parseReps(ex.repsText))
+      if (badReps) {
+        setCurrentWeek(w)
+        toast.error(`Reps "${badReps.repsText}" no válidas${where}: escribe un número (10) o un rango (8-12)`)
+        return
+      }
     }
 
     const deload = deloadWeeks
@@ -261,31 +350,19 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
       .filter(Boolean)
       .map(Number)
 
+    const weekSchedules = weeksData.map(toStructureSchedule)
+    const base = JSON.stringify(weekSchedules[0])
+    const weekPlans = weekSchedules
+      .map((schedule, i) => ({ week: i + 1, schedule }))
+      .filter(p => p.week > 1 && JSON.stringify(p.schedule) !== base)
+
     const structure = {
       name: name.trim(),
       weeks,
       progression,
       ...(goal && { goal }),
-      schedule: [...schedule]
-        .sort((a, b) => a.day - b.day)
-        .map(d => ({
-          day: d.day,
-          name: d.name.trim() || weekdayName(d.day),
-          exercises: d.exercises.map((ex, order) => ({
-            exercise_id: ex.exercise_id,
-            sets: ex.sets,
-            ...parseReps(ex.repsText)!,
-            // intensity = readable text the athlete pages already display
-            ...(ex.load_value !== undefined && {
-              load_type: ex.load_type,
-              load_value: ex.load_value,
-              intensity: formatLoad(ex.load_type, ex.load_value),
-            }),
-            ...(ex.rpe_target !== undefined && { rpe_target: ex.rpe_target }),
-            ...(ex.rest_seconds !== undefined && { rest_seconds: ex.rest_seconds }),
-            order,
-          })),
-        })),
+      schedule: weekSchedules[0],
+      ...(weekPlans.length > 0 && { week_plans: weekPlans }),
       ...(deload.length > 0 && { deload_weeks: deload }),
     }
 
@@ -387,15 +464,9 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
               ))}
             </div>
           </div>
-          <div className="grid gap-4 md:grid-cols-[1fr_140px]">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nombre</Label>
-              <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Ej: Hipertrofia 3 días" required maxLength={100} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="weeks">Semanas</Label>
-              <Input id="weeks" type="number" min={1} max={52} value={weeks} onChange={e => setWeeks(Number(e.target.value))} />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="name">Nombre</Label>
+            <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Ej: Hipertrofia 3 días" required maxLength={100} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">Notas para el alumno</Label>
@@ -462,6 +533,48 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
           </p>
         </CardContent>
       </Card>
+
+      {schedule.length > 0 && (
+        <Card className="sticky top-16 z-30 border-primary/30 shadow-sm">
+          <CardContent className="space-y-3 pt-4">
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {weeksData.map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setCurrentWeek(i)}
+                  className={cn(
+                    'shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
+                    i === currentWeek ? 'border-primary bg-primary text-primary-foreground' : 'bg-white text-gray-600 hover:bg-gray-50'
+                  )}
+                >
+                  Semana {i + 1}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button type="button" size="sm" onClick={duplicateWeekToNext}>
+                <Copy className="mr-1 h-4 w-4" />
+                Duplicar semana {currentWeek + 1} → {currentWeek + 2}
+              </Button>
+              {currentWeek < weeks - 1 && (
+                <Button type="button" size="sm" variant="outline" onClick={copyWeekToRemaining}>
+                  Copiar a todas las siguientes
+                </Button>
+              )}
+              {weeks > 1 && (
+                <Button type="button" size="sm" variant="ghost" className="text-red-600" onClick={removeWeek}>
+                  <Trash2 className="mr-1 h-4 w-4" />
+                  Eliminar semana {currentWeek + 1}
+                </Button>
+              )}
+              <span className="text-sm text-gray-500">
+                Editando la <span className="font-semibold text-gray-900">semana {currentWeek + 1}</span> de {weeks}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {schedule.map((day, dayIndex) => (
         <Card key={day.day}>
