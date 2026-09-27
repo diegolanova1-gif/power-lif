@@ -128,6 +128,17 @@ ALTER TABLE estimated_1rm ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bodyweight_log ENABLE ROW LEVEL SECURITY;
 ALTER TABLE exercises ENABLE ROW LEVEL SECURITY;
 
+-- RLS helpers (SECURITY DEFINER: evaluated without re-entering RLS)
+CREATE OR REPLACE FUNCTION public.is_routine_coach(p_routine_id UUID)
+RETURNS BOOLEAN AS $
+  SELECT EXISTS (SELECT 1 FROM routines WHERE id = p_routine_id AND coach_id = auth.uid());
+$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
+
+CREATE OR REPLACE FUNCTION public.athlete_has_routine(p_routine_id UUID)
+RETURNS BOOLEAN AS $
+  SELECT EXISTS (SELECT 1 FROM athlete_routines WHERE routine_id = p_routine_id AND athlete_id = auth.uid());
+$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
+
 -- RLS Policies
 
 -- Profiles: Users see own profile + coach sees their athletes
@@ -164,10 +175,10 @@ CREATE POLICY "routines_coach_all" ON routines
   FOR ALL USING (coach_id = auth.uid());
 
 -- Athletes can see assigned routines
+-- (cross-table checks use SECURITY DEFINER helpers to avoid RLS recursion,
+--  see migrations/20260927_fix_policy_recursion.sql)
 CREATE POLICY "routines_athlete_select" ON routines
-  FOR SELECT USING (
-    id IN (SELECT routine_id FROM athlete_routines WHERE athlete_id = auth.uid())
-  );
+  FOR SELECT USING (public.athlete_has_routine(id));
 
 -- Athlete Routines: Athlete sees own, coach sees their athletes'
 CREATE POLICY "athlete_routines_athlete_select" ON athlete_routines
@@ -181,7 +192,7 @@ CREATE POLICY "athlete_routines_coach_select" ON athlete_routines
 CREATE POLICY "athlete_routines_coach_insert" ON athlete_routines
   FOR INSERT WITH CHECK (
     athlete_id IN (SELECT athlete_id FROM coach_athletes WHERE coach_id = auth.uid())
-    AND routine_id IN (SELECT id FROM routines WHERE coach_id = auth.uid())
+    AND public.is_routine_coach(routine_id)
   );
 
 CREATE POLICY "athlete_routines_coach_update" ON athlete_routines
