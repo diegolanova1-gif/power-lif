@@ -15,13 +15,14 @@ import { toast } from 'sonner'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { ExerciseFeedback } from '@/components/athlete/exercise-feedback'
+import { formatReps } from '@/lib/validations/routine'
 
 interface ExercisePrescription {
   exercise_id: string
   exercise_name: string
   category: string
   sets: number
-  reps: number
+  reps: string
   intensity: string
   rpe_target: number
 }
@@ -123,7 +124,7 @@ export default function AthleteLogPage() {
             exercise_name: ex?.name || 'Ejercicio',
             category: ex?.category || 'other',
             sets: e.sets,
-            reps: e.reps,
+            reps: formatReps(e),
             intensity: e.intensity,
             rpe_target: e.rpe_target,
           }

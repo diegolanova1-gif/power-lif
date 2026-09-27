@@ -7,7 +7,7 @@ import { UserPlus, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { assignRoutine } from '@/actions/routines'
 
@@ -49,7 +49,7 @@ export function AssignRoutineDialog({ routineId, routineName, athletes, defaultA
       return
     }
 
-    toast.success(`Rutina asignada a ${athleteItems[athleteId]}. Su programa anterior quedó en pausa.`)
+    toast.success(`Rutina asignada a ${athleteItems[athleteId]}. Si tenía otra, quedó en pausa.`)
     setOpen(false)
     router.refresh()
   }
@@ -63,6 +63,7 @@ export function AssignRoutineDialog({ routineId, routineName, athletes, defaultA
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Asignar &quot;{routineName}&quot;</DialogTitle>
+          <DialogDescription>Se le crea una copia personal: puedes ajustarla solo para ese alumno.</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">

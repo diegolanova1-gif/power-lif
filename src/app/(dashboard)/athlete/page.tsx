@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { Dumbbell, Calendar, Clock, ArrowRight, CheckCircle, Loader2 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { formatReps } from '@/lib/validations/routine'
 
 interface TodayWorkout {
   athlete_routine: {
@@ -27,7 +28,7 @@ interface TodayWorkout {
     exercise_name: string
     category: string
     sets: number
-    reps: number
+    reps: string
     intensity: string
     rpe_target: number
     rest_seconds?: number
@@ -111,7 +112,7 @@ export default function AthleteTodayPage() {
           exercise_name: ex?.name || 'Ejercicio',
           category: ex?.category || 'other',
           sets: e.sets,
-          reps: e.reps,
+          reps: formatReps(e),
           intensity: e.intensity,
           rpe_target: e.rpe_target,
           rest_seconds: e.rest_seconds,

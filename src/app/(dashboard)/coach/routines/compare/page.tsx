@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { RoutineComparePicker } from '@/components/coach/routine-compare-picker'
 import { summarizeRoutine, type RoutineSummary } from '@/lib/calculations/routine'
-import type { RoutineStructure } from '@/lib/validations/routine'
+import { formatReps, type RoutineStructure } from '@/lib/validations/routine'
 import { cn } from '@/lib/utils'
 
 const PROGRESSION_LABELS: Record<string, string> = {
@@ -155,7 +155,7 @@ export default async function CompareRoutinesPage({ searchParams }: { searchPara
                                       <li key={j} className="flex justify-between gap-2">
                                         <span>{nameById.get(ex.exercise_id) ?? 'Ejercicio'}</span>
                                         <span className="shrink-0 text-gray-500">
-                                          {ex.sets}×{ex.reps}{ex.intensity ? ` · ${ex.intensity}` : ''}{ex.rpe_target ? ` · RPE ${ex.rpe_target}` : ''}
+                                          {ex.sets}×{formatReps(ex)}{ex.intensity ? ` · ${ex.intensity}` : ''}{ex.rpe_target ? ` · RPE ${ex.rpe_target}` : ''}
                                         </span>
                                       </li>
                                     ))}

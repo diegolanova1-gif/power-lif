@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
-import { Loader2, RefreshCw, Copy, Check } from 'lucide-react'
+import Link from 'next/link'
+import { Loader2, RefreshCw, Copy, Check, Dumbbell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -27,7 +28,7 @@ interface CreateAthleteDialogProps {
 
 export function CreateAthleteDialog({ children, triggerClassName, onCreated }: CreateAthleteDialogProps) {
   const [open, setOpen] = useState(false)
-  const [credentials, setCredentials] = useState<{ email: string; password: string; created: boolean } | null>(null)
+  const [credentials, setCredentials] = useState<{ email: string; password: string; created: boolean; athleteId: string; name: string } | null>(null)
   const [copied, setCopied] = useState(false)
 
   const form = useForm<CreateAthleteInput>({
@@ -54,7 +55,13 @@ export function CreateAthleteDialog({ children, triggerClassName, onCreated }: C
       const result = await res.json()
       if (result.error) throw new Error(result.error)
 
-      setCredentials({ email: data.email.toLowerCase(), password: data.password, created: result.created })
+      setCredentials({
+        email: data.email.toLowerCase(),
+        password: data.password,
+        created: result.created,
+        athleteId: result.athleteId,
+        name: data.full_name,
+      })
       onCreated()
     } catch (error) {
       toast.error((error as Error).message)
@@ -96,8 +103,16 @@ export function CreateAthleteDialog({ children, triggerClassName, onCreated }: C
                   Copiar datos
                 </Button>
               )}
-              <Button onClick={() => setOpen(false)}>Listo</Button>
+              <Button variant={credentials.created ? 'outline' : 'default'} onClick={() => setOpen(false)}>Listo</Button>
             </DialogFooter>
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+              <p className="text-sm font-medium text-gray-900">Siguiente paso: su rutina</p>
+              <p className="mt-1 text-sm text-gray-600">Arma un plan personalizado para {credentials.name}: desde cero, con un modelo o una plantilla tuya.</p>
+              <Button className="mt-3 w-full" nativeButton={false} render={<Link href={`/coach/routines/new?athlete=${credentials.athleteId}`} />}>
+                <Dumbbell className="mr-2 h-4 w-4" />
+                Armar su rutina ahora
+              </Button>
+            </div>
           </>
         ) : (
           <>

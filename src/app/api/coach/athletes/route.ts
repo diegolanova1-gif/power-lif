@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: linkError.message }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, created })
+    return NextResponse.json({ success: true, created, athleteId })
   } catch (error: any) {
     console.error('Error in POST /api/coach/athletes:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })

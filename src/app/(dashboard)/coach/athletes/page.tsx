@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { Plus, UserPlus, Search, Loader2, MoreHorizontal, Edit, Trash2, ExternalLink } from 'lucide-react'
+import Link from 'next/link'
+import { Plus, UserPlus, Search, Loader2, MoreHorizontal, Edit, Trash2, Dumbbell, LayoutTemplate, BarChart } from 'lucide-react'
 import { toast } from 'sonner'
 import { CreateAthleteDialog } from '@/components/coach/create-athlete-dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
@@ -20,6 +21,7 @@ interface Athlete {
   avatar_url: string | null
   created_at: string
   current_routine: string | null
+  current_routine_id: string | null
   last_session: string | null
 }
 
@@ -90,6 +92,7 @@ export default function AthletesPage() {
         avatar_url: item.profiles?.avatar_url,
         created_at: item.profiles?.created_at,
         current_routine: routines.find((r: any) => r.athlete_id === item.profiles?.id)?.routines?.name || null,
+        current_routine_id: routines.find((r: any) => r.athlete_id === item.profiles?.id)?.routine_id || null,
         last_session: lastSessions.get(item.profiles?.id || '') || null,
       })) || []
 
@@ -202,9 +205,14 @@ export default function AthletesPage() {
                       <TableCell>{athlete.email}</TableCell>
                       <TableCell>
                         {athlete.current_routine ? (
-                          <Badge variant="secondary">{athlete.current_routine}</Badge>
+                          <Link href={`/coach/routines/${athlete.current_routine_id}/edit`} title="Editar su rutina">
+                            <Badge variant="secondary" className="hover:bg-gray-200">{athlete.current_routine}</Badge>
+                          </Link>
                         ) : (
-                          <Badge variant="outline">Sin asignar</Badge>
+                          <Button size="sm" variant="outline" nativeButton={false} render={<Link href={`/coach/routines/new?athlete=${athlete.id}`} />}>
+                            <Dumbbell className="mr-1 h-4 w-4" />
+                            Armar rutina
+                          </Button>
                         )}
                       </TableCell>
                       <TableCell>
@@ -223,18 +231,24 @@ export default function AthletesPage() {
                           <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8" />}>
                             <MoreHorizontal className="h-4 w-4" />
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
-                              <a href={`/coach/analytics?athlete=${athlete.id}`} className="flex items-center gap-2">
-                                <ExternalLink className="mr-2 h-4 w-4" />
-                                Ver Analytics
-                              </a>
+                          <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuItem render={<Link href={`/coach/routines/new?athlete=${athlete.id}`} />}>
+                              <Plus className="mr-2 h-4 w-4" />
+                              Nueva rutina personalizada
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <a href={`/coach/routines?assign=${athlete.id}`} className="flex items-center gap-2">
+                            {athlete.current_routine_id && (
+                              <DropdownMenuItem render={<Link href={`/coach/routines/${athlete.current_routine_id}/edit`} />}>
                                 <Edit className="mr-2 h-4 w-4" />
-                                Asignar Rutina
-                              </a>
+                                Editar su rutina
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem render={<Link href={`/coach/routines?assign=${athlete.id}`} />}>
+                              <LayoutTemplate className="mr-2 h-4 w-4" />
+                              Asignar una plantilla
+                            </DropdownMenuItem>
+                            <DropdownMenuItem render={<Link href={`/coach/analytics?athlete=${athlete.id}`} />}>
+                              <BarChart className="mr-2 h-4 w-4" />
+                              Ver estadísticas
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
