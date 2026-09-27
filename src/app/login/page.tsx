@@ -7,15 +7,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import Link from 'next/link'
-import { Loader2, Mail, Lock, AlertCircle } from 'lucide-react'
+import { Loader2, Mail, Lock, AlertCircle, ArrowLeft, Dumbbell, User } from 'lucide-react'
 import { toast } from 'sonner'
 import { whatsappLink, WHATSAPP_MESSAGES } from '@/lib/contact'
 
 export default function LoginPage({ searchParams }: { searchParams: Promise<{ as?: string; error?: string }> }) {
   const params = use(searchParams)
-  const isAthlete = params.as === 'alumno'
   const isInactive = params.error === 'inactive'
+  const [role, setRole] = useState<'coach' | 'alumno' | null>(
+    params.as === 'alumno' ? 'alumno' : params.as === 'coach' ? 'coach' : null
+  )
+  const isAthlete = role === 'alumno'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -71,10 +73,54 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ as
     setLoading(false)
   }
 
+  if (!role) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold">Power Routine</CardTitle>
+            <CardDescription>¿Cómo querés ingresar?</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {isInactive && (
+              <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>Tu cuenta está desactivada. Contacta al administrador.</span>
+              </div>
+            )}
+            <Button type="button" size="lg" className="w-full justify-start gap-3" onClick={() => setRole('coach')}>
+              <Dumbbell className="h-5 w-5" />
+              Soy coach
+            </Button>
+            <Button
+              type="button"
+              size="lg"
+              variant="outline"
+              className="w-full justify-start gap-3"
+              onClick={() => setRole('alumno')}
+            >
+              <User className="h-5 w-5" />
+              Soy alumno
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md relative">
         <CardHeader className="text-center">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="absolute left-2 top-2 text-gray-400"
+            onClick={() => setRole(null)}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
           <CardTitle className="text-2xl font-bold">Power Routine</CardTitle>
           <CardDescription>{isAthlete ? 'Ingreso de alumnos' : 'Ingreso de coaches'}</CardDescription>
         </CardHeader>
@@ -167,12 +213,6 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ as
               </a>
             </p>
           )}
-
-          <p className="text-center text-sm">
-            <Link href={isAthlete ? '/login' : '/login?as=alumno'} className="text-gray-500 hover:underline">
-              {isAthlete ? '¿Eres coach? Ingresa aquí' : '¿Eres alumno? Ingresa aquí'}
-            </Link>
-          </p>
         </CardContent>
       </Card>
     </div>
