@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { DeleteTeamButton, TeamMembersEditor } from '@/components/coach/team-dialogs'
 import { TeamLeaderboard } from '@/components/team-leaderboard'
+import { TeamRankingPanel } from '@/components/coach/team-ranking-panel'
 
 export default async function TeamDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -12,9 +13,16 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
   const { data: { user } } = await supabase.auth.getUser()
   const coachId = user?.id ?? ''
 
-  const [{ data: team }, { data: links }] = await Promise.all([
-    supabase.from('teams').select('id, name, team_members(athlete_id)').eq('id', id).eq('coach_id', coachId).maybeSingle(),
+  const [{ data: team }, { data: links }, { data: exercises }, { data: rankings }] = await Promise.all([
+    supabase.from('teams').select('id, name, lead_exercise_id, team_members(athlete_id)').eq('id', id).eq('coach_id', coachId).maybeSingle(),
     supabase.from('coach_athletes').select('profiles:athlete_id(id, full_name)').eq('coach_id', coachId),
+    supabase.from('exercises').select('id, name, category, is_competition_lift').order('is_competition_lift', { ascending: false }).order('name'),
+    supabase
+      .from('team_rankings')
+      .select('id, calculated_at, approved_at, entries')
+      .eq('team_id', id)
+      .order('calculated_at', { ascending: false })
+      .limit(5),
   ])
 
   if (!team) notFound()
@@ -46,7 +54,23 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
         </CardContent>
       </Card>
 
-      {memberIds.length > 0 && <TeamLeaderboard key={memberIds.join()} teamId={team.id} />}
+      <TeamRankingPanel
+        teamId={team.id}
+        exercises={exercises ?? []}
+        leadExerciseId={team.lead_exercise_id}
+        rankings={rankings ?? []}
+      />
+
+      {memberIds.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Vista en vivo (solo vos)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TeamLeaderboard key={memberIds.join()} teamId={team.id} />
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Trophy } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent } from '@/components/ui/card'
-import { TeamLeaderboard } from '@/components/team-leaderboard'
+import { TeamRankingOfficial } from '@/components/team-ranking-official'
 import { cn } from '@/lib/utils'
 
 export default async function AthleteTeamPage({ searchParams }: { searchParams: Promise<{ team?: string }> }) {
@@ -13,6 +13,18 @@ export default async function AthleteTeamPage({ searchParams }: { searchParams: 
   // RLS (teams_member_select) returns only the teams this athlete belongs to
   const { data: teams } = await supabase.from('teams').select('id, name').order('name')
   const team = teams?.find(t => t.id === teamParam) ?? teams?.[0]
+
+  // RLS (team_rankings_member_select_approved) only returns approved snapshots
+  const { data: ranking } = team
+    ? await supabase
+        .from('team_rankings')
+        .select('approved_at, entries')
+        .eq('team_id', team.id)
+        .not('approved_at', 'is', null)
+        .order('approved_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    : { data: null }
 
   return (
     <div className="space-y-6">
@@ -47,7 +59,7 @@ export default async function AthleteTeamPage({ searchParams }: { searchParams: 
             </div>
           )}
           {teams!.length === 1 && <h2 className="text-xl font-semibold text-gray-900">{team.name}</h2>}
-          <TeamLeaderboard key={team.id} teamId={team.id} currentUserId={user?.id} />
+          <TeamRankingOfficial ranking={ranking} currentUserId={user?.id} />
         </>
       )}
     </div>
