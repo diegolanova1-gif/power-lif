@@ -32,10 +32,15 @@ export default function AthletesPage() {
   const [search, setSearch] = useState('')
   const [resetFor, setResetFor] = useState<Athlete | null>(null)
 
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
+
+  // Load the list on mount (and again after creating/removing an athlete)
+  useEffect(() => {
+    fetchAthletes()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
+  }, [])
 
   async function fetchAthletes() {
-    setLoading(true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
