@@ -225,7 +225,7 @@ export function AthleteAnalytics({
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-500">
-                  Sin datos de 1RM. Se calculan con series de competición registradas con RPE ≥ 7.
+                  Sin datos de 1RM. Se calcula cuando registra sentadilla, banca o peso muerto.
                 </div>
               )}
             </CardContent>

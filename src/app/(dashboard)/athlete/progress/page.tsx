@@ -73,12 +73,18 @@ export default function AthleteProgressPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      // Fetch 1RM data
-      const { data: oneRM } = await supabase
+      // Fetch 1RM data (within the selected period)
+      let oneRMQuery = supabase
         .from('estimated_1rm')
         .select('estimated_1rm, calculated_at, exercise_id, exercises(name, category)')
         .eq('athlete_id', user.id)
         .order('calculated_at', { ascending: true })
+      if (timeRange !== 'all') {
+        const since = new Date()
+        since.setMonth(since.getMonth() - (timeRange === '3m' ? 3 : timeRange === '6m' ? 6 : 12))
+        oneRMQuery = oneRMQuery.gte('calculated_at', since.toISOString())
+      }
+      const { data: oneRM } = await oneRMQuery
 
       if (oneRM) {
         const grouped = oneRM.reduce<Record<string, ExerciseOneRM>>((acc, item: any) => {
@@ -91,12 +97,20 @@ export default function AthleteProgressPage() {
               dataPoints: [],
             }
           }
-          acc[key].dataPoints.push({
-            date: item.calculated_at,
-            estimated_1rm: item.estimated_1rm,
-            exercise_name: item.exercises?.name,
-            category: item.exercises?.category,
-          })
+          // One point per day (the best set), not one per set
+          const day = String(item.calculated_at).slice(0, 10)
+          const value = Number(item.estimated_1rm)
+          const existing = acc[key].dataPoints.find(p => p.date.slice(0, 10) === day)
+          if (existing) {
+            existing.estimated_1rm = Math.max(existing.estimated_1rm, value)
+          } else {
+            acc[key].dataPoints.push({
+              date: item.calculated_at,
+              estimated_1rm: value,
+              exercise_name: item.exercises?.name,
+              category: item.exercises?.category,
+            })
+          }
           return acc
         }, {})
 
@@ -174,7 +188,11 @@ export default function AthleteProgressPage() {
           <p className="text-gray-500 mt-1">Estadísticas y evolución de tus entrenamientos</p>
         </div>
         <div className="flex gap-4">
-          <Select value={timeRange} onValueChange={(v) => setTimeRange(v as 'all' | '3m' | '6m' | '1y')}>
+          <Select
+            value={timeRange}
+            onValueChange={(v) => v && setTimeRange(v as 'all' | '3m' | '6m' | '1y')}
+            items={{ all: 'Todo el historial', '3m': 'Últimos 3 meses', '6m': 'Últimos 6 meses', '1y': 'Último año' }}
+          >
             <SelectTrigger className="w-40">
               <SelectValue />
             </SelectTrigger>
@@ -185,14 +203,19 @@ export default function AthleteProgressPage() {
               <SelectItem value="1y">Último año</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={selectedExercise} onValueChange={setSelectedExercise} disabled={exercises.length === 0}>
+          <Select
+            value={selectedExercise || null}
+            onValueChange={(v) => v && setSelectedExercise(v)}
+            disabled={exercises.length === 0}
+            items={Object.fromEntries(exercises.map(ex => [ex.id, ex.name]))}
+          >
             <SelectTrigger className="w-60">
               <SelectValue placeholder="Selecciona ejercicio" />
             </SelectTrigger>
             <SelectContent>
               {exercises.map(ex => (
                 <SelectItem key={ex.id} value={ex.id}>
-                  {ex.name} ({ex.category})
+                  {ex.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -230,7 +253,7 @@ export default function AthleteProgressPage() {
             </div>
           ) : (
             <div className="text-center py-12 text-gray-500">
-              No hay datos de 1RM para este ejercicio. Completa series con RPE ≥ 7.
+              Todavía no hay 1RM estimado. Se calcula al registrar sentadilla, banca o peso muerto.
             </div>
           )}
         </CardContent>

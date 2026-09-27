@@ -141,10 +141,13 @@ export default async function AthleteFollowUpPage({
     : { data: [] }
   const urlByPath = signedUrlMap(signed)
 
-  // Overall compliance up to the athlete's current position
-  const pastSessions = Array.from({ length: totalWeeks }, (_, i) => i + 1).flatMap(w =>
-    trainingDays.filter(d => w < assignment.current_week || (w === assignment.current_week && d <= assignment.current_day) || assignment.status === 'completed').map(d => statusOf(w, d))
-  )
+  // Sessions already due: before the athlete's current position, plus the current one once they logged something
+  const isBeforeCurrent = (w: number, d: number) =>
+    assignment.status === 'completed' || w < assignment.current_week || (w === assignment.current_week && d < assignment.current_day)
+  const pastSessions = Array.from({ length: totalWeeks }, (_, i) => i + 1)
+    .flatMap(w => trainingDays.map(d => ({ w, d, status: statusOf(w, d) })))
+    .filter(({ w, d, status }) => isBeforeCurrent(w, d) || status !== 'none')
+    .map(s => s.status)
   const doneSessions = pastSessions.filter(s => s === 'done').length
   const partialSessions = pastSessions.filter(s => s === 'partial').length
 

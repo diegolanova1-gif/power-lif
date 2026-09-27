@@ -12,6 +12,15 @@ import { es } from 'date-fns/locale'
 import { weekdayName } from '@/lib/weekdays'
 import { formatReps, scheduleForWeek } from '@/lib/validations/routine'
 
+const CATEGORY_LABELS: Record<string, string> = {
+  squat: 'Sentadilla',
+  bench: 'Banca',
+  deadlift: 'Peso muerto',
+  accessory: 'Accesorio',
+  olympic: 'Olímpico',
+  other: 'Otro',
+}
+
 interface TodayWorkout {
   athlete_routine: {
     id: string
@@ -197,11 +206,11 @@ export default function AthleteTodayPage() {
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">{exercise.exercise_name}</CardTitle>
-                <Badge variant="outline" className="capitalize">{exercise.category}</Badge>
+                <Badge variant="outline">{CATEGORY_LABELS[exercise.category] ?? 'Otro'}</Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="grid grid-cols-3 gap-2 text-sm">
+              <div className={`grid gap-2 text-sm ${exercise.intensity ? 'grid-cols-3' : 'grid-cols-2'}`}>
                 <div className="text-center p-2 bg-gray-50 rounded-lg">
                   <p className="font-medium text-gray-900">{exercise.sets}</p>
                   <p className="text-gray-500">Series</p>
@@ -210,10 +219,12 @@ export default function AthleteTodayPage() {
                   <p className="font-medium text-gray-900">{exercise.reps}</p>
                   <p className="text-gray-500">Reps</p>
                 </div>
-                <div className="text-center p-2 bg-gray-50 rounded-lg">
-                  <p className="font-medium text-gray-900">{exercise.intensity}</p>
-                  <p className="text-gray-500">Intensidad</p>
-                </div>
+                {exercise.intensity && (
+                  <div className="text-center p-2 bg-gray-50 rounded-lg">
+                    <p className="font-medium text-gray-900">{exercise.intensity}</p>
+                    <p className="text-gray-500">Carga</p>
+                  </div>
+                )}
               </div>
 
               {exercise.rpe_target && (

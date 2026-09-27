@@ -41,7 +41,7 @@ export default async function CoachDashboard() {
 
   const stats = [
     {
-      name: 'Atletas',
+      name: 'Alumnos',
       value: athletes?.length || 0,
       icon: Users,
       color: 'text-blue-600 bg-blue-100',
@@ -80,7 +80,7 @@ export default async function CoachDashboard() {
         <Link href="/coach/athletes">
           <Button>
             <Plus className="mr-2 h-4 w-4" />
-            Nuevo Atleta
+            Nuevo Alumno
           </Button>
         </Link>
       </div>
@@ -115,7 +115,7 @@ export default async function CoachDashboard() {
             <Link href="/coach/athletes">
               <Button variant="outline" className="w-full justify-start gap-2">
                 <Users className="h-4 w-4" />
-                Gestionar Atletas
+                Gestionar Alumnos
               </Button>
             </Link>
             <Link href="/coach/routines/new">
@@ -142,7 +142,7 @@ export default async function CoachDashboard() {
         {/* Recent Athletes */}
         <Card className="md:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg">Atletas Recientes</CardTitle>
+            <CardTitle className="text-lg">Alumnos Recientes</CardTitle>
             <Link href="/coach/athletes" className="text-sm text-primary hover:underline">
               Ver todos
             </Link>
@@ -175,10 +175,10 @@ export default async function CoachDashboard() {
             ) : (
               <div className="text-center py-8 text-gray-500">
                 <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                <p>No tienes atletas aún</p>
+                <p>No tienes alumnos aún</p>
                 <Link href="/coach/athletes">
                   <Button variant="link" className="mt-2" size="sm">
-                    Agregar tu primer atleta
+                    Agregar tu primer alumno
                   </Button>
                 </Link>
               </div>

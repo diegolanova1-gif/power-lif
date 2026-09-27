@@ -24,17 +24,17 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Analytics</h1>
-        <p className="text-gray-500 mt-1">1RM estimado, volumen y adherencia de tus atletas</p>
+        <p className="text-gray-500 mt-1">1RM estimado, volumen y adherencia de tus alumnos</p>
       </div>
 
       {athletes.length === 0 ? (
         <Card>
           <CardContent className="text-center py-12">
             <BarChart className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-            <p className="text-gray-500">Agrega atletas para ver sus estadísticas</p>
+            <p className="text-gray-500">Agrega alumnos para ver sus estadísticas</p>
             <Button className="mt-4" nativeButton={false} render={<Link href="/coach/athletes" />}>
               <UserPlus className="mr-2 h-4 w-4" />
-              Ir a atletas
+              Ir a alumnos
             </Button>
           </CardContent>
         </Card>

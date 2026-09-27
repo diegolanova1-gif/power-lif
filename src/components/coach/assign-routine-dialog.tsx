@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { UserPlus, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -19,7 +18,6 @@ interface AssignRoutineDialogProps {
 }
 
 export function AssignRoutineDialog({ routineId, routineName, athletes, defaultAthleteId }: AssignRoutineDialogProps) {
-  const router = useRouter()
   const [open, setOpen] = useState(false)
   const [athleteId, setAthleteId] = useState<string | null>(
     athletes.some(a => a.id === defaultAthleteId) ? defaultAthleteId! : null
@@ -31,7 +29,7 @@ export function AssignRoutineDialog({ routineId, routineName, athletes, defaultA
 
   async function handleAssign() {
     if (!athleteId) {
-      toast.error('Selecciona un atleta')
+      toast.error('Selecciona un alumno')
       return
     }
 
@@ -51,7 +49,6 @@ export function AssignRoutineDialog({ routineId, routineName, athletes, defaultA
 
     toast.success(`Rutina asignada a ${athleteItems[athleteId]}. Si tenía otra, quedó en pausa.`)
     setOpen(false)
-    router.refresh()
   }
 
   return (
@@ -67,10 +64,10 @@ export function AssignRoutineDialog({ routineId, routineName, athletes, defaultA
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Atleta</Label>
+            <Label>Alumno</Label>
             <Select value={athleteId} onValueChange={setAthleteId} items={athleteItems}>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecciona atleta" />
+                <SelectValue placeholder="Selecciona alumno" />
               </SelectTrigger>
               <SelectContent>
                 {athletes.map(a => (

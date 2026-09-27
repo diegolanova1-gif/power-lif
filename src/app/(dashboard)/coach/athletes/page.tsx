@@ -112,7 +112,7 @@ export default function AthletesPage() {
   }
 
   async function removeAthlete(athleteId: string) {
-    if (!confirm('¿Eliminar atleta? Se desvinculará pero no se borrará su cuenta.')) return
+    if (!confirm('¿Eliminar alumno? Se desvinculará pero no se borrará su cuenta.')) return
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -126,7 +126,7 @@ export default function AthletesPage() {
 
       if (error) throw error
 
-      toast.success('Atleta eliminado')
+      toast.success('Alumno eliminado')
       fetchAthletes()
     } catch (error: any) {
       toast.error(error.message)
@@ -143,7 +143,7 @@ export default function AthletesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Mis Alumnos</h1>
-          <p className="text-gray-500 mt-1">Gestiona y supervisa el progreso de tus atletas</p>
+          <p className="text-gray-500 mt-1">Gestiona y supervisa el progreso de tus alumnos</p>
         </div>
         <CreateAthleteDialog onCreated={fetchAthletes}>
           <UserPlus className="mr-2 h-4 w-4" />
@@ -154,11 +154,11 @@ export default function AthletesPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Lista de Atletas ({athletes.length})</CardTitle>
+            <CardTitle>Lista de Alumnos ({athletes.length})</CardTitle>
             <div className="relative max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Buscar atleta..."
+                placeholder="Buscar alumno..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 className="pl-10"
@@ -174,7 +174,7 @@ export default function AthletesPage() {
           ) : filteredAthletes.length === 0 ? (
             <div className="text-center py-12">
               <UserPlus className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-              <p className="text-gray-500">{search ? 'No se encontraron atletas' : 'No tienes atletas aún'}</p>
+              <p className="text-gray-500">{search ? 'No se encontraron alumnos' : 'No tienes alumnos aún'}</p>
               {!search && (
                 <CreateAthleteDialog triggerClassName="mt-4" onCreated={fetchAthletes}>
                   <Plus className="mr-2 h-4 w-4" />
@@ -187,7 +187,7 @@ export default function AthletesPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Atleta</TableHead>
+                    <TableHead>Alumno</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Rutina Actual</TableHead>
                     <TableHead>Última Sesión</TableHead>
@@ -237,7 +237,7 @@ export default function AthletesPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
-                          <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8" />}>
+                          <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Acciones de ${athlete.full_name || 'alumno'}`} />}>
                             <MoreHorizontal className="h-4 w-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-56">

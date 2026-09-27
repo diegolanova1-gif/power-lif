@@ -55,11 +55,11 @@ export default async function Home() {
       <main>
         <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-            La plataforma para <span className="text-primary">coaches de powerlifting</span>
+            Rutinas a medida para <span className="text-primary">cada alumno</span>
           </h2>
           <p className="mt-6 text-lg leading-8 text-gray-600 max-w-3xl mx-auto">
-            Gestiona atletas, crea rutinas con periodización flexible, trackea cargas en tiempo real
-            y obtén estadísticas automáticas (1RM, volumen, IPF Points, adherencia).
+            Para entrenadores de gimnasio, fuerza e hipertrofia: armas la rutina de cada alumno semana a semana,
+            ellos registran lo que hicieron desde el celular y tú ves su progreso.
           </p>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 max-w-2xl mx-auto text-left">
             <div className="rounded-lg border bg-white p-6 shadow-sm">
@@ -84,33 +84,33 @@ export default async function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <FeatureCard
               icon="Users"
-              title="Gestión de Atletas"
-              description="Crea las cuentas de tus alumnos, asigna rutinas, ve su progreso en tiempo real y comunica feedback."
+              title="Tus alumnos"
+              description="Creas la cuenta de cada alumno en segundos y le pasas su usuario y contraseña."
             />
             <FeatureCard
               icon="FileText"
-              title="Constructor de Rutinas"
-              description="Crea plantillas con periodización lineal, undulante, bloques o conjugado. JSON flexible para cualquier modelo."
-            />
-            <FeatureCard
-              icon="BarChart"
-              title="Stats Automáticas"
-              description="1RM estimado (Epley/Brzycki), volumen semanal, intensidad media, RPE/RIR, adherencia, IPF Points."
+              title="Rutinas a medida"
+              description="Desde cero o con modelos listos: días, ejercicios, series, reps y cargas, semana a semana."
             />
             <FeatureCard
               icon="Smartphone"
-              title="Portal del Atleta"
-              description="Tus atletas ven su entrenamiento del día, registran series con RPE/peso/reps y ven sus gráficos de progreso."
+              title="El alumno registra"
+              description="Marca cada ejercicio como hecho o anota lo que pudo hacer, y te deja comentarios y videos."
             />
             <FeatureCard
               icon="Shield"
-              title="Multi-tenant Seguro"
-              description="Row Level Security nativo: cada coach solo ve sus atletas y datos. Aislamiento total a nivel base de datos."
+              title="Seguimiento"
+              description="Ves lo que indicaste contra lo que hizo, sesión por sesión, y le respondes."
+            />
+            <FeatureCard
+              icon="BarChart"
+              title="Estadísticas"
+              description="1RM estimado, volumen y adherencia de cada alumno."
             />
             <FeatureCard
               icon="Zap"
-              title="Tiempo Real"
-              description="Supabase Realtime: ve cuando tus atletas completan series al instante. Colaboración coach-atleta fluida."
+              title="Teams y ranking"
+              description="Agrupa alumnos para que comparen su progreso y compitan en un ranking."
             />
           </div>
         </section>
@@ -118,7 +118,7 @@ export default async function Home() {
 
       <footer className="border-t bg-white py-8">
         <div className="mx-auto max-w-7xl px-4 text-center text-gray-500 text-sm">
-          Powerlifting Coach Platform - Hecho para coaches, por coaches
+          Powerlifting Coach · Hecho para entrenadores
         </div>
       </footer>
     </div>

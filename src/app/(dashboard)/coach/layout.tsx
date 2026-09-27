@@ -51,7 +51,7 @@ export default async function DashboardLayout({
 
   const navigation = [
     { name: 'Dashboard', href: '/coach', icon: LayoutDashboard },
-    { name: 'Atletas', href: '/coach/athletes', icon: Users },
+    { name: 'Alumnos', href: '/coach/athletes', icon: Users },
     { name: 'Rutinas', href: '/coach/routines', icon: FileText },
     { name: 'Analytics', href: '/coach/analytics', icon: BarChart },
     { name: 'Revisiones', href: '/coach/reviews', icon: MessageSquare, badge: pendingReviews ?? 0 },
@@ -106,7 +106,7 @@ export default async function DashboardLayout({
                   <DropdownMenuItem>
                     <Link href="/coach/athletes" className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
-                      Mis Atletas
+                      Mis Alumnos
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
