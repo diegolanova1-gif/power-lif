@@ -1,4 +1,5 @@
 import type { RoutineStructure } from '@/lib/validations/routine'
+import { defaultTrainingDays } from '@/lib/weekdays'
 
 // [exercise name in catalog, sets, reps, reps_max?, extras?]
 type PresetExercise = [
@@ -238,8 +239,9 @@ export function buildPresetStructure(preset: RoutinePreset, exercises: { id: str
   const idByName = new Map(exercises.map(e => [e.name.toLowerCase(), e.id]))
   const missing: string[] = []
 
+  const trainingDays = defaultTrainingDays(preset.days.length)
   const schedule = preset.days.map((day, i) => ({
-    day: i + 1,
+    day: trainingDays[i],
     name: day.name,
     exercises: day.exercises.flatMap(([name, sets, reps, repsMax, extras], order) => {
       const id = idByName.get(name.toLowerCase())

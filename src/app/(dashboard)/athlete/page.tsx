@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { Dumbbell, Calendar, Clock, ArrowRight, CheckCircle, Loader2 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { weekdayName } from '@/lib/weekdays'
 import { formatReps } from '@/lib/validations/routine'
 
 interface TodayWorkout {
@@ -176,7 +177,7 @@ export default function AthleteTodayPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Entrenamiento de Hoy</h1>
           <p className="text-gray-500 mt-1">
-            {athlete_routine.routine?.name} - Semana {athlete_routine.current_week}, Día {athlete_routine.current_day}
+            {athlete_routine.routine?.name} - Semana {athlete_routine.current_week} · {weekdayName(athlete_routine.current_day)}
           </p>
         </div>
         <div className="flex items-center gap-4">

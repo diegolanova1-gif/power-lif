@@ -10,8 +10,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { createRoutine, updateRoutine } from '@/actions/routines'
+import { createExercise, type CreateExerciseInput } from '@/actions/exercises'
+import { ExerciseCombobox } from '@/components/coach/exercise-combobox'
+import { WEEKDAYS, weekdayName } from '@/lib/weekdays'
+import { cn } from '@/lib/utils'
 import { routineStructureSchema, formatReps, ROUTINE_GOALS, type RoutineStructure } from '@/lib/validations/routine'
 import { NewExerciseDialog } from '@/components/coach/new-exercise-dialog'
 import { RoutineStartPicker, type RoutineTemplate, type StartChoice } from '@/components/coach/routine-start-picker'
@@ -65,16 +69,18 @@ const PROGRESSIONS: Record<RoutineStructure['progression'], string> = {
   custom: 'Personalizada',
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  squat: 'Sentadilla',
-  bench: 'Banca',
-  deadlift: 'Peso muerto',
-  accessory: 'Accesorio',
-  olympic: 'Olímpico',
-  other: 'Otro',
-}
+const DAY_NUMBERS = WEEKDAYS.map(w => w.day)
 
-const DAY_NUMBERS = [1, 2, 3, 4, 5, 6, 7]
+const sortDays = (days: BuilderDay[]) => [...days].sort((a, b) => a.day - b.day)
+
+// Category for exercises created by typing a new name
+function guessCategory(exerciseName: string): CreateExerciseInput['category'] {
+  const n = exerciseName.toLowerCase()
+  if (n.includes('sentadilla') || n.includes('squat')) return 'squat'
+  if (n.includes('peso muerto') || n.includes('deadlift')) return 'deadlift'
+  if (n.includes('banca') || n.includes('bench')) return 'bench'
+  return 'accessory'
+}
 
 const emptyExercise = (loadType: LoadType = 'kg'): BuilderExercise => ({ exercise_id: '', sets: 3, repsText: '10', load_type: loadType })
 
@@ -134,7 +140,7 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
   const [progression, setProgression] = useState<RoutineStructure['progression']>(initial?.progression ?? 'linear')
   const [deloadWeeks, setDeloadWeeks] = useState(initial?.deload_weeks?.join(', ') ?? '')
   const [schedule, setSchedule] = useState<BuilderDay[]>(
-    initial ? toBuilderDays(initial) : [{ day: 1, name: 'Día 1', exercises: [emptyExercise()] }]
+    initial ? toBuilderDays(initial) : []
   )
   const [saving, setSaving] = useState(false)
   const [exercises, setExercises] = useState(initialExercises)
@@ -148,45 +154,56 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
       setProgression(choice.structure.progression)
       setDeloadWeeks(choice.structure.deload_weeks?.join(', ') ?? '')
       setSchedule(toBuilderDays(choice.structure))
+    } else {
+      setSchedule([])
     }
     setStarted(true)
     window.scrollTo({ top: 0 })
   }
 
-  const exerciseItems = Object.fromEntries(exercises.map(e => [e.id, e.name]))
-  const exercisesByCategory = exercises.reduce<Record<string, ExerciseOption[]>>((acc, e) => {
-    const key = e.category ?? 'other'
-    ;(acc[key] ??= []).push(e)
-    return acc
-  }, {})
-
   function updateDay(index: number, patch: Partial<BuilderDay>) {
-    setSchedule(prev => prev.map((d, i) => (i === index ? { ...d, ...patch } : d)))
+    setSchedule(prev => sortDays(prev.map((d, i) => (i === index ? { ...d, ...patch } : d))))
   }
 
-  function addDay() {
-    const used = new Set(schedule.map(d => d.day))
-    const next = DAY_NUMBERS.find(n => !used.has(n))
-    if (!next) return
-    setSchedule(prev => [...prev, { day: next, name: `Día ${next}`, exercises: [emptyExercise()] }])
+  // Weekday chips: tapping a day adds or removes its session
+  function toggleWeekday(day: number) {
+    const existing = schedule.find(d => d.day === day)
+    if (!existing) {
+      setSchedule(prev => sortDays([...prev, { day, name: '', exercises: [emptyExercise()] }]))
+      return
+    }
+    const hasContent = existing.exercises.some(e => e.exercise_id)
+    if (hasContent && !confirm(`¿Quitar el ${weekdayName(day)} y sus ejercicios?`)) return
+    setSchedule(prev => prev.filter(d => d.day !== day))
   }
 
   function removeDay(index: number) {
-    setSchedule(prev => prev.filter((_, i) => i !== index))
+    toggleWeekday(schedule[index].day)
   }
 
   function duplicateDay(index: number) {
+    const source = schedule[index]
     const used = new Set(schedule.map(d => d.day))
-    const next = DAY_NUMBERS.find(n => !used.has(n))
+    const next = [...DAY_NUMBERS.filter(n => n > source.day), ...DAY_NUMBERS].find(n => !used.has(n))
     if (!next) {
-      toast.error('Ya tienes 7 días en la semana')
+      toast.error('Ya entrena los 7 días')
       return
     }
-    const source = schedule[index]
-    setSchedule(prev => [
-      ...prev,
-      { day: next, name: `${source.name} (copia)`, exercises: source.exercises.map(e => ({ ...e })) },
-    ])
+    setSchedule(prev =>
+      sortDays([...prev, { day: next, name: source.name, exercises: source.exercises.map(e => ({ ...e })) }])
+    )
+    toast.success(`Copiado al ${weekdayName(next)}`)
+  }
+
+  async function createExerciseInline(exerciseName: string): Promise<ExerciseOption | null> {
+    const result = await createExercise({ name: exerciseName, category: guessCategory(exerciseName) })
+    if (result.error || !result.exercise) {
+      toast.error(result.error ?? 'No se pudo crear el ejercicio')
+      return null
+    }
+    setExercises(prev => [...prev, result.exercise].sort((a, b) => a.name.localeCompare(b.name)))
+    toast.success(`"${result.exercise.name}" agregado a tus ejercicios`)
+    return result.exercise
   }
 
   function updateExercise(dayIndex: number, exIndex: number, patch: Partial<BuilderExercise>) {
@@ -216,6 +233,10 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
+    if (schedule.length === 0) {
+      toast.error('Elige al menos un día de entrenamiento')
+      return
+    }
     if (new Set(schedule.map(d => d.day)).size !== schedule.length) {
       toast.error('Hay días repetidos en la semana')
       return
@@ -249,7 +270,7 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
         .sort((a, b) => a.day - b.day)
         .map(d => ({
           day: d.day,
-          name: d.name.trim(),
+          name: d.name.trim() || weekdayName(d.day),
           exercises: d.exercises.map((ex, order) => ({
             exercise_id: ex.exercise_id,
             sets: ex.sets,
@@ -409,156 +430,179 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>¿Qué días entrena?</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="flex flex-wrap gap-2">
+            {WEEKDAYS.map(w => {
+              const on = schedule.some(d => d.day === w.day)
+              return (
+                <button
+                  key={w.day}
+                  type="button"
+                  onClick={() => toggleWeekday(w.day)}
+                  aria-pressed={on}
+                  className={cn(
+                    'h-11 min-w-11 rounded-full border px-3 text-sm font-medium transition-colors',
+                    on ? 'border-primary bg-primary text-primary-foreground' : 'bg-white text-gray-600 hover:bg-gray-50'
+                  )}
+                >
+                  <span className="sm:hidden">{w.short}</span>
+                  <span className="hidden sm:inline">{w.name}</span>
+                </button>
+              )
+            })}
+          </div>
+          <p className="text-sm text-gray-500">
+            {schedule.length === 0
+              ? 'Toca los días en que entrena el alumno.'
+              : `${schedule.length} ${schedule.length === 1 ? 'día' : 'días'} por semana. Toca un día para agregarlo o quitarlo.`}
+          </p>
+        </CardContent>
+      </Card>
+
       {schedule.map((day, dayIndex) => (
-        <Card key={dayIndex}>
+        <Card key={day.day}>
           <CardHeader>
             <div className="flex flex-wrap items-center gap-3">
-              <Select
-                value={String(day.day)}
-                onValueChange={v => v && updateDay(dayIndex, { day: Number(v) })}
-                items={Object.fromEntries(DAY_NUMBERS.map(n => [String(n), `Día ${n}`]))}
-              >
-                <SelectTrigger className="w-28">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {DAY_NUMBERS.map(n => (
-                    <SelectItem key={n} value={String(n)}>Día {n}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <CardTitle className="text-xl">{weekdayName(day.day)}</CardTitle>
               <Input
                 value={day.name}
                 onChange={e => updateDay(dayIndex, { name: e.target.value })}
-                placeholder="Nombre del día (ej: Pecho y tríceps)"
+                placeholder="Enfoque del día (ej: Pecho y tríceps)"
+                aria-label={`Enfoque del ${weekdayName(day.day)}`}
                 className="max-w-xs"
                 maxLength={50}
               />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="ml-auto text-gray-500"
-                onClick={() => duplicateDay(dayIndex)}
-                disabled={schedule.length >= 7}
-              >
-                <Copy className="mr-1 h-4 w-4" />
-                Duplicar día
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="text-red-600"
-                onClick={() => removeDay(dayIndex)}
-                disabled={schedule.length === 1}
-                aria-label="Eliminar día"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <div className="ml-auto flex items-center gap-1">
+                <Select
+                  value={String(day.day)}
+                  onValueChange={v => {
+                    if (!v || Number(v) === day.day) return
+                    if (schedule.some(d => d.day === Number(v))) {
+                      toast.error(`El ${weekdayName(Number(v))} ya tiene entrenamiento`)
+                      return
+                    }
+                    updateDay(dayIndex, { day: Number(v) })
+                  }}
+                  items={Object.fromEntries(WEEKDAYS.map(w => [String(w.day), 'Mover a otro día']))}
+                >
+                  <SelectTrigger className="w-auto text-gray-500" aria-label="Mover a otro día">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {WEEKDAYS.map(w => (
+                      <SelectItem key={w.day} value={String(w.day)} disabled={w.day !== day.day && schedule.some(d => d.day === w.day)}>
+                        {w.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button type="button" variant="ghost" size="sm" className="text-gray-500" onClick={() => duplicateDay(dayIndex)} disabled={schedule.length >= 7}>
+                  <Copy className="mr-1 h-4 w-4" />
+                  Duplicar
+                </Button>
+                <Button type="button" variant="ghost" size="icon" className="text-red-600" onClick={() => removeDay(dayIndex)} aria-label={`Quitar ${weekdayName(day.day)}`}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="hidden md:grid grid-cols-12 gap-2 text-xs font-medium text-gray-500">
-              <span className="col-span-4">Ejercicio</span>
-              <span className="col-span-1">Series</span>
-              <span className="col-span-1">Reps</span>
-              <span className="col-span-2">Carga (kg / % RM)</span>
-              <span className="col-span-1">RPE</span>
-              <span className="col-span-2">Descanso (s)</span>
-            </div>
             {day.exercises.map((ex, exIndex) => (
-              <div key={exIndex} className="grid grid-cols-12 gap-2 items-center">
-                <div className="col-span-12 md:col-span-4">
-                  <Select
-                    value={ex.exercise_id || null}
-                    onValueChange={v => v && updateExercise(dayIndex, exIndex, { exercise_id: v })}
-                    items={exerciseItems}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Selecciona ejercicio" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(exercisesByCategory).map(([category, list]) => (
-                        <SelectGroup key={category}>
-                          <SelectLabel>{CATEGORY_LABELS[category] ?? category}</SelectLabel>
-                          {list.map(e => (
-                            <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
-                          ))}
-                        </SelectGroup>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Input
-                  className="col-span-3 md:col-span-1"
-                  type="number" min={1} max={20} aria-label="Series"
-                  value={ex.sets}
-                  onChange={e => updateExercise(dayIndex, exIndex, { sets: Number(e.target.value) })}
-                />
-                <Input
-                  className="col-span-3 md:col-span-1"
-                  inputMode="numeric" placeholder="8-12" aria-label="Reps (número o rango)"
-                  value={ex.repsText}
-                  onChange={e => updateExercise(dayIndex, exIndex, { repsText: e.target.value })}
-                />
-                <div className="col-span-6 md:col-span-2 flex">
-                  <Input
-                    className="rounded-r-none"
-                    type="number" min={0} step={ex.load_type === 'kg' ? 2.5 : 1}
-                    placeholder={ex.load_type === 'kg' ? '100' : '75'}
-                    aria-label={ex.load_type === 'kg' ? 'Carga en kg' : 'Carga en % del RM'}
-                    value={ex.load_value ?? ''}
-                    onChange={e => updateExercise(dayIndex, exIndex, { load_value: parseOptionalNumber(e.target.value) })}
-                  />
+              <div key={exIndex} className="rounded-lg border bg-gray-50/60 p-3">
+                <div className="flex items-end gap-2">
+                  <div className="flex-1 space-y-1">
+                    <Label className="text-xs text-gray-500">Ejercicio {exIndex + 1}</Label>
+                    <ExerciseCombobox
+                      exercises={exercises}
+                      value={ex.exercise_id}
+                      onChange={id => updateExercise(dayIndex, exIndex, { exercise_id: id })}
+                      onCreate={createExerciseInline}
+                    />
+                  </div>
                   <Button
                     type="button"
-                    variant="outline"
-                    className="w-14 shrink-0 rounded-l-none border-l-0"
-                    onClick={() => updateExercise(dayIndex, exIndex, { load_type: ex.load_type === 'kg' ? 'percent' : 'kg' })}
-                    title="Cambiar entre kg y % del RM"
+                    variant="ghost"
+                    size="icon"
+                    className="text-gray-400 hover:text-red-600"
+                    onClick={() => removeExercise(dayIndex, exIndex)}
+                    disabled={day.exercises.length === 1}
+                    aria-label="Quitar ejercicio"
                   >
-                    {ex.load_type === 'kg' ? 'kg' : '% RM'}
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
-                <Input
-                  className="col-span-4 md:col-span-1"
-                  type="number" min={1} max={10} step={0.5} placeholder="8" aria-label="RPE objetivo"
-                  value={ex.rpe_target ?? ''}
-                  onChange={e => updateExercise(dayIndex, exIndex, { rpe_target: parseOptionalNumber(e.target.value) })}
-                />
-                <Input
-                  className="col-span-6 md:col-span-2"
-                  type="number" min={0} max={600} step={15} placeholder="180" aria-label="Descanso en segundos"
-                  value={ex.rest_seconds ?? ''}
-                  onChange={e => updateExercise(dayIndex, exIndex, { rest_seconds: parseOptionalNumber(e.target.value) })}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="col-span-2 md:col-span-1 justify-self-end text-gray-400 hover:text-red-600"
-                  onClick={() => removeExercise(dayIndex, exIndex)}
-                  disabled={day.exercises.length === 1}
-                  aria-label="Eliminar ejercicio"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-gray-500">Series</Label>
+                    <Input
+                      type="number" min={1} max={20} placeholder="ej: 4"
+                      value={ex.sets}
+                      onChange={e => updateExercise(dayIndex, exIndex, { sets: Number(e.target.value) })}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-gray-500">Repeticiones</Label>
+                    <Input
+                      inputMode="numeric" placeholder="ej: 8-12"
+                      value={ex.repsText}
+                      onChange={e => updateExercise(dayIndex, exIndex, { repsText: e.target.value })}
+                    />
+                  </div>
+                  <div className="col-span-2 space-y-1 sm:col-span-1">
+                    <Label className="text-xs text-gray-500">Peso <span className="text-gray-400">(opcional)</span></Label>
+                    <div className="flex">
+                      <Input
+                        className="rounded-r-none"
+                        type="number" min={0} step={ex.load_type === 'kg' ? 2.5 : 1}
+                        placeholder={ex.load_type === 'kg' ? 'ej: 60' : 'ej: 75'}
+                        value={ex.load_value ?? ''}
+                        onChange={e => updateExercise(dayIndex, exIndex, { load_value: parseOptionalNumber(e.target.value) })}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-16 shrink-0 rounded-l-none border-l-0"
+                        onClick={() => updateExercise(dayIndex, exIndex, { load_type: ex.load_type === 'kg' ? 'percent' : 'kg' })}
+                        title="Cambiar entre kilos y % del máximo (RM)"
+                      >
+                        {ex.load_type === 'kg' ? 'kg' : '% RM'}
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-gray-500" title="Esfuerzo percibido: 10 = al fallo, 8 = le quedan 2 reps">
+                      RPE / esfuerzo <span className="text-gray-400">(1-10)</span>
+                    </Label>
+                    <Input
+                      type="number" min={1} max={10} step={0.5} placeholder="ej: 8"
+                      value={ex.rpe_target ?? ''}
+                      onChange={e => updateExercise(dayIndex, exIndex, { rpe_target: parseOptionalNumber(e.target.value) })}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-gray-500">Descanso <span className="text-gray-400">(seg)</span></Label>
+                    <Input
+                      type="number" min={0} max={600} step={15} placeholder="ej: 90"
+                      value={ex.rest_seconds ?? ''}
+                      onChange={e => updateExercise(dayIndex, exIndex, { rest_seconds: parseOptionalNumber(e.target.value) })}
+                    />
+                  </div>
+                </div>
               </div>
             ))}
             <Button type="button" variant="outline" size="sm" onClick={() => addExercise(dayIndex)}>
               <Plus className="mr-1 h-4 w-4" />
-              Agregar ejercicio
+              Agregar ejercicio al {weekdayName(day.day).toLowerCase()}
             </Button>
           </CardContent>
         </Card>
       ))}
 
       <div className="flex flex-wrap gap-3">
-        <Button type="button" variant="outline" onClick={addDay} disabled={schedule.length >= 7}>
-          <Plus className="mr-2 h-4 w-4" />
-          Agregar día
-        </Button>
         <NewExerciseDialog
           onCreated={exercise =>
             setExercises(prev => [...prev, exercise].sort((a, b) => a.name.localeCompare(b.name)))

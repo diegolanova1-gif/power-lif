@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Loader2, ChevronDown, ChevronUp, Calendar, Dumbbell } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { weekdayName } from '@/lib/weekdays'
 import { cn } from '@/lib/utils'
 
 interface Session {
@@ -216,7 +217,7 @@ export default function AthleteHistoryPage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-gray-900">
-                            Semana {session.week} - Día {session.day}
+                            Semana {session.week} · {weekdayName(session.day)}
                           </span>
                           <Badge variant="outline">{session.exercises.length} ejercicios</Badge>
                         </div>

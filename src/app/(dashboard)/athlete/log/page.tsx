@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { ExerciseFeedback } from '@/components/athlete/exercise-feedback'
+import { weekdayName, weekdayShort } from '@/lib/weekdays'
 import { formatReps } from '@/lib/validations/routine'
 
 interface ExercisePrescription {
@@ -310,7 +311,7 @@ export default function AthleteLogPage() {
           </Button>
           <div className="text-center">
             <p className="text-sm text-gray-500">Semana {currentDay.week}</p>
-            <p className="text-2xl font-bold text-gray-900">Día {currentDay.day}</p>
+            <p className="text-2xl font-bold text-gray-900">{weekdayName(currentDay.day)}</p>
           </div>
           <Button variant="outline" size="icon" onClick={() => goToDay('next')} disabled={currentDayIndex === days.length - 1}>
             <ChevronRight className="h-4 w-4" />
@@ -328,7 +329,7 @@ export default function AthleteLogPage() {
                   : 'text-gray-500 hover:bg-gray-100'
               )}
             >
-              {d.day}
+              {weekdayShort(d.day)}
             </button>
           ))}
         </div>

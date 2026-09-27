@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
 import { MediaGrid, type MediaItem } from '@/components/media-grid'
+import { weekdayName } from '@/lib/weekdays'
 import { replyToFeedback, deleteFeedbackMedia } from '@/actions/feedback'
 
 export interface ReviewItem {
@@ -60,7 +61,7 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
           <div>
             <p className="font-semibold text-gray-900">{item.athleteName}</p>
             <p className="text-sm text-gray-500">
-              {item.exerciseName} · Semana {item.week}, Día {item.day} ·{' '}
+              {item.exerciseName} · Semana {item.week}, {weekdayName(item.day)} ·{' '}
               {new Date(item.updatedAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
             </p>
           </div>

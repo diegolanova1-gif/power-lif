@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { RoutineComparePicker } from '@/components/coach/routine-compare-picker'
 import { summarizeRoutine, type RoutineSummary } from '@/lib/calculations/routine'
 import { formatReps, type RoutineStructure } from '@/lib/validations/routine'
+import { weekdayName } from '@/lib/weekdays'
 import { cn } from '@/lib/utils'
 
 const PROGRESSION_LABELS: Record<string, string> = {
@@ -141,7 +142,7 @@ export default async function CompareRoutinesPage({ searchParams }: { searchPara
                 <CardContent className="space-y-6">
                   {dayNumbers.map(dayNum => (
                     <div key={dayNum}>
-                      <p className="mb-2 text-sm font-semibold text-gray-700">Día {dayNum}</p>
+                      <p className="mb-2 text-sm font-semibold text-gray-700">{weekdayName(dayNum)}</p>
                       <div className="grid gap-4 sm:grid-cols-2">
                         {columns.map((c, i) => {
                           const day = c!.structure.schedule.find(d => d.day === dayNum)
