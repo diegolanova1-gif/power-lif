@@ -90,9 +90,9 @@ Coaches de gimnasio gestionan a sus alumnos: rutinas semana a semana, seguimient
 - Teams con subconjunto de alumnos; aislamiento entre coaches por `coach_id` (RLS).
 - Vista en vivo del coach (`team_exercise_bests`, sin aprobar) + ranking oficial del ejercicio líder con criterio combinado (60% actual + 40% progreso), aprobado por el coach (`team_rankings`, snapshot inmutable). El alumno solo ve lo aprobado.
 
-### 3.5 Fotos y videos — ✅ construido, falta retención
+### 3.5 Fotos y videos — ✅
 - Subida (máx. 50 MB), vista del coach, borrado manual. Bucket privado `exercise-media`.
-- **Decisión:** no ocupar espacio permanente. Borrado automático cuando la observación fue revisada o pasados N días → Paso 3.
+- Retención automática: se borra el archivo al revisar o a los 14 días (Paso 3); repetir reemplaza el archivo anterior.
 
 ### 3.6 Planes y capacidad — ⚠️ no existe → Paso 1
 - Límite de alumnos por plan; bloquear alta al llegar al límite y ofrecer upgrade por WhatsApp.
@@ -158,9 +158,10 @@ Cada paso: alcance → criterio de terminado → modelo recomendado. Un paso a l
 - `teams.lead_exercise_id`, tabla `team_rankings` (snapshot inmutable via trigger), 60% actual + 40% progreso normalizados, aprobación del coach.
 - El alumno ve solo el último ranking aprobado; nunca en vivo.
 
-### Paso 3 — Retención de fotos/videos · `/model sonnet`
-- Job programado (Vercel Cron) que borra del storage los archivos con observación revisada o con más de N días; deja registro sin archivo.
-- **Pendiente de Diego:** N días; si "repetir" reemplaza o crea uno nuevo.
+### Paso 3 — Retención de fotos/videos · ✅ hecho
+- Vercel Cron diario (`vercel.json` → `/api/cron/media-retention`, 06:00 UTC) borra del storage el archivo de `exercise_media` si la observación fue revisada o pasaron 14 días; el registro queda (`deleted_at`), sin archivo.
+- Subir foto/video de nuevo para la misma observación reemplaza lo anterior (no acumula).
+- **Pendiente de Diego:** cargar `CRON_SECRET` en las env vars de Vercel (Project Settings → Environment Variables) para que el cron pueda autenticarse.
 
 ### Paso 4 — Landing inmersiva (proyecto aparte) · `/model sonnet` para construir, `opus` para el diseño del embudo
 - Nuevo proyecto (Three.js), deploy propio, CTA único a WhatsApp.
@@ -182,7 +183,7 @@ Cada paso: alcance → criterio de terminado → modelo recomendado. Un paso a l
 - [x] Registro público de coaches: se elimina (Paso 1).
 - [ ] Planes: cantidad de alumnos por tier y precios.
 - [ ] Número de WhatsApp para CTA y upgrades.
-- [ ] Días de retención de fotos/video; "repetir" reemplaza o crea nuevo.
+- [x] Retención: 14 días o al revisar; repetir reemplaza.
 - [ ] Fórmula exacta del ranking combinado.
 - [ ] ¿Límite de rutinas/semanas históricas por alumno?
 - [ ] Pagos y método de upgrade.

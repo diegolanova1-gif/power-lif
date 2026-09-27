@@ -22,15 +22,19 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
       id, athlete_id, week, day, note, coach_reply, reviewed_at, updated_at,
       exercise:exercises(name),
       athlete:profiles!exercise_feedback_athlete_id_fkey(full_name),
-      media:exercise_media(id, storage_path, media_type, created_at)
+      media:exercise_media(id, storage_path, media_type, created_at, deleted_at)
     `)
     .order('updated_at', { ascending: false })
     .limit(50)
 
   query = status === 'pending' ? query.is('reviewed_at', null) : query.not('reviewed_at', 'is', null)
-  const { data: rows, error } = await query
+  const { data: rawRows, error } = await query
+  const rows = rawRows?.map(r => ({
+    ...r,
+    media: (r.media as { id: string; storage_path: string; media_type: MediaType; created_at: string; deleted_at: string | null }[]).filter(m => !m.deleted_at),
+  }))
 
-  const paths = rows?.flatMap(r => (r.media as { storage_path: string }[]).map(m => m.storage_path)) ?? []
+  const paths = rows?.flatMap(r => r.media.map(m => m.storage_path)) ?? []
   const { data: signed } = paths.length
     ? await supabase.storage.from(MEDIA_BUCKET).createSignedUrls(paths, SIGNED_URL_TTL_SECONDS)
     : { data: [] }
@@ -39,7 +43,7 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
   const items: ReviewItem[] = (rows ?? []).map(r => {
     const exercise = r.exercise as unknown as { name: string } | null
     const athlete = r.athlete as unknown as { full_name: string | null } | null
-    const media = r.media as unknown as { id: string; storage_path: string; media_type: MediaType; created_at: string }[]
+    const media = r.media
     return {
       id: r.id,
       athleteId: r.athlete_id,

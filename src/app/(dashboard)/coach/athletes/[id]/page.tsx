@@ -108,9 +108,10 @@ export default async function AthleteFollowUpPage({
       .eq('athlete_routine_id', assignment.id),
     supabase
       .from('exercise_feedback')
-      .select('id, week, day, exercise_id, note, coach_reply, reviewed_at, media:exercise_media(id, storage_path, media_type, created_at)')
+      .select('id, week, day, exercise_id, note, coach_reply, reviewed_at, media:exercise_media(id, storage_path, media_type, created_at, deleted_at)')
       .eq('athlete_routine_id', assignment.id),
   ])
+  const feedbackRows = feedback?.map(f => ({ ...f, media: f.media.filter(m => !m.deleted_at) }))
 
   const setsFor = (week: number, day: number, exerciseId: string) =>
     (sets ?? [])
@@ -134,7 +135,7 @@ export default async function AthleteFollowUpPage({
     : { data: [] }
   const nameById = new Map((exercises ?? []).map(e => [e.id, e.name as string]))
 
-  const sessionFeedback = (feedback ?? []).filter(f => f.week === week && f.day === day)
+  const sessionFeedback = (feedbackRows ?? []).filter(f => f.week === week && f.day === day)
   const mediaPaths = sessionFeedback.flatMap(f => (f.media as unknown as { storage_path: string }[]).map(m => m.storage_path))
   const { data: signed } = mediaPaths.length
     ? await supabase.storage.from(MEDIA_BUCKET).createSignedUrls(mediaPaths, SIGNED_URL_TTL_SECONDS)

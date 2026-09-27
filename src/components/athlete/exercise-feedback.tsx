@@ -56,11 +56,12 @@ export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week
       .maybeSingle()
     if (!fb) return { feedback: null, media: [] }
 
-    const { data: rows } = await supabase
+    const { data: allRows } = await supabase
       .from('exercise_media')
-      .select('id, storage_path, media_type')
+      .select('id, storage_path, media_type, deleted_at')
       .eq('feedback_id', fb.id)
       .order('created_at')
+    const rows = allRows?.filter(r => !r.deleted_at)
 
     const paths = rows?.map(r => r.storage_path) ?? []
     const { data: signed } = paths.length
@@ -137,6 +138,12 @@ export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week
         .select('id')
         .single()
       if (error) throw error
+
+      // Subir de nuevo reemplaza lo anterior de esta observación (no acumula)
+      if (files.length > 0 && media.length > 0) {
+        await supabase.storage.from(MEDIA_BUCKET).remove(media.map(m => m.storage_path))
+        await supabase.from('exercise_media').delete().in('id', media.map(m => m.id))
+      }
 
       for (const [i, file] of files.entries()) {
         setProgress(`Subiendo ${i + 1} de ${files.length}...`)
