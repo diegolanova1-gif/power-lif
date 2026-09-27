@@ -11,14 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { createAthleteSchema, type CreateAthleteInput } from '@/lib/validations/athlete'
-
-// No ambiguous chars (0/O, 1/l/I) so it can be dictated or typed from a screenshot
-const PASSWORD_CHARS = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-
-function generatePassword(length = 10) {
-  const values = crypto.getRandomValues(new Uint32Array(length))
-  return Array.from(values, v => PASSWORD_CHARS[v % PASSWORD_CHARS.length]).join('')
-}
+import { generatePassword, credentialsText } from '@/lib/password'
 
 interface CreateAthleteDialogProps {
   children: React.ReactNode
@@ -70,8 +63,7 @@ export function CreateAthleteDialog({ children, triggerClassName, onCreated }: C
 
   async function copyCredentials() {
     if (!credentials) return
-    const text = `Powerlifting Coach\nIngreso: ${window.location.origin}/login?as=alumno\nEmail: ${credentials.email}\nContraseña: ${credentials.password}`
-    await navigator.clipboard.writeText(text)
+    await navigator.clipboard.writeText(credentialsText(credentials.email, credentials.password))
     setCopied(true)
     toast.success('Datos copiados')
   }

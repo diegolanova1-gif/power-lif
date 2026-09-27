@@ -3,8 +3,10 @@ import { z } from 'zod'
 export const createAthleteSchema = z.object({
   email: z.string().email('Email inválido'),
   full_name: z.string().min(2, 'Nombre muy corto').max(100),
-  password: z.string().min(8, 'Mínimo 8 caracteres').max(72),
+  password: z.string().trim().min(8, 'Mínimo 8 caracteres').max(72),
 })
+
+export const resetPasswordSchema = createAthleteSchema.pick({ password: true })
 
 export const updateAthleteSchema = z.object({
   full_name: z.string().min(2).max(100).optional(),

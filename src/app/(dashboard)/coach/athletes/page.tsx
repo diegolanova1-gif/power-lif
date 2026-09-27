@@ -8,9 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
-import { Plus, UserPlus, Search, Loader2, MoreHorizontal, Edit, Trash2, Dumbbell, LayoutTemplate, BarChart } from 'lucide-react'
+import { Plus, UserPlus, Search, Loader2, MoreHorizontal, Edit, Trash2, Dumbbell, LayoutTemplate, BarChart, KeyRound } from 'lucide-react'
 import { toast } from 'sonner'
 import { CreateAthleteDialog } from '@/components/coach/create-athlete-dialog'
+import { ResetPasswordDialog } from '@/components/coach/reset-password-dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 
@@ -29,6 +30,7 @@ export default function AthletesPage() {
   const [athletes, setAthletes] = useState<Athlete[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const [resetFor, setResetFor] = useState<Athlete | null>(null)
 
   const supabase = createClient()
 
@@ -250,6 +252,10 @@ export default function AthletesPage() {
                               <BarChart className="mr-2 h-4 w-4" />
                               Ver estadísticas
                             </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setResetFor(athlete)}>
+                              <KeyRound className="mr-2 h-4 w-4" />
+                              Cambiar contraseña
+                            </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               onClick={() => removeAthlete(athlete.id)}
@@ -269,6 +275,7 @@ export default function AthletesPage() {
           )}
         </CardContent>
       </Card>
+      <ResetPasswordDialog athlete={resetFor} onClose={() => setResetFor(null)} />
     </div>
   )
 }

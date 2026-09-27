@@ -24,10 +24,20 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ as
     e.preventDefault()
     setLoading(true)
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    // Pasted credentials often carry stray spaces; mobile keyboards may capitalize the email
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password: password.trim(),
+    })
 
     if (error) {
-      toast.error(error.message)
+      toast.error(
+        error.message === 'Invalid login credentials'
+          ? isAthlete
+            ? 'Email o contraseña incorrectos. Si no recuerdas la contraseña, pídele a tu coach una nueva.'
+            : 'Email o contraseña incorrectos.'
+          : error.message
+      )
     } else {
       toast.success('¡Bienvenido!')
       // Home redirects each role to its panel
@@ -43,7 +53,7 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ as
     setLoading(true)
 
     const { error } = await supabase.auth.signInWithOtp({
-      email,
+      email: email.trim().toLowerCase(),
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
