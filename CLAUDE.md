@@ -61,9 +61,9 @@ Coaches de gimnasio gestionan a sus alumnos: rutinas semana a semana, seguimient
 
 ## 2. Roles
 
-- **Admin (Diego):** crea coaches, define plan y límite de alumnos. ⚠️ No existe rol ni panel → Paso 1.
-- **Coach:** crea alumnos ✅ (límite de plan ⚠️ Paso 1), rutinas y clonado ✅, teams ✅, ejercicio líder ⚠️ Paso 2, aprobación del ranking ⚠️ Paso 2, estadísticas y comentarios ✅.
-- **Alumno:** ve su rutina ✅, marca hecho / no pude ✅, comenta ✅, ve su progreso ✅, ve el ranking del team ✅ — pero **sin** aprobación ni permiso del coach (hoy lo ve cualquiera del team) ⚠️ Paso 2.
+- **Admin (Diego):** crea coaches, define plan y límite de alumnos. ✅
+- **Coach:** crea alumnos ✅ (límite de plan ✅), rutinas y clonado ✅, teams ✅, ejercicio líder ✅, aprobación del ranking ✅, estadísticas y comentarios ✅.
+- **Alumno:** ve su rutina ✅, marca hecho / no pude ✅, comenta ✅, ve su progreso ✅, ve solo el ranking aprobado por el coach ✅.
 
 ---
 
@@ -86,12 +86,9 @@ Coaches de gimnasio gestionan a sus alumnos: rutinas semana a semana, seguimient
 ### 3.3 Comentarios — ✅
 - Alumno comenta por ejercicio; coach responde; contador de pendientes en Revisiones y punto azul en Seguimiento.
 
-### 3.4 Teams y ranking — 🟡
-- ✅ Teams con subconjunto de alumnos; aislamiento entre coaches por `coach_id` (RLS).
-- ✅ Ranking por Total (S+B+PM) o por cualquier ejercicio, calculado al vuelo (`team_exercise_bests`); gráfico de comparación.
-- ⚠️ **Ejercicio líder fijo** del team → Paso 2.
-- ⚠️ **Criterio combinado** (peso absoluto + progreso desde que empezó); hoy solo absoluto → Paso 2.
-- ⚠️ **Aprobación del coach** antes de que lo vean los alumnos, auditable (quién y cuándo) → Paso 2.
+### 3.4 Teams y ranking — ✅
+- Teams con subconjunto de alumnos; aislamiento entre coaches por `coach_id` (RLS).
+- Vista en vivo del coach (`team_exercise_bests`, sin aprobar) + ranking oficial del ejercicio líder con criterio combinado (60% actual + 40% progreso), aprobado por el coach (`team_rankings`, snapshot inmutable). El alumno solo ve lo aprobado.
 
 ### 3.5 Fotos y videos — ✅ construido, falta retención
 - Subida (máx. 50 MB), vista del coach, borrado manual. Bucket privado `exercise-media`.
@@ -153,19 +150,13 @@ Objetivo:
 
 Cada paso: alcance → criterio de terminado → modelo recomendado. Un paso a la vez.
 
-### Paso 1 — Admin, alta de coaches y planes · `/model opus` (datos + permisos), UI con Sonnet
-- `profiles.is_admin`, `plan`, `student_limit` (migración + RLS: solo admin cambia plan/límite).
-- Panel `/admin`: listar coaches, crear coach (email + contraseña, como el alta de alumnos), cambiar plan/límite, activar/desactivar.
-- Quitar registro público: eliminar `/register` y "Crear cuenta"; reemplazar por CTA a WhatsApp.
-- Límite de alumnos: bloquear en la API de alta (no solo en UI) y mostrar aviso con botón de upgrade por WhatsApp.
-- **Terminado:** Diego crea un coach desde `/admin`; un coach sin cupo no puede crear alumnos; no hay forma pública de registrarse.
+### Paso 1 — Admin, alta de coaches y planes · ✅ hecho (commit `f47598c`)
+- `profiles.is_admin`, `plan`, `student_limit`; panel `/admin`; `/register` eliminado; límite enforced en `POST /api/coach/athletes`.
 - **Pendiente de Diego:** números de planes (alumnos por tier) y número de WhatsApp.
 
-### Paso 2 — Ranking con ejercicio líder, criterio combinado y aprobación · `/model opus`
-- `teams.lead_exercise_id`; el coach lo elige.
-- Fórmula combinada (peso absoluto normalizado + progreso desde el inicio normalizado) — proponer y validar con Diego.
-- Tabla de rankings publicados (snapshot) con `approved_by`, `approved_at`; los alumnos solo ven lo aprobado.
-- **Terminado:** el coach calcula, revisa y aprueba; el alumno ve solo el último ranking aprobado.
+### Paso 2 — Ranking con ejercicio líder, criterio combinado y aprobación · ✅ hecho (commit `3f74789`)
+- `teams.lead_exercise_id`, tabla `team_rankings` (snapshot inmutable via trigger), 60% actual + 40% progreso normalizados, aprobación del coach.
+- El alumno ve solo el último ranking aprobado; nunca en vivo.
 
 ### Paso 3 — Retención de fotos/videos · `/model sonnet`
 - Job programado (Vercel Cron) que borra del storage los archivos con observación revisada o con más de N días; deja registro sin archivo.
