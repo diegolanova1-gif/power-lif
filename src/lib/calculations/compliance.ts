@@ -1,8 +1,11 @@
-import type { RoutineStructure } from '@/lib/validations/routine'
-
 export type ComplianceStatus = 'done' | 'partial' | 'none'
 
-type PrescribedExercise = RoutineStructure['schedule'][number]['exercises'][number]
+interface PrescribedExercise {
+  sets: number
+  reps: number
+  load_type?: 'kg' | 'percent'
+  load_value?: number
+}
 
 export interface LoggedSetLike {
   reps: number

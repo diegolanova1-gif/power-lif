@@ -20,6 +20,7 @@ export interface Prescription {
   load_value?: number
   rpe_target?: number
   rest_seconds?: number
+  note?: string
 }
 
 export interface LoggedSet {
@@ -202,6 +203,7 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
           {p.rpe_target !== undefined && <span>Esfuerzo <span className="font-semibold">{p.rpe_target}/10</span></span>}
           {p.rest_seconds !== undefined && <span>Descanso <span className="font-semibold">{p.rest_seconds >= 60 ? `${Math.floor(p.rest_seconds / 60)}:${String(p.rest_seconds % 60).padStart(2, '0')} min` : `${p.rest_seconds} s`}</span></span>}
         </div>
+        {p.note && <p className="mt-2 rounded-md bg-blue-50 px-2 py-1.5 text-sm text-blue-800">{p.note}</p>}
       </CardHeader>
 
       <CardContent className="space-y-3">

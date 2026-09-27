@@ -9,6 +9,8 @@ import { FeedbackReply } from '@/components/coach/feedback-reply'
 import { exerciseCompliance, sessionCompliance, type ComplianceStatus } from '@/lib/calculations/compliance'
 import { formatReps, scheduleForWeek, type RoutineStructure } from '@/lib/validations/routine'
 import { MEDIA_BUCKET, SIGNED_URL_TTL_SECONDS, signedUrlMap, type MediaType } from '@/lib/media'
+import { FEEDBACK_REASONS } from '@/lib/feedback-reason'
+import { Badge } from '@/components/ui/badge'
 import { weekdayName, weekdayShort } from '@/lib/weekdays'
 import { cn } from '@/lib/utils'
 
@@ -108,7 +110,7 @@ export default async function AthleteFollowUpPage({
       .eq('athlete_routine_id', assignment.id),
     supabase
       .from('exercise_feedback')
-      .select('id, week, day, exercise_id, note, coach_reply, reviewed_at, media:exercise_media(id, storage_path, media_type, created_at, deleted_at)')
+      .select('id, week, day, exercise_id, note, reason, coach_reply, reviewed_at, media:exercise_media(id, storage_path, media_type, created_at, deleted_at)')
       .eq('athlete_routine_id', assignment.id),
   ])
   const feedbackRows = feedback?.map(f => ({ ...f, media: f.media.filter(m => !m.deleted_at) }))
@@ -255,6 +257,7 @@ export default async function AthleteFollowUpPage({
                       {ex.intensity ? ` · ${ex.intensity}` : ''}
                       {ex.rpe_target ? ` · esfuerzo ${ex.rpe_target}/10` : ''}
                     </p>
+                    {ex.note && <p className="mt-1 text-sm text-blue-700">{ex.note}</p>}
                   </div>
                   <div className={cn('rounded-lg p-3', status === 'done' ? 'bg-green-50' : status === 'partial' ? 'bg-amber-50' : 'bg-gray-50')}>
                     <p className="mb-1 text-xs font-medium uppercase text-gray-500">Hizo</p>
@@ -278,6 +281,7 @@ export default async function AthleteFollowUpPage({
                     <p className="flex items-center gap-1 text-xs font-medium uppercase text-blue-700">
                       <MessageSquare className="h-3.5 w-3.5" /> Comentario del alumno
                     </p>
+                    {fb.reason && <Badge variant="outline" className="text-amber-700">{FEEDBACK_REASONS[fb.reason as keyof typeof FEEDBACK_REASONS]}</Badge>}
                     {fb.note && <p className="whitespace-pre-wrap text-sm text-gray-800">{fb.note}</p>}
                     <MediaGrid items={media} />
                     <FeedbackReply feedbackId={fb.id} coachReply={fb.coach_reply} reviewedAt={fb.reviewed_at} />

@@ -74,14 +74,14 @@ Coaches de gimnasio gestionan a sus alumnos: rutinas semana a semana, seguimient
 - Clonar: "Duplicar semana N → N+1" y "Copiar a todas las siguientes"; la copia se edita sin afectar la original.
 - Por ejercicio: nombre (buscador con alta inline), series, reps o rango, peso en kg o % RM, RPE, descanso.
 - Modelos listos (PPL, Torso/Pierna, Full Body, 5×5, Powerlifting) y plantillas propias; asignar una plantilla crea una copia personal.
-- 🟡 **Notas del coach por ejercicio:** no existen (solo notas de la rutina y "enfoque" por día) → Paso 5.
+- Nota del coach por ejercicio (además de las notas de la rutina y "enfoque" por día) ✅.
 
 ### 3.2 Seguimiento y estadísticas — ✅ con matices
 - Alumno: "Hecho tal cual" / "No pude completarlo" (carga reps y peso por serie), deshacer, editar.
 - Avance automático de semana/día por trigger al completar la sesión.
 - Coach: página de Seguimiento (calendario por colores, indicado vs. hecho), Analytics, Revisiones.
-- 🟡 **Motivo cuando no completó:** no hay campo obligatorio, solo comentario libre → Paso 5.
-- 🟡 **Evolución de cargas:** completa solo para sentadilla/banca/peso muerto (1RM). Accesorios: volumen y registro por sesión, sin gráfico de peso por ejercicio → Paso 5.
+- Motivo rápido opcional (chips) además del comentario libre ✅.
+- Evolución de cargas: 1RM para sentadilla/banca/peso muerto; accesorios muestran "Mejor peso por sesión" ✅.
 
 ### 3.3 Comentarios — ✅
 - Alumno comenta por ejercicio; coach responde; contador de pendientes en Revisiones y punto azul en Seguimiento.
@@ -167,8 +167,10 @@ Cada paso: alcance → criterio de terminado → modelo recomendado. Un paso a l
 - Nuevo proyecto (Three.js), deploy propio, CTA único a WhatsApp.
 - **Pendiente de Diego:** textos, número de WhatsApp, dominio.
 
-### Paso 5 — Detalles de seguimiento · `/model sonnet`
-- Nota del coach por ejercicio; motivo al "No pude completarlo" (¿obligatorio?); gráfico de peso por ejercicio para accesorios.
+### Paso 5 — Detalles de seguimiento · ✅ hecho
+- Nota del coach por ejercicio (`structure.schedule[].exercises[].note`, editable en el builder, visible para el alumno y en la vista del coach).
+- Motivo rápido y opcional (Dolor/molestia, Cansancio, Otro) cuando guarda menos de lo indicado — no reemplaza el comentario libre, no bloquea el guardado. Columna `exercise_feedback.reason`.
+- Gráfico de progreso (`/athlete/progress`) ahora incluye accesorios: si el ejercicio no tiene 1RM (no es sentadilla/banca/peso muerto), muestra "Mejor peso por sesión" calculado directo de `sets_log`.
 
 ### Paso 6 — Renombrar a Power Routine · ✅ hecho
 - Textos de UI (portada, login, headers de dashboard), `<title>`/metadata, copiado de contraseña al portapapeles, comentario de `schema.sql`. `README.md` sin tocar (doc interno, no visible a usuarios).
@@ -185,5 +187,6 @@ Cada paso: alcance → criterio de terminado → modelo recomendado. Un paso a l
 - [ ] Número de WhatsApp para CTA y upgrades.
 - [x] Retención: 14 días o al revisar; repetir reemplaza.
 - [ ] Fórmula exacta del ranking combinado.
+- [x] Motivo al no completar: opcional, chips (Dolor/molestia, Cansancio, Otro), no bloquea.
 - [ ] ¿Límite de rutinas/semanas históricas por alumno?
 - [ ] Pagos y método de upgrade.

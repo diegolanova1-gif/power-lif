@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { MediaGrid, type MediaItem } from '@/components/media-grid'
 import { createClient } from '@/lib/supabase/client'
+import { cn } from '@/lib/utils'
+import { FEEDBACK_REASONS, type FeedbackReason } from '@/lib/feedback-reason'
 import {
   MEDIA_BUCKET,
   MAX_MEDIA_BYTES,
@@ -24,6 +26,8 @@ interface ExerciseFeedbackProps {
   exerciseId: string
   week: number
   day: number
+  /** Hizo menos de lo indicado: muestra el selector rápido de motivo */
+  partial?: boolean
 }
 
 interface Feedback {
@@ -31,15 +35,17 @@ interface Feedback {
   note: string | null
   coach_reply: string | null
   reviewed_at: string | null
+  reason: FeedbackReason | null
 }
 
-export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week, day }: ExerciseFeedbackProps) {
+export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week, day, partial }: ExerciseFeedbackProps) {
   const [supabase] = useState(() => createClient())
   const fileInput = useRef<HTMLInputElement>(null)
 
   const [feedback, setFeedback] = useState<Feedback | null>(null)
   const [media, setMedia] = useState<MediaItem[]>([])
   const [note, setNote] = useState('')
+  const [reason, setReason] = useState<FeedbackReason | null>(null)
   const [files, setFiles] = useState<File[]>([])
   const [open, setOpen] = useState(false)
   const [progress, setProgress] = useState<string | null>(null)
@@ -48,7 +54,7 @@ export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week
   const fetchFeedback = useCallback(async () => {
     const { data: fb } = await supabase
       .from('exercise_feedback')
-      .select('id, note, coach_reply, reviewed_at')
+      .select('id, note, coach_reply, reviewed_at, reason')
       .eq('athlete_routine_id', athleteRoutineId)
       .eq('exercise_id', exerciseId)
       .eq('week', week)
@@ -81,6 +87,7 @@ export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week
   function applyFeedback({ feedback: fb, media: items }: Awaited<ReturnType<typeof fetchFeedback>>) {
     setFeedback(fb)
     setNote(fb?.note ?? '')
+    setReason(fb?.reason ?? null)
     setMedia(items)
     if (fb) setOpen(true)
   }
@@ -113,8 +120,8 @@ export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week
   }
 
   async function submit() {
-    if (!note.trim() && files.length === 0) {
-      toast.error('Escribe una observación o adjunta una foto/video')
+    if (!note.trim() && files.length === 0 && !reason) {
+      toast.error('Escribe una observación, elegí un motivo o adjuntá una foto/video')
       return
     }
 
@@ -131,6 +138,7 @@ export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week
             week,
             day,
             note: note.trim() || null,
+            reason,
             reviewed_at: null,
           },
           { onConflict: 'athlete_routine_id,exercise_id,week,day' }
@@ -222,6 +230,27 @@ export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week
       )}
 
       <MediaGrid items={media} onDelete={deleteMedia} deletingId={deletingId} />
+
+      {partial && (
+        <div className="space-y-1">
+          <p className="text-xs text-gray-500">¿Por qué no lo completaste tal cual? (opcional)</p>
+          <div className="flex flex-wrap gap-2">
+            {(Object.entries(FEEDBACK_REASONS) as [FeedbackReason, string][]).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setReason(prev => (prev === value ? null : value))}
+                className={cn(
+                  'rounded-full border px-3 py-1 text-sm font-medium transition-colors',
+                  reason === value ? 'border-primary bg-primary text-primary-foreground' : 'bg-white text-gray-600 hover:bg-gray-50'
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <Textarea
         value={note}

@@ -52,8 +52,14 @@ interface Exercise {
   category: string
 }
 
+interface BestWeightPoint {
+  date: string
+  weight_kg: number
+}
+
 export default function AthleteProgressPage() {
   const [oneRMData, setOneRMData] = useState<Record<string, ExerciseOneRM>>({})
+  const [bestWeightData, setBestWeightData] = useState<Record<string, BestWeightPoint[]>>({})
   const [volumeData, setVolumeData] = useState<VolumeDataPoint[]>([])
   const [adherenceData, setAdherenceData] = useState<AdherenceDataPoint[]>([])
   const [exercises, setExercises] = useState<Exercise[]>([])
@@ -115,17 +121,44 @@ export default function AthleteProgressPage() {
         }, {})
 
         setOneRMData(grouped)
-        
-        const exerciseList = Object.values(grouped).map(g => ({
-          id: g.exercise_id,
-          name: g.exercise_name,
-          category: g.category,
-        }))
-        setExercises(exerciseList)
+      }
 
-        if (!selectedExercise && exerciseList.length > 0) {
-          setSelectedExercise(exerciseList[0].id)
-        }
+      // Mejor peso por sesión de CUALQUIER ejercicio registrado (accesorios incluidos,
+      // que no tienen 1RM estimado porque no son sentadilla/banca/peso muerto)
+      let bestWeightQuery = supabase
+        .from('sets_log')
+        .select('exercise_id, weight_kg, reps, completed_at, exercises(name, category)')
+        .eq('athlete_id', user.id)
+        .gt('weight_kg', 0)
+        .gt('reps', 0)
+        .order('completed_at', { ascending: true })
+      if (timeRange !== 'all') {
+        const since = new Date()
+        since.setMonth(since.getMonth() - (timeRange === '3m' ? 3 : timeRange === '6m' ? 6 : 12))
+        bestWeightQuery = bestWeightQuery.gte('completed_at', since.toISOString())
+      }
+      const { data: weightSets } = await bestWeightQuery
+
+      const exerciseById = new Map<string, Exercise>()
+      const bestWeight: Record<string, BestWeightPoint[]> = {}
+      for (const s of weightSets ?? []) {
+        const info = s.exercises as unknown as { name: string; category: string } | null
+        if (!exerciseById.has(s.exercise_id)) exerciseById.set(s.exercise_id, { id: s.exercise_id, name: info?.name ?? 'Ejercicio', category: info?.category ?? '' })
+
+        const day = String(s.completed_at).slice(0, 10)
+        const value = Number(s.weight_kg)
+        const points = (bestWeight[s.exercise_id] ??= [])
+        const existing = points.find(p => p.date.slice(0, 10) === day)
+        if (existing) existing.weight_kg = Math.max(existing.weight_kg, value)
+        else points.push({ date: s.completed_at, weight_kg: value })
+      }
+      setBestWeightData(bestWeight)
+
+      // Un ejercicio por selector: con 1RM (competencia) o solo mejor peso (accesorios)
+      const exerciseList = [...exerciseById.values()].sort((a, b) => a.name.localeCompare(b.name))
+      setExercises(exerciseList)
+      if (!selectedExercise && exerciseList.length > 0) {
+        setSelectedExercise(exerciseList[0].id)
       }
 
       // Fetch volume data
@@ -169,6 +202,8 @@ export default function AthleteProgressPage() {
   }
 
   const filteredOneRM = selectedExercise ? oneRMData[selectedExercise]?.dataPoints || [] : []
+  const filteredBestWeight = selectedExercise ? bestWeightData[selectedExercise] || [] : []
+  const showingOneRM = filteredOneRM.length > 0
 
   const formatDate = (dateStr: string) => format(parseISO(dateStr), 'dd/MM', { locale: es })
 
@@ -223,13 +258,13 @@ export default function AthleteProgressPage() {
         </div>
       </div>
 
-      {/* 1RM Progression */}
+      {/* 1RM (sentadilla/banca/peso muerto) o mejor peso por sesión (accesorios) */}
       <Card>
         <CardHeader>
-          <CardTitle>1RM Estimado</CardTitle>
+          <CardTitle>{showingOneRM ? '1RM Estimado' : 'Mejor peso por sesión'}</CardTitle>
         </CardHeader>
         <CardContent>
-          {filteredOneRM.length > 0 ? (
+          {showingOneRM ? (
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={filteredOneRM.map(d => ({ ...d, date: formatDate(d.date) }))}>
@@ -251,9 +286,31 @@ export default function AthleteProgressPage() {
                 </LineChart>
               </ResponsiveContainer>
             </div>
+          ) : filteredBestWeight.length > 0 ? (
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={filteredBestWeight.map(d => ({ ...d, date: formatDate(d.date) }))}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} tickFormatter={val => `${val} kg`} />
+                  <Tooltip
+                    formatter={(value: number) => [`${value.toFixed(1)} kg`, 'Mejor peso']}
+                    labelFormatter={(label) => `Fecha: ${label}`}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="weight_kg"
+                    stroke="#8b5cf6"
+                    strokeWidth={2}
+                    dot={{ r: 4, fill: '#8b5cf6' }}
+                    activeDot={{ r: 6, fill: '#8b5cf6' }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           ) : (
             <div className="text-center py-12 text-gray-500">
-              Todavía no hay 1RM estimado. Se calcula al registrar sentadilla, banca o peso muerto.
+              Todavía no hay registros con peso para este ejercicio.
             </div>
           )}
         </CardContent>

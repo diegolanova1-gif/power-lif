@@ -19,7 +19,7 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
   let query = supabase
     .from('exercise_feedback')
     .select(`
-      id, athlete_id, week, day, note, coach_reply, reviewed_at, updated_at,
+      id, athlete_id, week, day, note, reason, coach_reply, reviewed_at, updated_at,
       exercise:exercises(name),
       athlete:profiles!exercise_feedback_athlete_id_fkey(full_name),
       media:exercise_media(id, storage_path, media_type, created_at, deleted_at)
@@ -52,6 +52,7 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
       week: r.week,
       day: r.day,
       note: r.note,
+      reason: r.reason,
       coachReply: r.coach_reply,
       reviewedAt: r.reviewed_at,
       updatedAt: r.updated_at,

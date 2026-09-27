@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { MediaGrid, type MediaItem } from '@/components/media-grid'
 import { weekdayName } from '@/lib/weekdays'
 import { replyToFeedback, deleteFeedbackMedia } from '@/actions/feedback'
+import { FEEDBACK_REASONS, type FeedbackReason } from '@/lib/feedback-reason'
 
 export interface ReviewItem {
   id: string
@@ -20,6 +21,7 @@ export interface ReviewItem {
   week: number
   day: number
   note: string | null
+  reason: FeedbackReason | null
   coachReply: string | null
   reviewedAt: string | null
   updatedAt: string
@@ -77,6 +79,7 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
+        {item.reason && <Badge variant="outline" className="text-amber-700">{FEEDBACK_REASONS[item.reason]}</Badge>}
         {item.note && <p className="whitespace-pre-wrap rounded-md bg-gray-50 p-3 text-sm text-gray-800">{item.note}</p>}
 
         <MediaGrid items={media} onDelete={removeMedia} deletingId={deletingId} />

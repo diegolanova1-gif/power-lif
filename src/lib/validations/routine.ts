@@ -11,6 +11,7 @@ export const routineExerciseSchema = z.object({
   load_value: z.number().min(0).max(500).optional(),
   rpe_target: z.number().min(1).max(10).optional(),
   rest_seconds: z.number().int().min(0).max(600).optional(),
+  note: z.string().max(300).optional(), // coach's tip/cue for this exercise
   order: z.number().int().min(0),
 })
 

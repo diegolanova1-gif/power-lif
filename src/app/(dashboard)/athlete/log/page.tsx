@@ -11,6 +11,7 @@ import { ExerciseFeedback } from '@/components/athlete/exercise-feedback'
 import { ExerciseLogCard, type LoggedSet, type Prescription } from '@/components/athlete/exercise-log-card'
 import { weekdayName, weekdayShort } from '@/lib/weekdays'
 import { scheduleForWeek, type RoutineStructure } from '@/lib/validations/routine'
+import { exerciseCompliance } from '@/lib/calculations/compliance'
 
 interface DayData {
   week: number
@@ -80,6 +81,7 @@ async function loadWorkout(supabase: Supabase) {
           load_value: e.load_value,
           rpe_target: e.rpe_target,
           rest_seconds: e.rest_seconds,
+          note: e.note,
         })),
     }))
   )
@@ -264,6 +266,7 @@ export default function AthleteLogPage() {
               exerciseId={exercise.exercise_id}
               week={currentDay.week}
               day={currentDay.day}
+              partial={exerciseCompliance(exercise, setsByKey[setsKey(currentDay.week, currentDay.day, exercise.exercise_id)] ?? []) === 'partial'}
             />
           </ExerciseLogCard>
         ))}

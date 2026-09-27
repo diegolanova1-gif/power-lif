@@ -36,6 +36,7 @@ interface BuilderExercise {
   load_value?: number
   rpe_target?: number
   rest_seconds?: number
+  note?: string
 }
 
 type LoadType = 'kg' | 'percent'
@@ -107,6 +108,7 @@ function toBuilderDays(schedule: RoutineStructure['schedule']): BuilderDay[] {
         ...parseLoad(e),
         rpe_target: e.rpe_target,
         rest_seconds: e.rest_seconds,
+        note: e.note,
       })),
   }))
 }
@@ -134,6 +136,7 @@ function toStructureSchedule(days: BuilderDay[]): RoutineStructure['schedule'] {
       }),
       ...(ex.rpe_target !== undefined && { rpe_target: ex.rpe_target }),
       ...(ex.rest_seconds !== undefined && { rest_seconds: ex.rest_seconds }),
+      ...(ex.note?.trim() && { note: ex.note.trim() }),
       order,
     })),
   }))
@@ -704,6 +707,15 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
                       onChange={e => updateExercise(dayIndex, exIndex, { rest_seconds: parseOptionalNumber(e.target.value) })}
                     />
                   </div>
+                </div>
+                <div className="mt-2 space-y-1">
+                  <Label className="text-xs text-gray-500">Nota para el alumno <span className="text-gray-400">(opcional, ej: "codos pegados al cuerpo")</span></Label>
+                  <Input
+                    value={ex.note ?? ''}
+                    onChange={e => updateExercise(dayIndex, exIndex, { note: e.target.value })}
+                    placeholder="Indicación técnica de este ejercicio"
+                    maxLength={300}
+                  />
                 </div>
               </div>
             ))}
