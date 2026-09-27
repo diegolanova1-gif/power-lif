@@ -5,8 +5,9 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { LogOut, Dumbbell, BarChart, History, LayoutDashboard, User } from 'lucide-react'
+import { Dumbbell, BarChart, History, LayoutDashboard, User, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { SignOutItem } from '@/components/layout/sign-out-item'
 
 export default async function AthleteLayout({
   children,
@@ -47,6 +48,7 @@ export default async function AthleteLayout({
     { name: 'Registrar', href: '/athlete/log', icon: Dumbbell },
     { name: 'Progreso', href: '/athlete/progress', icon: BarChart },
     { name: 'Historial', href: '/athlete/history', icon: History },
+    { name: 'Team', href: '/athlete/team', icon: Trophy },
   ]
 
   return (
@@ -73,13 +75,11 @@ export default async function AthleteLayout({
             </div>
             <div className="flex items-center gap-4">
               <DropdownMenu>
-                <DropdownMenuTrigger>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={profile.avatar_url || undefined} alt={profile.full_name || 'User'} />
-                      <AvatarFallback>{profile.full_name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
-                    </Avatar>
-                  </Button>
+                <DropdownMenuTrigger render={<Button variant="ghost" className="relative h-8 w-8 rounded-full" />}>
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={profile.avatar_url || undefined} alt={profile.full_name || 'User'} />
+                    <AvatarFallback>{profile.full_name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                  </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end">
                   <div className="px-2 py-1.5">
@@ -111,14 +111,14 @@ export default async function AthleteLayout({
                       Historial
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => supabase.auth.signOut().then(() => window.location.href = '/login')}
-                    className="flex items-center gap-2 text-red-600 focus:text-red-600"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Cerrar sesión
+                  <DropdownMenuItem>
+                    <Link href="/athlete/team" className="flex items-center gap-2">
+                      <Trophy className="h-4 w-4" />
+                      Mi Team
+                    </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <SignOutItem />
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
   role TEXT NOT NULL CHECK (role IN ('coach', 'athlete')),
   full_name TEXT,
+  email TEXT,
   avatar_url TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
 );
@@ -60,7 +61,8 @@ CREATE TABLE IF NOT EXISTS exercises (
   name TEXT NOT NULL,
   category TEXT CHECK (category IN ('squat', 'bench', 'deadlift', 'accessory', 'olympic', 'other')),
   muscle_groups TEXT[],
-  is_competition_lift BOOLEAN DEFAULT false
+  is_competition_lift BOOLEAN DEFAULT false,
+  created_by UUID REFERENCES profiles(id) ON DELETE CASCADE -- NULL = catálogo global
 );
 
 -- 7. Sets Log (core tracking)
@@ -138,12 +140,20 @@ CREATE POLICY "profiles_select_own" ON profiles
 CREATE POLICY "profiles_insert_own" ON profiles
   FOR INSERT WITH CHECK (id = auth.uid());
 
+-- Users can't change their own role
 CREATE POLICY "profiles_update_own" ON profiles
-  FOR UPDATE USING (id = auth.uid());
+  FOR UPDATE USING (id = auth.uid())
+  WITH CHECK (
+    id = auth.uid()
+    AND role = (SELECT p.role FROM profiles p WHERE p.id = auth.uid())
+  );
 
--- Coach-Athletes: Coach manages their relationships
-CREATE POLICY "coach_athletes_coach_all" ON coach_athletes
-  FOR ALL USING (coach_id = auth.uid());
+-- Coach-Athletes: links are created server-side only (service role, /api/coach/athletes)
+CREATE POLICY "coach_athletes_coach_select" ON coach_athletes
+  FOR SELECT USING (coach_id = auth.uid());
+
+CREATE POLICY "coach_athletes_coach_delete" ON coach_athletes
+  FOR DELETE USING (coach_id = auth.uid());
 
 -- Athletes can see their own coach relationship
 CREATE POLICY "coach_athletes_athlete_select" ON coach_athletes
@@ -166,6 +176,12 @@ CREATE POLICY "athlete_routines_athlete_select" ON athlete_routines
 CREATE POLICY "athlete_routines_coach_select" ON athlete_routines
   FOR SELECT USING (
     athlete_id IN (SELECT athlete_id FROM coach_athletes WHERE coach_id = auth.uid())
+  );
+
+CREATE POLICY "athlete_routines_coach_insert" ON athlete_routines
+  FOR INSERT WITH CHECK (
+    athlete_id IN (SELECT athlete_id FROM coach_athletes WHERE coach_id = auth.uid())
+    AND routine_id IN (SELECT id FROM routines WHERE coach_id = auth.uid())
   );
 
 CREATE POLICY "athlete_routines_coach_update" ON athlete_routines
@@ -191,6 +207,14 @@ CREATE POLICY "estimated_1rm_coach_select" ON estimated_1rm
     athlete_id IN (SELECT athlete_id FROM coach_athletes WHERE coach_id = auth.uid())
   );
 
+CREATE POLICY "estimated_1rm_athlete_insert" ON estimated_1rm
+  FOR INSERT WITH CHECK (athlete_id = auth.uid());
+
+CREATE POLICY "estimated_1rm_coach_insert" ON estimated_1rm
+  FOR INSERT WITH CHECK (
+    athlete_id IN (SELECT athlete_id FROM coach_athletes WHERE coach_id = auth.uid())
+  );
+
 -- Bodyweight Log: Athlete manages own, coach sees their athletes'
 CREATE POLICY "bodyweight_athlete_all" ON bodyweight_log
   FOR ALL USING (athlete_id = auth.uid());
@@ -200,25 +224,35 @@ CREATE POLICY "bodyweight_coach_select" ON bodyweight_log
     athlete_id IN (SELECT athlete_id FROM coach_athletes WHERE coach_id = auth.uid())
   );
 
--- Exercises: Everyone can read (shared catalog)
-CREATE POLICY "exercises_select_all" ON exercises
-  FOR SELECT USING (true);
+-- Exercises: global catalog + own + your coach's custom exercises
+CREATE POLICY "exercises_select_visible" ON exercises
+  FOR SELECT USING (
+    created_by IS NULL
+    OR created_by = auth.uid()
+    OR created_by IN (SELECT coach_id FROM coach_athletes WHERE athlete_id = auth.uid())
+  );
 
--- Coaches can add exercises to catalog
+-- Coaches can add their own exercises
 CREATE POLICY "exercises_coach_insert" ON exercises
   FOR INSERT WITH CHECK (
-    auth.uid() IN (SELECT id FROM profiles WHERE role = 'coach')
+    created_by = auth.uid()
+    AND auth.uid() IN (SELECT id FROM profiles WHERE role = 'coach')
   );
 
 -- Function to auto-create profile on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, role, full_name)
-  VALUES (NEW.id, 'coach', NEW.raw_user_meta_data->>'full_name');
+  INSERT INTO public.profiles (id, role, full_name, email)
+  VALUES (
+    NEW.id,
+    CASE WHEN NEW.raw_user_meta_data->>'role' = 'athlete' THEN 'athlete' ELSE 'coach' END,
+    NEW.raw_user_meta_data->>'full_name',
+    NEW.email
+  );
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Trigger for new user signup
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;

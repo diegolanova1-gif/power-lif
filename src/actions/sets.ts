@@ -2,7 +2,6 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { estimate1RM, estimate1RMFromRPE } from '@/lib/calculations/1rm'
 import { z } from 'zod'
 
 const logSetSchema = z.object({
@@ -83,30 +82,7 @@ export async function logSet(formData: FormData) {
 
     if (error) throw error
 
-    // Calculate 1RM if RPE >= 7 and it's a competition lift
-    if (data.rpe && data.rpe >= 7 && data.reps > 0) {
-      const { data: exercise } = await supabase
-        .from('exercises')
-        .select('is_competition_lift')
-        .eq('id', data.exercise_id)
-        .single()
-
-      if (exercise?.is_competition_lift) {
-        // Use RPE-based 1RM for better accuracy
-        const estimated1RMValue = data.rpe
-          ? estimate1RMFromRPE(data.weight_kg, data.reps, data.rpe)
-          : estimate1RM(data.weight_kg, data.reps)
-
-        await supabase
-          .from('estimated_1rm')
-          .insert({
-            athlete_id: routine.athlete_id,
-            exercise_id: data.exercise_id,
-            estimated_1rm: Math.round(estimated1RMValue * 100) / 100,
-            source_set_id: setData.id,
-          })
-      }
-    }
+    // estimated_1rm is computed by the sets_log trigger (update_estimated_1rm)
 
     // Update athlete_routine current position if needed
     // (Optional: auto-advance day/week based on completed sets)
@@ -168,39 +144,7 @@ export async function logMultipleSets(sets: z.infer<typeof logSetSchema>[]) {
 
     if (error) throw error
 
-    // Calculate 1RMs for competition lifts with RPE >= 7
-    const competitionSets = sets.filter(s =>
-      s.rpe && s.rpe >= 7 && s.reps > 0
-    )
-
-    if (competitionSets.length > 0) {
-      const exerciseIds = [...new Set(competitionSets.map(s => s.exercise_id))]
-      const { data: exercises } = await supabase
-        .from('exercises')
-        .select('id, is_competition_lift')
-        .in('id', exerciseIds)
-
-      const competitionLifts = new Set(
-        exercises?.filter(e => e.is_competition_lift).map(e => e.id) || []
-      )
-
-      const oneRMInserts = competitionSets
-        .filter(s => competitionLifts.has(s.exercise_id))
-        .map((s, idx) => ({
-          athlete_id: routine.athlete_id,
-          exercise_id: s.exercise_id,
-          estimated_1rm: Math.round(
-            (s.rpe
-              ? estimate1RMFromRPE(s.weight_kg, s.reps, s.rpe)
-              : estimate1RM(s.weight_kg, s.reps)) * 100
-          ) / 100,
-          source_set_id: setData[idx]?.id,
-        }))
-
-      if (oneRMInserts.length > 0) {
-        await supabase.from('estimated_1rm').insert(oneRMInserts)
-      }
-    }
+    // estimated_1rm is computed by the sets_log trigger (update_estimated_1rm)
 
     revalidatePath('/athlete/log')
     revalidatePath('/athlete/progress')

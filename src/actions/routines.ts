@@ -2,27 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import { z } from 'zod'
-
-const routineStructureSchema = z.object({
-  name: z.string().min(1).max(100),
-  weeks: z.number().int().min(1).max(52),
-  progression: z.enum(['linear', 'undulating', 'block', 'conjugate', 'custom']),
-  schedule: z.array(z.object({
-    day: z.number().int().min(1).max(7),
-    name: z.string().min(1).max(50),
-    exercises: z.array(z.object({
-      exercise_id: z.string().uuid(),
-      sets: z.number().int().min(1).max(20),
-      reps: z.number().int().min(1).max(50),
-      intensity: z.string().optional(),
-      rpe_target: z.number().min(1).max(10).optional(),
-      rest_seconds: z.number().int().min(0).max(600).optional(),
-      order: z.number().int().min(0),
-    })).min(1),
-  })).min(1).max(7),
-  deload_weeks: z.array(z.number().int().min(1).max(52)).optional(),
-})
+import { routineStructureSchema, type RoutineStructure } from '@/lib/validations/routine'
 
 export async function createRoutine(formData: FormData) {
   const supabase = await createClient()
@@ -38,10 +18,9 @@ export async function createRoutine(formData: FormData) {
     return { error: 'Nombre y estructura son requeridos' }
   }
 
-  let structure: z.infer<typeof routineStructureSchema>
+  let structure: RoutineStructure
   try {
-    structure = JSON.parse(structureJson)
-    routineStructureSchema.parse(structure)
+    structure = routineStructureSchema.parse(JSON.parse(structureJson))
   } catch {
     return { error: 'Estructura de rutina inválida' }
   }
@@ -83,9 +62,7 @@ export async function updateRoutine(routineId: string, formData: FormData) {
   if (description !== undefined) updates.description = description
   if (structureJson) {
     try {
-      const structure = JSON.parse(structureJson)
-      routineStructureSchema.parse(structure)
-      updates.structure = structure
+      updates.structure = routineStructureSchema.parse(JSON.parse(structureJson))
     } catch {
       return { error: 'Estructura de rutina inválida' }
     }
@@ -115,6 +92,16 @@ export async function deleteRoutine(routineId: string) {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return { error: 'No autenticado' }
+
+  // athlete_routines (and their sets_log) cascade on delete: never wipe athlete history
+  const { count } = await supabase
+    .from('athlete_routines')
+    .select('id', { count: 'exact', head: true })
+    .eq('routine_id', routineId)
+
+  if (count) {
+    return { error: `Rutina asignada a ${count} atleta(s). No se puede eliminar sin perder su historial.` }
+  }
 
   try {
     const { error } = await supabase

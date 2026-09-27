@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
   if (profile?.role === 'coach' && athleteId !== user.id) {
     const { data: link } = await supabase
       .from('coach_athletes')
-      .select('id')
+      .select('athlete_id')
       .eq('coach_id', user.id)
       .eq('athlete_id', athleteId)
       .single()
@@ -44,34 +44,39 @@ export async function GET(request: NextRequest) {
   }
 
   // Get athlete routine
-  const { data: routine } = await supabase
+  const { data: assigned } = await supabase
     .from('athlete_routines')
-    .select('*')
+    .select('*, routine:routines(structure)')
     .eq('athlete_id', athleteId)
     .eq('status', 'active')
     .order('assigned_at', { ascending: false })
     .limit(1)
     .single()
 
+  const structure = (assigned?.routine as unknown as { structure: { weeks?: number; schedule?: unknown[] } } | null)?.structure
+  const routine = assigned && { ...assigned, sessions_per_week: structure?.schedule?.length }
+  const programWeeks = structure?.weeks ?? weeks
+
   if (!routine) {
-    return NextResponse.json({ 
-      adherence: 0, 
-      weekly: [], 
-      heatmap: [], 
-      streak: 0 
+    return NextResponse.json({
+      overall: 0,
+      weekly: [],
+      heatmap: [],
+      streak: 0,
     })
   }
 
   // Get sets
   const { data: sets } = await supabase
     .from('sets_log')
-    .select('week, day, completed_at')
+    .select('week, day, completed_at, rpe')
     .eq('athlete_id', athleteId)
+    .eq('athlete_routine_id', routine.id)
     .order('completed_at', { ascending: true })
 
   const overallAdherence = calculateAdherence(routine, sets || [])
   
-  const weeklyAdherence = Array.from({ length: weeks }, (_, i) => {
+  const weeklyAdherence = Array.from({ length: programWeeks }, (_, i) => {
     const weekNum = i + 1
     return {
       week: weekNum,
@@ -79,7 +84,7 @@ export async function GET(request: NextRequest) {
     }
   })
 
-  const heatmap = getAdherenceHeatmap(routine, sets || [], weeks)
+  const heatmap = getAdherenceHeatmap(routine, sets || [], programWeeks)
   const streak = calculateStreak(sets || [])
 
   return NextResponse.json({

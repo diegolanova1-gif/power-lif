@@ -14,11 +14,10 @@ Plataforma para coaches de powerlifting - gestión de atletas, rutinas con perio
 ### Para Coaches
 - ✅ Dashboard con resumen de atletas
 - ✅ Gestión de atletas (invitar por email)
-- ✅ Constructor de rutinas visual (JSONB flexible)
-- ✅ Biblioteca de plantillas de rutinas
-- ✅ Asignación de rutinas a atletas
-- ✅ Analytics: 1RM, volumen, intensidad, adherencia
-- ✅ Vista detalle de atleta con progreso
+- ✅ Constructor de rutinas visual (`/coach/routines/new`, `/coach/routines/[id]/edit`)
+- ✅ Biblioteca de rutinas (`/coach/routines`)
+- ✅ Asignación de rutinas a atletas (pausa el programa activo anterior)
+- ✅ Analytics por atleta: 1RM, volumen, adherencia, racha (`/coach/analytics`)
 
 ### Para Atletas
 - ✅ Portal con entrenamiento del día
@@ -46,7 +45,13 @@ npm install
 ### 2. Configurar Supabase
 1. Crear proyecto en [supabase.com](https://supabase.com)
 2. Ir a SQL Editor y ejecutar `supabase/schema.sql`
-3. Copiar credenciales: Project URL y Anon Key
+   - Después ejecutar, en orden, los archivos de `supabase/migrations/` (son idempotentes):
+     `20260925_fix_roles_rls.sql` → `20260926_custom_exercises.sql` → `20260926_feedback_media.sql`
+3. Copiar credenciales: Project URL, Anon Key y Service Role Key
+4. Auth → URL Configuration: agregar `http://localhost:3000/auth/callback` y `http://localhost:3000/auth/confirm` (y las de prod) a Redirect URLs
+5. Las invitaciones usan el template por defecto: el link llega a `/auth/confirm`, que toma la sesión del hash de la URL.
+   Con SMTP propio se puede usar en su lugar `{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=invite`
+6. Los atletas invitados entran luego con enlace mágico desde `/login`
 
 ### 3. Variables de entorno
 ```bash

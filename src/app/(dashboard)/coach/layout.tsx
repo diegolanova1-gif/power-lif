@@ -5,8 +5,9 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { LogOut, LayoutDashboard, Users, FileText, BarChart, User, Settings } from 'lucide-react'
+import { LayoutDashboard, Users, FileText, BarChart, User, Settings, MessageSquare, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { SignOutItem } from '@/components/layout/sign-out-item'
 
 export default async function DashboardLayout({
   children,
@@ -42,11 +43,19 @@ export default async function DashboardLayout({
     redirect('/athlete')
   }
 
+  // RLS scopes this to the coach's athletes
+  const { count: pendingReviews } = await supabase
+    .from('exercise_feedback')
+    .select('id', { count: 'exact', head: true })
+    .is('reviewed_at', null)
+
   const navigation = [
     { name: 'Dashboard', href: '/coach', icon: LayoutDashboard },
     { name: 'Atletas', href: '/coach/athletes', icon: Users },
     { name: 'Rutinas', href: '/coach/routines', icon: FileText },
     { name: 'Analytics', href: '/coach/analytics', icon: BarChart },
+    { name: 'Revisiones', href: '/coach/reviews', icon: MessageSquare, badge: pendingReviews ?? 0 },
+    { name: 'Teams', href: '/coach/teams', icon: Trophy },
   ]
 
   return (
@@ -67,19 +76,20 @@ export default async function DashboardLayout({
                   >
                     <item.icon className="h-4 w-4" />
                     {item.name}
+                    {'badge' in item && item.badge > 0 && (
+                      <span className="rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground">{item.badge}</span>
+                    )}
                   </Link>
                 ))}
               </nav>
             </div>
             <div className="flex items-center gap-4">
               <DropdownMenu>
-                <DropdownMenuTrigger>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={profile.avatar_url || undefined} alt={profile.full_name || 'User'} />
-                      <AvatarFallback>{profile.full_name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
-                    </Avatar>
-                  </Button>
+                <DropdownMenuTrigger render={<Button variant="ghost" className="relative h-8 w-8 rounded-full" />}>
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={profile.avatar_url || undefined} alt={profile.full_name || 'User'} />
+                    <AvatarFallback>{profile.full_name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                  </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end">
                   <div className="px-2 py-1.5">
@@ -112,14 +122,20 @@ export default async function DashboardLayout({
                       Analytics
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => supabase.auth.signOut().then(() => window.location.href = '/login')}
-                    className="flex items-center gap-2 text-red-600 focus:text-red-600"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Cerrar sesión
+                  <DropdownMenuItem>
+                    <Link href="/coach/reviews" className="flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      Revisiones{pendingReviews ? ` (${pendingReviews})` : ''}
+                    </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link href="/coach/teams" className="flex items-center gap-2">
+                      <Trophy className="h-4 w-4" />
+                      Teams
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <SignOutItem />
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

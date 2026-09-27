@@ -28,6 +28,13 @@ interface OneRMDataPoint {
   category: string
 }
 
+interface ExerciseOneRM {
+  exercise_id: string
+  exercise_name: string
+  category: string
+  dataPoints: OneRMDataPoint[]
+}
+
 interface VolumeDataPoint {
   week: number
   volume: number
@@ -46,7 +53,7 @@ interface Exercise {
 }
 
 export default function AthleteProgressPage() {
-  const [oneRMData, setOneRMData] = useState<Record<string, OneRMDataPoint[]>>({})
+  const [oneRMData, setOneRMData] = useState<Record<string, ExerciseOneRM>>({})
   const [volumeData, setVolumeData] = useState<VolumeDataPoint[]>([])
   const [adherenceData, setAdherenceData] = useState<AdherenceDataPoint[]>([])
   const [exercises, setExercises] = useState<Exercise[]>([])
@@ -74,7 +81,7 @@ export default function AthleteProgressPage() {
         .order('calculated_at', { ascending: true })
 
       if (oneRM) {
-        const grouped = oneRM.reduce((acc: any, item: any) => {
+        const grouped = oneRM.reduce<Record<string, ExerciseOneRM>>((acc, item: any) => {
           const key = item.exercise_id
           if (!acc[key]) {
             acc[key] = {

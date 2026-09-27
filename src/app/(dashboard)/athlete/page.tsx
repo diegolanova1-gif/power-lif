@@ -131,7 +131,7 @@ export default function AthleteTodayPage() {
       const loggedCount = setsLogged?.length || 0
 
       setWorkout({
-        athlete_routine: routine,
+        athlete_routine: routine as unknown as TodayWorkout['athlete_routine'],
         dayExercises,
         completedToday: loggedCount >= totalSets && totalSets > 0,
         setsLogged: loggedCount,

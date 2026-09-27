@@ -38,6 +38,7 @@ export interface Database {
           organization_id: string | null
           role: 'coach' | 'athlete'
           full_name: string | null
+          email: string | null
           avatar_url: string | null
           created_at: string
         }
@@ -46,6 +47,7 @@ export interface Database {
           organization_id?: string | null
           role: 'coach' | 'athlete'
           full_name?: string | null
+          email?: string | null
           avatar_url?: string | null
           created_at?: string
         }
@@ -54,6 +56,7 @@ export interface Database {
           organization_id?: string | null
           role?: 'coach' | 'athlete'
           full_name?: string | null
+          email?: string | null
           avatar_url?: string | null
           created_at?: string
         }
@@ -146,6 +149,7 @@ export interface Database {
           category: 'squat' | 'bench' | 'deadlift' | 'accessory' | 'olympic' | 'other'
           muscle_groups: string[] | null
           is_competition_lift: boolean
+          created_by: string | null
         }
         Insert: {
           id?: string
@@ -153,6 +157,7 @@ export interface Database {
           category?: 'squat' | 'bench' | 'deadlift' | 'accessory' | 'olympic' | 'other'
           muscle_groups?: string[] | null
           is_competition_lift?: boolean
+          created_by?: string | null
         }
         Update: {
           id?: string
@@ -160,6 +165,7 @@ export interface Database {
           category?: 'squat' | 'bench' | 'deadlift' | 'accessory' | 'olympic' | 'other'
           muscle_groups?: string[] | null
           is_competition_lift?: boolean
+          created_by?: string | null
         }
       }
       sets_log: {
@@ -268,65 +274,8 @@ export interface Database {
   }
 }
 
-export type Tables<
-  PublicTableNameOrOptions extends
-    | keyof (Database['public']['Tables'])
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions['schema']]['Tables'])
-    : never = PublicTableNameOrOptions extends keyof (Database['public']['Tables'])
-    ? PublicTableNameOrOptions
-    : never
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions['schema']]['Tables'])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : (Database['public']['Tables'])[PublicTableNameOrOptions] extends {
-      Row: infer R
-    }
-  ? R
-  : never
+type PublicTables = Database['public']['Tables']
 
-export type InsertTables<
-  PublicTableNameOrOptions extends
-    | keyof (Database['public']['Tables'])
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions['schema']]['Tables'])
-    : never = PublicTableNameOrOptions extends keyof (Database['public']['Tables'])
-    ? PublicTableNameOrOptions
-    : never
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions['schema']]['Tables'])[TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : (Database['public']['Tables'])[PublicTableNameOrOptions] extends {
-      Insert: infer I
-    }
-  ? I
-  : never
-
-export type UpdateTables<
-  PublicTableNameOrOptions extends
-    | keyof (Database['public']['Tables'])
-    | { schema: keyof Database },
-  TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
-    ? keyof (Database[PublicTableNameOrOptions['schema']]['Tables'])
-    : never = PublicTableNameOrOptions extends keyof (Database['public']['Tables'])
-    ? PublicTableNameOrOptions
-    : never
-> = PublicTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[PublicTableNameOrOptions['schema']]['Tables'])[TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : (Database['public']['Tables'])[PublicTableNameOrOptions] extends {
-      Update: infer U
-    }
-  ? U
-  : never
+export type Tables<T extends keyof PublicTables> = PublicTables[T]['Row']
+export type InsertTables<T extends keyof PublicTables> = PublicTables[T]['Insert']
+export type UpdateTables<T extends keyof PublicTables> = PublicTables[T]['Update']

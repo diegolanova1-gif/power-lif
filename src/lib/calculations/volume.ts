@@ -1,6 +1,10 @@
 import type { Tables } from '@/types/database'
 
-export type SetLog = Tables<'sets_log'>
+type SetRow = Tables<'sets_log'>
+
+// Minimal shape needed by volume/intensity calcs (API routes select partial rows)
+export type SetLog = Pick<SetRow, 'exercise_id' | 'week' | 'weight_kg' | 'reps'> &
+  Partial<Pick<SetRow, 'rpe' | 'rir'>>
 
 /**
  * Calculate total volume (kg) for a set of logs

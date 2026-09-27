@@ -73,26 +73,10 @@ export function estimate1RMMedian(weight: number, reps: number): number {
 }
 
 /**
- * Calculate RPE-based 1RM (using RPE to adjust)
- * Based on Mike Tuchscherer's RPE chart
+ * RPE-based 1RM: Epley with reps in reserve added (RIR = 10 - RPE).
+ * Must match the SQL trigger update_estimated_1rm (supabase/migrations/20260926_feedback_media.sql).
  */
 export function estimate1RMFromRPE(weight: number, reps: number, rpe: number): number {
-  // RPE to %1RM mapping (approximate)
-  const rpeToPercent: Record<number, number> = {
-    10: 1.00,
-    9.5: 0.97,
-    9: 0.94,
-    8.5: 0.91,
-    8: 0.88,
-    7.5: 0.85,
-    7: 0.82,
-    6.5: 0.79,
-    6: 0.76,
-    5.5: 0.73,
-    5: 0.70,
-  }
-
-  const percent = rpeToPercent[rpe] || rpeToPercent[8]
-  const repMax = estimate1RM(weight, reps, 'epley')
-  return repMax * percent
+  const effectiveReps = reps + (10 - rpe)
+  return effectiveReps <= 1 ? weight : weight * (1 + effectiveReps / 30)
 }

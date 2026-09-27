@@ -61,13 +61,22 @@ export default async function Home() {
             Gestiona atletas, crea rutinas con periodización flexible, trackea cargas en tiempo real
             y obtén estadísticas automáticas (1RM, volumen, IPF Points, adherencia).
           </p>
-          <div className="mt-10 flex items-center justify-center gap-4">
-            <Link href="/register">
-              <Button size="lg" className="w-48">Empezar gratis</Button>
-            </Link>
-            <Link href="/login">
-              <Button size="lg" variant="outline" className="w-48">Demo</Button>
-            </Link>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 max-w-2xl mx-auto text-left">
+            <div className="rounded-lg border bg-white p-6 shadow-sm">
+              <h3 className="text-xl font-semibold text-gray-900">Soy Coach</h3>
+              <p className="mt-2 text-gray-600">Crea rutinas, gestiona tus alumnos y sigue sus estadísticas.</p>
+              <div className="mt-6 flex gap-2">
+                <Button nativeButton={false} render={<Link href="/login" />}>Ingresar</Button>
+                <Button variant="outline" nativeButton={false} render={<Link href="/register" />}>Crear cuenta</Button>
+              </div>
+            </div>
+            <div className="rounded-lg border bg-white p-6 shadow-sm">
+              <h3 className="text-xl font-semibold text-gray-900">Soy Alumno</h3>
+              <p className="mt-2 text-gray-600">Entra con el email y la contraseña que te dio tu coach.</p>
+              <div className="mt-6">
+                <Button nativeButton={false} render={<Link href="/login?as=alumno" />}>Ingresar como alumno</Button>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -76,7 +85,7 @@ export default async function Home() {
             <FeatureCard
               icon="Users"
               title="Gestión de Atletas"
-              description="Invita atletas por email, asigna rutinas, ve su progreso en tiempo real y comunica feedback."
+              description="Crea las cuentas de tus alumnos, asigna rutinas, ve su progreso en tiempo real y comunica feedback."
             />
             <FeatureCard
               icon="FileText"

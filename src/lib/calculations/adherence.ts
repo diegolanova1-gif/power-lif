@@ -1,7 +1,10 @@
 import type { Tables } from '@/types/database'
 
-export type AthleteRoutine = Tables<'athlete_routines'>
-export type SetLog = Tables<'sets_log'>
+// sessions_per_week comes from the routine structure (schedule length) when the caller has it
+export type AthleteRoutine = Tables<'athlete_routines'> & { sessions_per_week?: number }
+// Minimal shape needed by adherence calcs
+type SetLog = Pick<Tables<'sets_log'>, 'week' | 'day' | 'completed_at'> &
+  Partial<Pick<Tables<'sets_log'>, 'rpe'>>
 
 /**
  * Calculate adherence percentage for an athlete routine
@@ -102,9 +105,8 @@ function getWeeksElapsed(startedAt: string): number {
 }
 
 function estimateSessionsPerWeek(routine: AthleteRoutine): number {
-  // This would ideally come from routine.structure
-  // For now, return a default based on common powerlifting frequencies
-  return 4
+  // Fallback: common powerlifting frequency
+  return routine.sessions_per_week || 4
 }
 
 /**

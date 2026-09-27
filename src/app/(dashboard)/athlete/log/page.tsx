@@ -14,6 +14,7 @@ import { Check, ChevronLeft, ChevronRight, Loader2, Save, AlertCircle } from 'lu
 import { toast } from 'sonner'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { ExerciseFeedback } from '@/components/athlete/exercise-feedback'
 
 interface ExercisePrescription {
   exercise_id: string
@@ -51,6 +52,7 @@ export default function AthleteLogPage() {
   const [setsData, setSetsData] = useState<Record<string, SetLog[]>>({})
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [session, setSession] = useState<{ userId: string; athleteRoutineId: string } | null>(null)
 
   // Initialize from URL params
   useEffect(() => {
@@ -86,13 +88,17 @@ export default function AthleteLogPage() {
         .limit(1)
         .single()
 
-      if (!routine?.routine?.structure) {
+      // Many-to-one join: Supabase returns an object, untyped client infers an array
+      const assigned = routine?.routine as unknown as { structure: any } | null
+
+      if (!routine || !assigned?.structure) {
         toast.error('No tienes rutina activa')
         setLoading(false)
         return
       }
 
-      const structure = routine.routine.structure as any
+      const structure = assigned.structure
+      setSession({ userId: user.id, athleteRoutineId: routine.id })
       const schedule = structure.schedule || []
 
       // Get all exercises
@@ -104,8 +110,11 @@ export default function AthleteLogPage() {
 
       const exerciseMap = new Map(exercises?.map(e => [e.id, e]) || [])
 
-      const dayData: DayData[] = schedule.map((d: any) => ({
-        week: d.week || 1,
+      // One entry per session across all weeks, so prev/next can move between weeks
+      const totalWeeks: number = structure.weeks || 1
+      const sortedSchedule = [...schedule].sort((a: any, b: any) => a.day - b.day)
+      const dayData: DayData[] = Array.from({ length: totalWeeks }, (_, i) => i + 1).flatMap(week => sortedSchedule.map((d: any) => ({
+        week,
         day: d.day,
         exercises: d.exercises.map((e: any) => {
           const ex = exerciseMap.get(e.exercise_id)
@@ -119,13 +128,13 @@ export default function AthleteLogPage() {
             rpe_target: e.rpe_target,
           }
         }),
-      }))
+      })))
 
       setDays(dayData)
 
       // Set initial day index
       if (dayData.length > 0) {
-        const targetDay = dayData.findIndex(d => d.day === routine.current_day)
+        const targetDay = dayData.findIndex(d => d.week === routine.current_week && d.day === routine.current_day)
         setCurrentDayIndex(targetDay >= 0 ? targetDay : 0)
       }
 
@@ -226,6 +235,7 @@ export default function AthleteLogPage() {
         sets.forEach(s => {
           if (s.completed && s.weight_kg > 0) {
             setsToInsert.push({
+              athlete_id: user.id,
               athlete_routine_id: routine.id,
               exercise_id: exercise.exercise_id,
               week: currentDay.week,
@@ -306,7 +316,7 @@ export default function AthleteLogPage() {
           </Button>
         </div>
         <div className="flex gap-2">
-          {days.map((d, i) => (
+          {days.map((d, i) => d.week !== currentDay.week ? null : (
             <button
               key={`${d.week}-${d.day}`}
               onClick={() => setCurrentDayIndex(i)}
@@ -394,7 +404,7 @@ export default function AthleteLogPage() {
                           <Label className="block text-xs text-gray-500 mb-1">RPE</Label>
                           <Slider
                             value={existing.rpe ? [existing.rpe] : [0]}
-                            onValueChange={([val]) => updateSet(exercise.exercise_id, setNum, 'rpe', val || null)}
+                            onValueChange={(v) => updateSet(exercise.exercise_id, setNum, 'rpe', (typeof v === 'number' ? v : v[0]) || null)}
                             max={10}
                             step={0.5}
                             min={1}
@@ -441,6 +451,15 @@ export default function AthleteLogPage() {
                     )
                   })}
                 </div>
+                {session && (
+                  <ExerciseFeedback
+                    athleteId={session.userId}
+                    athleteRoutineId={session.athleteRoutineId}
+                    exerciseId={exercise.exercise_id}
+                    week={currentDay.week}
+                    day={currentDay.day}
+                  />
+                )}
               </CardContent>
             </Card>
           )

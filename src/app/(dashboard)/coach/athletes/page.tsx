@@ -4,25 +4,14 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog'
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Plus, UserPlus, Search, Loader2, MoreHorizontal, Edit, Trash2, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
-import { z } from 'zod'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { CreateAthleteDialog } from '@/components/coach/create-athlete-dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
-
-const createAthleteSchema = z.object({
-  email: z.string().email('Email inválido'),
-  full_name: z.string().min(2, 'Nombre muy corto').max(100),
-})
-
-type CreateAthleteForm = z.infer<typeof createAthleteSchema>
 
 interface Athlete {
   id: string
@@ -40,11 +29,6 @@ export default function AthletesPage() {
   const [search, setSearch] = useState('')
 
   const supabase = createClient()
-
-  const form = useForm<CreateAthleteForm>({
-    resolver: zodResolver(createAthleteSchema),
-    defaultValues: { email: '', full_name: '' },
-  })
 
   async function fetchAthletes() {
     setLoading(true)
@@ -69,7 +53,7 @@ export default function AthletesPage() {
       if (error) throw error
 
       // Get current routine for each athlete
-      const athleteIds = data?.map(d => d.profiles?.id).filter(Boolean) || []
+      const athleteIds = data?.map((d: any) => d.profiles?.id).filter(Boolean) || []
       let routines: any[] = []
       if (athleteIds.length > 0) {
         const { data: r } = await supabase
@@ -117,25 +101,6 @@ export default function AthletesPage() {
     }
   }
 
-  async function onSubmit(data: CreateAthleteForm) {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('No autenticado')
-
-      const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(data.email, {
-        data: { full_name: data.full_name, role: 'athlete' },
-        redirectTo: `${window.location.origin}/auth/callback`,
-      })
-
-      if (inviteError) throw inviteError
-
-      toast.success('Invitación enviada. El atleta recibirá un email para crear su cuenta.')
-      form.reset()
-    } catch (error: any) {
-      toast.error(error.message)
-    }
-  }
-
   async function removeAthlete(athleteId: string) {
     if (!confirm('¿Eliminar atleta? Se desvinculará pero no se borrará su cuenta.')) return
 
@@ -160,64 +125,20 @@ export default function AthletesPage() {
 
   const filteredAthletes = athletes.filter(a =>
     a.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-    a.email.toLowerCase().includes(search.toLowerCase())
+    a.email?.toLowerCase().includes(search.toLowerCase())
   )
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Mis Atletas</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Mis Alumnos</h1>
           <p className="text-gray-500 mt-1">Gestiona y supervisa el progreso de tus atletas</p>
         </div>
-        <Dialog>
-          <DialogTrigger>
-            <Button>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Nuevo Atleta
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Invitar Nuevo Atleta</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="full_name">Nombre completo</Label>
-                <Input
-                  id="full_name"
-                  placeholder="Juan Pérez"
-                  {...form.register('full_name')}
-                />
-                {form.formState.errors.full_name && (
-                  <p className="text-sm text-red-500">{form.formState.errors.full_name.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="atleta@email.com"
-                  {...form.register('email')}
-                />
-                <p className="text-xs text-gray-500">Recibirá un email para crear su cuenta</p>
-                {form.formState.errors.email && (
-                  <p className="text-sm text-red-500">{form.formState.errors.email.message}</p>
-                )}
-              </div>
-              <DialogFooter>
-                <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? (
-                    <> <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Enviando... </ >
-                  ) : (
-                    'Enviar invitación'
-                  )}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <CreateAthleteDialog onCreated={fetchAthletes}>
+          <UserPlus className="mr-2 h-4 w-4" />
+          Nuevo Alumno
+        </CreateAthleteDialog>
       </div>
 
       <Card>
@@ -245,50 +166,10 @@ export default function AthletesPage() {
               <UserPlus className="h-12 w-12 mx-auto text-gray-300 mb-3" />
               <p className="text-gray-500">{search ? 'No se encontraron atletas' : 'No tienes atletas aún'}</p>
               {!search && (
-                <Dialog>
-                  <DialogTrigger>
-                    <Button className="mt-4">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Agregar primer atleta
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Invitar Nuevo Atleta</DialogTitle>
-                    </DialogHeader>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="full_name">Nombre completo</Label>
-                        <Input
-                          id="full_name"
-                          placeholder="Juan Pérez"
-                          {...form.register('full_name')}
-                        />
-                        {form.formState.errors.full_name && (
-                          <p className="text-sm text-red-500">{form.formState.errors.full_name.message}</p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          placeholder="atleta@email.com"
-                          {...form.register('email')}
-                        />
-                        <p className="text-xs text-gray-500">Recibirá un email para crear su cuenta</p>
-                        {form.formState.errors.email && (
-                          <p className="text-sm text-red-500">{form.formState.errors.email.message}</p>
-                        )}
-                      </div>
-                      <DialogFooter>
-                        <Button type="submit" disabled={form.formState.isSubmitting}>
-                          {form.formState.isSubmitting ? 'Enviando...' : 'Enviar invitación'}
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </DialogContent>
-                </Dialog>
+                <CreateAthleteDialog triggerClassName="mt-4" onCreated={fetchAthletes}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Crear primer alumno
+                </CreateAthleteDialog>
               )}
             </div>
           ) : (
@@ -339,22 +220,20 @@ export default function AthletesPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
-                          <DropdownMenuTrigger>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
+                          <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8" />}>
+                            <MoreHorizontal className="h-4 w-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem>
-                              <a href={`/coach/athletes/${athlete.id}`} className="flex items-center gap-2">
+                              <a href={`/coach/analytics?athlete=${athlete.id}`} className="flex items-center gap-2">
                                 <ExternalLink className="mr-2 h-4 w-4" />
-                                Ver Detalle
+                                Ver Analytics
                               </a>
                             </DropdownMenuItem>
                             <DropdownMenuItem>
-                              <a href={`/coach/athletes/${athlete.id}/routine`} className="flex items-center gap-2">
+                              <a href={`/coach/routines?assign=${athlete.id}`} className="flex items-center gap-2">
                                 <Edit className="mr-2 h-4 w-4" />
-                                Asignar/Editar Rutina
+                                Asignar Rutina
                               </a>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />

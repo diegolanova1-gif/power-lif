@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
   if (profile?.role === 'coach' && athleteId !== user.id) {
     const { data: link } = await supabase
       .from('coach_athletes')
-      .select('id')
+      .select('athlete_id')
       .eq('coach_id', user.id)
       .eq('athlete_id', athleteId)
       .single()

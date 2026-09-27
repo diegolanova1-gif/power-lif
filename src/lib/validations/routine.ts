@@ -5,7 +5,9 @@ export const routineExerciseSchema = z.object({
   exercise_id: z.string().uuid('ID de ejercicio inválido'),
   sets: z.number().int().min(1).max(20),
   reps: z.number().int().min(1).max(50),
-  intensity: z.string().optional(), // e.g., "75% 1RM" or "RPE 8"
+  intensity: z.string().optional(), // display text, e.g. "100 kg" or "75% RM"
+  load_type: z.enum(['kg', 'percent']).optional(),
+  load_value: z.number().min(0).max(500).optional(),
   rpe_target: z.number().min(1).max(10).optional(),
   rest_seconds: z.number().int().min(0).max(600).optional(),
   order: z.number().int().min(0),
