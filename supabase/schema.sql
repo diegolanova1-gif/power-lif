@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS estimated_1rm (
   exercise_id UUID REFERENCES exercises(id) ON DELETE CASCADE,
   estimated_1rm DECIMAL(6,2) NOT NULL,
   calculated_at TIMESTAMPTZ DEFAULT now(),
-  source_set_id UUID REFERENCES sets_log(id) ON DELETE SET NULL
+  source_set_id UUID REFERENCES sets_log(id) ON DELETE CASCADE
 );
 
 -- 9. Bodyweight Log (for IPF/DOTS/Wilks)
