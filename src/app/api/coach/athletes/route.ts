@@ -13,11 +13,11 @@ export async function POST(request: NextRequest) {
 
     const { data: coach } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, student_limit, active')
       .eq('id', user.id)
       .single()
-    if (coach?.role !== 'coach') {
-      return NextResponse.json({ error: 'Solo coaches pueden invitar atletas' }, { status: 403 })
+    if (coach?.role !== 'coach' || !coach.active) {
+      return NextResponse.json({ error: 'Solo coaches activos pueden crear alumnos' }, { status: 403 })
     }
 
     const validation = createAthleteSchema.safeParse(await request.json())
@@ -38,6 +38,24 @@ export async function POST(request: NextRequest) {
 
     let athleteId: string
     let created = false
+
+    const { data: alreadyLinked } = existing
+      ? await admin.from('coach_athletes').select('athlete_id').eq('coach_id', user.id).eq('athlete_id', existing.id).maybeSingle()
+      : { data: null }
+
+    // Plan limit, checked before creating any account (the DB trigger enforces it too)
+    if (!alreadyLinked && coach.student_limit !== null) {
+      const { count } = await admin
+        .from('coach_athletes')
+        .select('athlete_id', { count: 'exact', head: true })
+        .eq('coach_id', user.id)
+      if ((count ?? 0) >= coach.student_limit) {
+        return NextResponse.json(
+          { error: `Llegaste al límite de tu plan (${coach.student_limit} alumnos).`, code: 'STUDENT_LIMIT' },
+          { status: 403 }
+        )
+      }
+    }
 
     if (existing) {
       if (existing.role !== 'athlete') {
@@ -63,6 +81,9 @@ export async function POST(request: NextRequest) {
       .from('coach_athletes')
       .upsert({ coach_id: user.id, athlete_id: athleteId }, { onConflict: 'coach_id,athlete_id', ignoreDuplicates: true })
     if (linkError) {
+      if (linkError.message.includes('STUDENT_LIMIT_REACHED')) {
+        return NextResponse.json({ error: 'Llegaste al límite de alumnos de tu plan.', code: 'STUDENT_LIMIT' }, { status: 403 })
+      }
       return NextResponse.json({ error: linkError.message }, { status: 500 })
     }
 

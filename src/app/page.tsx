@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { whatsappLink, WHATSAPP_MESSAGES } from '@/lib/contact'
 
 export default async function Home() {
   const cookieStore = await cookies()
@@ -45,9 +46,9 @@ export default async function Home() {
             <Link href="/login">
               <Button variant="ghost">Iniciar sesión</Button>
             </Link>
-            <Link href="/register">
-              <Button>Registrarse</Button>
-            </Link>
+            <Button nativeButton={false} render={<a href={whatsappLink(WHATSAPP_MESSAGES.info)} target="_blank" rel="noopener noreferrer" />}>
+              Quiero usarlo
+            </Button>
           </nav>
         </div>
       </header>
@@ -64,10 +65,16 @@ export default async function Home() {
           <div className="mt-10 grid gap-4 sm:grid-cols-2 max-w-2xl mx-auto text-left">
             <div className="rounded-lg border bg-white p-6 shadow-sm">
               <h3 className="text-xl font-semibold text-gray-900">Soy Coach</h3>
-              <p className="mt-2 text-gray-600">Crea rutinas, gestiona tus alumnos y sigue sus estadísticas.</p>
+              <p className="mt-2 text-gray-600">Crea rutinas, gestiona tus alumnos y sigue sus estadísticas. Las cuentas de coach las crea Power Routine a pedido.</p>
               <div className="mt-6 flex gap-2">
                 <Button nativeButton={false} render={<Link href="/login" />}>Ingresar</Button>
-                <Button variant="outline" nativeButton={false} render={<Link href="/register" />}>Crear cuenta</Button>
+                <Button
+                  variant="outline"
+                  nativeButton={false}
+                  render={<a href={whatsappLink(WHATSAPP_MESSAGES.info)} target="_blank" rel="noopener noreferrer" />}
+                >
+                  Pedir información
+                </Button>
               </div>
             </div>
             <div className="rounded-lg border bg-white p-6 shadow-sm">

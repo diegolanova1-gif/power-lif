@@ -8,12 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
-import { Plus, UserPlus, Search, Loader2, MoreHorizontal, Edit, Trash2, Dumbbell, LayoutTemplate, BarChart, KeyRound, ClipboardCheck } from 'lucide-react'
+import { Plus, UserPlus, Search, Loader2, MoreHorizontal, Edit, Trash2, Dumbbell, LayoutTemplate, BarChart, KeyRound, ClipboardCheck, TriangleAlert } from 'lucide-react'
 import { toast } from 'sonner'
 import { CreateAthleteDialog } from '@/components/coach/create-athlete-dialog'
 import { ResetPasswordDialog } from '@/components/coach/reset-password-dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
+import { PLANS, whatsappLink, WHATSAPP_MESSAGES, type PlanId } from '@/lib/contact'
 
 interface Athlete {
   id: string
@@ -31,14 +32,27 @@ export default function AthletesPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [resetFor, setResetFor] = useState<Athlete | null>(null)
+  const [coachPlan, setCoachPlan] = useState<{ plan: PlanId; student_limit: number | null } | null>(null)
 
   const [supabase] = useState(() => createClient())
 
   // Load the list on mount (and again after creating/removing an athlete)
   useEffect(() => {
     fetchAthletes()
+    fetchCoachPlan()
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
   }, [])
+
+  async function fetchCoachPlan() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data } = await supabase
+      .from('profiles')
+      .select('plan, student_limit')
+      .eq('id', user.id)
+      .single()
+    if (data) setCoachPlan({ plan: data.plan as PlanId, student_limit: data.student_limit })
+  }
 
   async function fetchAthletes() {
     try {
@@ -138,18 +152,41 @@ export default function AthletesPage() {
     a.email?.toLowerCase().includes(search.toLowerCase())
   )
 
+  const atLimit = coachPlan?.student_limit !== null && coachPlan?.student_limit !== undefined && athletes.length >= coachPlan.student_limit
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Mis Alumnos</h1>
           <p className="text-gray-500 mt-1">Gestiona y supervisa el progreso de tus alumnos</p>
+          {coachPlan && (
+            <p className="text-sm text-gray-500 mt-1">
+              {coachPlan.student_limit === null
+                ? `${athletes.length} alumnos · Plan ${PLANS[coachPlan.plan].label}, sin límite`
+                : `${athletes.length} de ${coachPlan.student_limit} alumnos (Plan ${PLANS[coachPlan.plan].label})`}
+            </p>
+          )}
         </div>
         <CreateAthleteDialog onCreated={fetchAthletes}>
           <UserPlus className="mr-2 h-4 w-4" />
           Nuevo Alumno
         </CreateAthleteDialog>
       </div>
+
+      {atLimit && (
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <TriangleAlert className="h-5 w-5 shrink-0 text-amber-600" />
+          <p className="flex-1 text-sm text-amber-800">Llegaste al límite de alumnos de tu plan.</p>
+          <Button
+            size="sm"
+            nativeButton={false}
+            render={<a href={whatsappLink(WHATSAPP_MESSAGES.upgrade)} target="_blank" rel="noopener noreferrer" />}
+          >
+            Ampliar mi plan por WhatsApp
+          </Button>
+        </div>
+      )}
 
       <Card>
         <CardHeader>

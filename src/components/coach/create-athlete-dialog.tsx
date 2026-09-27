@@ -5,13 +5,14 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import Link from 'next/link'
-import { Loader2, RefreshCw, Copy, Check, Dumbbell } from 'lucide-react'
+import { Loader2, RefreshCw, Copy, Check, Dumbbell, TriangleAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { createAthleteSchema, type CreateAthleteInput } from '@/lib/validations/athlete'
 import { generatePassword, credentialsText } from '@/lib/password'
+import { whatsappLink, WHATSAPP_MESSAGES } from '@/lib/contact'
 
 interface CreateAthleteDialogProps {
   children: React.ReactNode
@@ -23,6 +24,7 @@ export function CreateAthleteDialog({ children, triggerClassName, onCreated }: C
   const [open, setOpen] = useState(false)
   const [credentials, setCredentials] = useState<{ email: string; password: string; created: boolean; athleteId: string; name: string } | null>(null)
   const [copied, setCopied] = useState(false)
+  const [limitError, setLimitError] = useState<string | null>(null)
 
   const form = useForm<CreateAthleteInput>({
     resolver: zodResolver(createAthleteSchema),
@@ -35,18 +37,26 @@ export function CreateAthleteDialog({ children, triggerClassName, onCreated }: C
       form.reset({ email: '', full_name: '', password: generatePassword() })
       setCredentials(null)
       setCopied(false)
+      setLimitError(null)
     }
   }
 
   async function onSubmit(data: CreateAthleteInput) {
     try {
+      setLimitError(null)
       const res = await fetch('/api/coach/athletes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       })
       const result = await res.json()
-      if (result.error) throw new Error(result.error)
+      if (result.error) {
+        if (result.code === 'STUDENT_LIMIT') {
+          setLimitError(result.error)
+          return
+        }
+        throw new Error(result.error)
+      }
 
       setCredentials({
         email: data.email.toLowerCase(),
@@ -112,6 +122,24 @@ export function CreateAthleteDialog({ children, triggerClassName, onCreated }: C
               <DialogTitle>Nuevo Alumno</DialogTitle>
               <DialogDescription>Creas la cuenta y le pasas el email y la contraseña.</DialogDescription>
             </DialogHeader>
+            {limitError ? (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-3">
+                <div className="flex items-start gap-2">
+                  <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                  <div>
+                    <p className="font-medium text-amber-900">Llegaste al límite de tu plan</p>
+                    <p className="mt-1 text-sm text-amber-700">{limitError}</p>
+                  </div>
+                </div>
+                <Button
+                  className="w-full"
+                  nativeButton={false}
+                  render={<a href={whatsappLink(WHATSAPP_MESSAGES.upgrade)} target="_blank" rel="noopener noreferrer" />}
+                >
+                  Ampliar mi plan por WhatsApp
+                </Button>
+              </div>
+            ) : (
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="full_name">Nombre completo</Label>
@@ -153,6 +181,7 @@ export function CreateAthleteDialog({ children, triggerClassName, onCreated }: C
                 </Button>
               </DialogFooter>
             </form>
+            )}
           </>
         )}
       </DialogContent>

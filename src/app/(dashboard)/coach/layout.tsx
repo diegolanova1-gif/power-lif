@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { LayoutDashboard, Users, FileText, BarChart, User, Settings, MessageSquare, Trophy } from 'lucide-react'
+import { LayoutDashboard, Users, FileText, BarChart, User, Settings, MessageSquare, Trophy, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SignOutItem } from '@/components/layout/sign-out-item'
 
@@ -35,7 +35,7 @@ export default async function DashboardLayout({
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, full_name, avatar_url')
+    .select('role, full_name, avatar_url, is_admin')
     .eq('id', user.id)
     .single()
 
@@ -56,6 +56,7 @@ export default async function DashboardLayout({
     { name: 'Analytics', href: '/coach/analytics', icon: BarChart },
     { name: 'Revisiones', href: '/coach/reviews', icon: MessageSquare, badge: pendingReviews ?? 0 },
     { name: 'Teams', href: '/coach/teams', icon: Trophy },
+    ...(profile.is_admin ? [{ name: 'Admin', href: '/admin', icon: Shield }] : []),
   ]
 
   return (
@@ -134,6 +135,14 @@ export default async function DashboardLayout({
                       Teams
                     </Link>
                   </DropdownMenuItem>
+                  {profile.is_admin && (
+                    <DropdownMenuItem>
+                      <Link href="/admin" className="flex items-center gap-2">
+                        <Shield className="h-4 w-4" />
+                        Admin
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <SignOutItem />
                 </DropdownMenuContent>

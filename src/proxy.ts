@@ -38,7 +38,6 @@ export async function proxy(request: NextRequest) {
   // Public routes
   if (
     pathname.startsWith('/login') ||
-    pathname.startsWith('/register') ||
     pathname.startsWith('/auth/') ||
     pathname === '/'
   ) {
@@ -53,14 +52,31 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Check user role for coach/athlete routes
+  // Check user role for coach/athlete/admin routes
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, is_admin, active')
     .eq('id', user.id)
     .single()
 
   const role = profile?.role
+
+  // Accounts deactivated by the admin are signed out
+  if (profile && !profile.active) {
+    await supabase.auth.signOut()
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    url.search = '?error=inactive'
+    const response = NextResponse.redirect(url)
+    supabaseResponse.cookies.getAll().forEach(c => response.cookies.set(c))
+    return response
+  }
+
+  if (pathname.startsWith('/admin') && !profile?.is_admin) {
+    const url = request.nextUrl.clone()
+    url.pathname = role === 'athlete' ? '/athlete' : '/coach'
+    return NextResponse.redirect(url)
+  }
 
   // Coach routes
   if (pathname.startsWith('/coach') && role !== 'coach') {
