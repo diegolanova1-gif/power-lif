@@ -13,6 +13,9 @@ import { FEEDBACK_REASONS } from '@/lib/feedback-reason'
 import { Badge } from '@/components/ui/badge'
 import { weekdayName, weekdayShort } from '@/lib/weekdays'
 import { cn } from '@/lib/utils'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { dateForWeekDay, isToday as isTodayDate } from '@/lib/schedule-dates'
 
 const STATUS_STYLE: Record<ComplianceStatus, { label: string; className: string }> = {
   done: { label: 'Hecho', className: 'bg-green-500 text-white border-green-500' },
@@ -50,7 +53,7 @@ export default async function AthleteFollowUpPage({
   // Active program, or the most recent one
   const { data: assignment } = await supabase
     .from('athlete_routines')
-    .select('id, status, current_week, current_day, routine_id, routine:routines(name, structure)')
+    .select('id, status, current_week, current_day, started_at, routine_id, routine:routines(name, structure)')
     .eq('athlete_id', id)
     .order('status', { ascending: true }) // 'active' sorts first
     .order('assigned_at', { ascending: false })
@@ -102,6 +105,9 @@ export default async function AthleteFollowUpPage({
   const structure = routine.structure
   const totalWeeks = structure.weeks || 1
   const trainingDays = [...structure.schedule].map(d => d.day).sort((a, b) => a - b)
+
+  const dateFor = (w: number, d: number) => dateForWeekDay(assignment.started_at, w, d)
+  const isToday = (w: number, d: number) => isTodayDate(dateFor(w, d))
 
   const [{ data: sets }, { data: feedback }] = await Promise.all([
     supabase
@@ -190,25 +196,34 @@ export default async function AthleteFollowUpPage({
         <CardContent className="space-y-2 overflow-x-auto">
           {Array.from({ length: totalWeeks }, (_, i) => i + 1).map(w => (
             <div key={w} className="flex items-center gap-2">
-              <span className="w-20 shrink-0 text-sm text-gray-500">Semana {w}</span>
+              <span className="w-36 shrink-0 text-sm text-gray-500">
+                Semana {w}
+                <span className="ml-1 text-xs text-gray-400">
+                  ({format(dateFor(w, trainingDays[0]), 'd MMM', { locale: es })})
+                </span>
+              </span>
               {trainingDays.map(d => {
                 const status = statusOf(w, d)
                 const selected = w === week && d === day
+                const todayCell = isToday(w, d)
                 const hasNote = (feedback ?? []).some(f => f.week === w && f.day === d)
                 return (
                   <Link
                     key={d}
                     href={`/coach/athletes/${id}?week=${w}&day=${d}`}
                     scroll={false}
-                    title={`${weekdayName(d)} · ${STATUS_STYLE[status].label}`}
+                    title={`${weekdayName(d)} ${format(dateFor(w, d), 'd MMM', { locale: es })} · ${STATUS_STYLE[status].label}${todayCell ? ' · Hoy' : ''}`}
                     className={cn(
-                      'relative flex h-9 w-11 shrink-0 items-center justify-center rounded-md border text-xs font-medium',
+                      'relative flex h-12 w-12 shrink-0 flex-col items-center justify-center gap-0.5 rounded-md border text-xs font-medium leading-none',
                       STATUS_STYLE[status].className,
-                      selected && 'ring-2 ring-primary ring-offset-2'
+                      selected && 'ring-2 ring-primary ring-offset-2',
+                      todayCell && !selected && 'ring-2 ring-blue-400 ring-offset-1'
                     )}
                   >
-                    {weekdayShort(d)}
+                    <span>{weekdayShort(d)}</span>
+                    <span className="text-[10px] font-normal opacity-70">{format(dateFor(w, d), 'd')}</span>
                     {hasNote && <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-blue-500" />}
+                    {todayCell && <span className="absolute -left-1 -top-1 h-2.5 w-2.5 rounded-full bg-blue-400 ring-2 ring-white" />}
                   </Link>
                 )
               })}
@@ -219,6 +234,7 @@ export default async function AthleteFollowUpPage({
             <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-sm bg-amber-400" /> Parcial</span>
             <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-sm border" /> Sin registrar</span>
             <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-blue-500" /> Dejó comentario</span>
+            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-blue-400" /> Hoy</span>
           </div>
         </CardContent>
       </Card>

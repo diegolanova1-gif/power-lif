@@ -12,6 +12,9 @@ import { ExerciseLogCard, type LoggedSet, type Prescription } from '@/components
 import { weekdayName, weekdayShort } from '@/lib/weekdays'
 import { scheduleForWeek, type RoutineStructure } from '@/lib/validations/routine'
 import { exerciseCompliance } from '@/lib/calculations/compliance'
+import { dateForWeekDay, isToday } from '@/lib/schedule-dates'
+import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
 
 interface DayData {
   week: number
@@ -31,7 +34,7 @@ async function loadWorkout(supabase: Supabase) {
 
   const { data: routine } = await supabase
     .from('athlete_routines')
-    .select('id, current_week, current_day, routine:routines(structure)')
+    .select('id, current_week, current_day, started_at, routine:routines(structure)')
     .eq('athlete_id', user.id)
     .eq('status', 'active')
     .order('assigned_at', { ascending: false })
@@ -102,6 +105,7 @@ async function loadWorkout(supabase: Supabase) {
 
   return {
     session: { userId: user.id, athleteRoutineId: routine.id as string },
+    startedAt: routine.started_at as string,
     days,
     currentIndex: target >= 0 ? target : 0,
     setsByKey,
@@ -119,6 +123,7 @@ export default function AthleteLogPage() {
   const [e1rmByExercise, setE1rmByExercise] = useState<Map<string, number>>(new Map())
   const [lastWeightByExercise, setLastWeightByExercise] = useState<Map<string, number>>(new Map())
   const [session, setSession] = useState<{ userId: string; athleteRoutineId: string } | null>(null)
+  const [startedAt, setStartedAt] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [noRoutine, setNoRoutine] = useState(false)
 
@@ -132,6 +137,7 @@ export default function AthleteLogPage() {
           return
         }
         setSession(result.session)
+        setStartedAt(result.startedAt)
         setDays(result.days)
         setCurrentDayIndex(result.currentIndex)
         setSetsByKey(result.setsByKey)
@@ -194,6 +200,11 @@ export default function AthleteLogPage() {
         <div className="text-center">
           <p className="text-sm text-gray-500">Semana {currentDay.week}</p>
           <p className="text-2xl font-bold text-gray-900">{weekdayName(currentDay.day)}</p>
+          {startedAt && (
+            <p className="text-sm text-gray-500">
+              {format(dateForWeekDay(startedAt, currentDay.week, currentDay.day), "d 'de' MMMM", { locale: es })}
+            </p>
+          )}
           {currentDay.name && currentDay.name !== weekdayName(currentDay.day) && (
             <p className="text-sm text-gray-600">{currentDay.name}</p>
           )}
@@ -204,20 +215,29 @@ export default function AthleteLogPage() {
       </div>
 
       <div className="flex justify-center gap-2">
-        {days.map((d, i) =>
-          d.week !== currentDay.week ? null : (
+        {days.map((d, i) => {
+          if (d.week !== currentDay.week) return null
+          const todayChip = startedAt ? isToday(dateForWeekDay(startedAt, d.week, d.day)) : false
+          return (
             <button
               key={`${d.week}-${d.day}`}
               onClick={() => goTo(i)}
+              title={startedAt ? format(dateForWeekDay(startedAt, d.week, d.day), "d 'de' MMMM", { locale: es }) : undefined}
               className={cn(
-                'h-9 min-w-9 rounded-full px-2 text-sm font-medium transition-colors',
-                i === currentDayIndex ? 'bg-primary text-primary-foreground' : 'text-gray-500 hover:bg-gray-100'
+                'relative flex h-11 min-w-11 flex-col items-center justify-center gap-0 rounded-full px-2 text-sm font-medium leading-none transition-colors',
+                i === currentDayIndex ? 'bg-primary text-primary-foreground' : 'text-gray-500 hover:bg-gray-100',
+                todayChip && i !== currentDayIndex && 'ring-2 ring-blue-400'
               )}
             >
-              {weekdayShort(d.day)}
+              <span>{weekdayShort(d.day)}</span>
+              {startedAt && (
+                <span className={cn('text-[10px] font-normal', i === currentDayIndex ? 'opacity-80' : 'opacity-60')}>
+                  {format(dateForWeekDay(startedAt, d.week, d.day), 'd')}
+                </span>
+              )}
             </button>
           )
-        )}
+        })}
       </div>
 
       {/* Progress */}
