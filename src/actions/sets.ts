@@ -82,10 +82,8 @@ export async function logSet(formData: FormData) {
 
     if (error) throw error
 
-    // estimated_1rm is computed by the sets_log trigger (update_estimated_1rm)
-
-    // Update athlete_routine current position if needed
-    // (Optional: auto-advance day/week based on completed sets)
+    // estimated_1rm and athlete_routines progress are computed by sets_log triggers
+    // (update_estimated_1rm, advance_athlete_routine)
 
     revalidatePath('/athlete/log')
     revalidatePath('/athlete/progress')
@@ -144,7 +142,8 @@ export async function logMultipleSets(sets: z.infer<typeof logSetSchema>[]) {
 
     if (error) throw error
 
-    // estimated_1rm is computed by the sets_log trigger (update_estimated_1rm)
+    // estimated_1rm and athlete_routines progress are computed by sets_log triggers
+    // (update_estimated_1rm, advance_athlete_routine)
 
     revalidatePath('/athlete/log')
     revalidatePath('/athlete/progress')

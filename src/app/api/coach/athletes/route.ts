@@ -43,6 +43,21 @@ export async function POST(request: NextRequest) {
       ? await admin.from('coach_athletes').select('athlete_id').eq('coach_id', user.id).eq('athlete_id', existing.id).maybeSingle()
       : { data: null }
 
+    // That email already belongs to someone else's athlete: never auto-link
+    // across coaches, or that coach's whole history/media becomes visible here.
+    if (existing && existing.role === 'athlete' && !alreadyLinked) {
+      const { count: otherCoachCount } = await admin
+        .from('coach_athletes')
+        .select('coach_id', { count: 'exact', head: true })
+        .eq('athlete_id', existing.id)
+      if ((otherCoachCount ?? 0) > 0) {
+        return NextResponse.json(
+          { error: 'Ese email ya pertenece a un alumno de otro coach. No se puede agregar.' },
+          { status: 409 }
+        )
+      }
+    }
+
     // Plan limit, checked before creating any account (the DB trigger enforces it too)
     if (!alreadyLinked && coach.student_limit !== null) {
       const { count } = await admin

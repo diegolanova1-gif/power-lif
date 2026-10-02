@@ -19,7 +19,7 @@ export function calculateAdherence(
   // Parse routine structure to get total prescribed sessions
   // For now, estimate based on weeks * sessions per week
   // In a real implementation, this would come from the routine structure JSON
-  const weeksElapsed = getWeeksElapsed(athleteRoutine.started_at)
+  const weeksElapsed = getWeeksElapsed(athleteRoutine)
   const sessionsPerWeek = estimateSessionsPerWeek(athleteRoutine) // Default 4
   const prescribedSessions = weeksElapsed * sessionsPerWeek
 
@@ -50,6 +50,18 @@ export function calculateWeeklyAdherence(
   return Math.min(100, Math.round((completedDays / prescribedDays) * 100))
 }
 
+// App's userbase is Argentina (ART, UTC-3); there's no per-user timezone
+// stored yet. `completed_at` is a real instant (timestamptz) so it needs this
+// shift before truncating to a calendar day, or a session logged late at
+// night lands on the wrong day in the heatmap. `started_at` is already a
+// plain DATE column, not an instant, so it does NOT need this shift.
+const LOCAL_UTC_OFFSET_HOURS = -3
+
+function completedAtToLocalDateKey(completedAt: string): string {
+  const shifted = new Date(new Date(completedAt).getTime() + LOCAL_UTC_OFFSET_HOURS * 60 * 60 * 1000)
+  return shifted.toISOString().split('T')[0]
+}
+
 /**
  * Get adherence heatmap data for calendar view
  */
@@ -61,10 +73,10 @@ export function getAdherenceHeatmap(
   const startDate = new Date(athleteRoutine.started_at)
   const heatmap: Array<{ date: string; completed: boolean; intensity?: number }> = []
 
-  // Group sets by date (using completed_at)
+  // Group sets by date (using completed_at, shifted to local calendar day)
   const setsByDate = new Map<string, SetLog[]>()
   for (const set of setsLog) {
-    const date = set.completed_at.split('T')[0]
+    const date = completedAtToLocalDateKey(set.completed_at)
     if (!setsByDate.has(date)) {
       setsByDate.set(date, [])
     }
@@ -97,11 +109,17 @@ function calculateSessionIntensity(sets: SetLog[]): number {
   return withRPE.reduce((sum, s) => sum + (s.rpe || 0), 0) / withRPE.length
 }
 
-function getWeeksElapsed(startedAt: string): number {
-  const start = new Date(startedAt)
+function getWeeksElapsed(athleteRoutine: AthleteRoutine): number {
+  const start = new Date(athleteRoutine.started_at)
   const now = new Date()
-  const diffTime = Math.abs(now.getTime() - start.getTime())
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7))
+  const diffTime = now.getTime() - start.getTime()
+  if (diffTime <= 0) return 0 // started_at is in the future: program hasn't begun
+
+  const elapsed = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7))
+  // Once finished, freeze the denominator at the last active week instead of
+  // letting it keep growing with real time (adherence would otherwise drop
+  // forever after the athlete actually completed the program).
+  return athleteRoutine.status === 'completed' ? Math.min(elapsed, athleteRoutine.current_week) : elapsed
 }
 
 function estimateSessionsPerWeek(routine: AthleteRoutine): number {

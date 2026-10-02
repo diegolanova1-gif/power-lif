@@ -161,12 +161,28 @@ export default function AthleteProgressPage() {
         setSelectedExercise(exerciseList[0].id)
       }
 
-      // Fetch volume data
-      const { data: volume } = await supabase
-        .from('sets_log')
-        .select('week, weight_kg, reps')
+      // Fetch volume data — scoped to the current routine, since `week` is only
+      // unique within one athlete_routine (an older program's "week 1" would
+      // otherwise collide with the current program's "week 1" in the chart).
+      const { data: currentRoutine } = await supabase
+        .from('athlete_routines')
+        .select('id')
         .eq('athlete_id', user.id)
-        .order('week', { ascending: true })
+        .eq('status', 'active')
+        .order('assigned_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      const volume = currentRoutine
+        ? (
+            await supabase
+              .from('sets_log')
+              .select('week, weight_kg, reps')
+              .eq('athlete_id', user.id)
+              .eq('athlete_routine_id', currentRoutine.id)
+              .order('week', { ascending: true })
+          ).data
+        : []
 
       if (volume) {
         const weekly = volume.reduce((acc: any, set) => {

@@ -36,6 +36,17 @@ export const routineStructureSchema = z.object({
     schedule: z.array(routineDaySchema).min(1).max(7),
   })).optional(),
   deload_weeks: z.array(z.number().int().min(1).max(52)).optional(),
+}).superRefine((data, ctx) => {
+  data.week_plans?.forEach((plan, i) => {
+    if (plan.week > data.weeks) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['week_plans', i, 'week'], message: `La semana ${plan.week} supera la duración del programa (${data.weeks})` })
+    }
+  })
+  data.deload_weeks?.forEach((week, i) => {
+    if (week > data.weeks) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['deload_weeks', i], message: `La semana de descarga ${week} supera la duración del programa (${data.weeks})` })
+    }
+  })
 })
 
 export const createRoutineSchema = z.object({

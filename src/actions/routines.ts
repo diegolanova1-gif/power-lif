@@ -16,7 +16,11 @@ async function isCoachOf(supabase: SupabaseServer, coachId: string, athleteId: s
   return !!data
 }
 
-// Pauses the athlete's active program and starts this one on its first scheduled day
+// Starts this routine on its first scheduled day, then pauses whatever else
+// was active. Insert-first so a failure here never leaves the athlete with
+// zero active programs; a failure in the best-effort pause step below at
+// worst leaves an old program also marked 'active' (reads already pick the
+// most recently assigned one).
 async function activateRoutine(
   supabase: SupabaseServer,
   athleteId: string,
@@ -24,13 +28,7 @@ async function activateRoutine(
   structure: RoutineStructure,
   startedAt?: string
 ) {
-  await supabase
-    .from('athlete_routines')
-    .update({ status: 'paused' })
-    .eq('athlete_id', athleteId)
-    .eq('status', 'active')
-
-  return supabase
+  const result = await supabase
     .from('athlete_routines')
     .insert({
       athlete_id: athleteId,
@@ -42,6 +40,42 @@ async function activateRoutine(
     })
     .select()
     .single()
+
+  if (result.error || !result.data) return result
+
+  await supabase
+    .from('athlete_routines')
+    .update({ status: 'paused' })
+    .eq('athlete_id', athleteId)
+    .eq('status', 'active')
+    .neq('id', result.data.id)
+
+  return result
+}
+
+// A template assigned directly (without copying) could end up referenced by
+// two athletes' athlete_routines at once; editing it for one would silently
+// change it for the other. Copy whenever it's already claimed by someone else.
+async function copyRoutineForAthlete(
+  supabase: SupabaseServer,
+  coachId: string,
+  athleteId: string,
+  routine: { name: string; description: string | null; structure: unknown }
+) {
+  const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', athleteId).maybeSingle()
+  const { data: copy, error } = await supabase
+    .from('routines')
+    .insert({
+      coach_id: coachId,
+      name: `${routine.name} · ${profile?.full_name || 'Alumno'}`.slice(0, 100),
+      description: routine.description,
+      structure: routine.structure,
+      is_template: false,
+    })
+    .select('id')
+    .single()
+  if (error) throw error
+  return copy.id as string
 }
 
 export async function createRoutine(formData: FormData) {
@@ -131,6 +165,56 @@ export async function updateRoutine(routineId: string, formData: FormData) {
 
     if (error) throw error
 
+    if (updates.structure) {
+      const structure = updates.structure as RoutineStructure
+      const totalWeeks = structure.weeks || 1
+      const trainingDays = [...structure.schedule].map(d => d.day).sort((a, b) => a - b)
+      const firstDay = trainingDays[0]
+
+      // Adding weeks to a routine an athlete already finished leaves them stuck
+      // 'completed' forever (every athlete page only queries status='active').
+      // Resume them at the first newly-added week.
+      const { data: stuck } = await supabase
+        .from('athlete_routines')
+        .select('id, current_week')
+        .eq('routine_id', routineId)
+        .eq('status', 'completed')
+
+      for (const row of stuck ?? []) {
+        const nextWeek = row.current_week + 1
+        if (nextWeek > totalWeeks) continue
+        await supabase
+          .from('athlete_routines')
+          .update({ status: 'active', current_week: nextWeek, current_day: firstDay })
+          .eq('id', row.id)
+      }
+
+      // Removing/moving a training day can leave an active athlete pointed at
+      // a day that no longer exists in the schedule (they'd see "no hay
+      // entrenamiento programado" forever). Bump them to the next valid day,
+      // rolling into the next week or completing the program if needed.
+      const { data: active } = await supabase
+        .from('athlete_routines')
+        .select('id, current_week, current_day')
+        .eq('routine_id', routineId)
+        .eq('status', 'active')
+
+      for (const row of active ?? []) {
+        if (trainingDays.includes(row.current_day)) continue
+        const nextDay = trainingDays.find(d => d > row.current_day)
+        if (nextDay !== undefined) {
+          await supabase.from('athlete_routines').update({ current_day: nextDay }).eq('id', row.id)
+        } else if (row.current_week < totalWeeks) {
+          await supabase
+            .from('athlete_routines')
+            .update({ current_week: row.current_week + 1, current_day: firstDay })
+            .eq('id', row.id)
+        } else {
+          await supabase.from('athlete_routines').update({ status: 'completed' }).eq('id', row.id)
+        }
+      }
+    }
+
     revalidatePath('/coach/routines')
     revalidatePath(`/coach/routines/${routineId}/edit`)
     return { success: true }
@@ -197,20 +281,17 @@ export async function assignRoutine(formData: FormData) {
     // Templates are copied so the athlete gets their own editable routine
     let assignedId = routine.id
     if (routine.is_template) {
-      const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', athleteId).maybeSingle()
-      const { data: copy, error: copyError } = await supabase
-        .from('routines')
-        .insert({
-          coach_id: user.id,
-          name: `${routine.name} · ${profile?.full_name || 'Alumno'}`.slice(0, 100),
-          description: routine.description,
-          structure: routine.structure,
-          is_template: false,
-        })
-        .select('id')
-        .single()
-      if (copyError) throw copyError
-      assignedId = copy.id
+      assignedId = await copyRoutineForAthlete(supabase, user.id, athleteId, routine)
+    } else {
+      const { data: claimedByOther } = await supabase
+        .from('athlete_routines')
+        .select('athlete_id')
+        .eq('routine_id', routine.id)
+        .neq('athlete_id', athleteId)
+        .limit(1)
+      if (claimedByOther && claimedByOther.length > 0) {
+        assignedId = await copyRoutineForAthlete(supabase, user.id, athleteId, routine)
+      }
     }
 
     const { data, error } = await activateRoutine(supabase, athleteId, assignedId, routine.structure as RoutineStructure, startedAt)

@@ -25,7 +25,8 @@ export function estimate1RM(
       return weight * (1 + reps / 30)
 
     case 'brzycki':
-      // Brzycki: 1RM = weight * (36 / (37 - reps))
+      // Brzycki: 1RM = weight * (36 / (37 - reps)); undefined/negative at reps >= 37
+      if (reps >= 37) return weight * (1 + reps / 30) // fall back to Epley
       return weight * (36 / (37 - reps))
 
     case 'lombardi':

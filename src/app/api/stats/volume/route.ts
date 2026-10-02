@@ -43,6 +43,22 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
   }
 
+  // Scope to the current routine: `week` numbers are only unique within one
+  // athlete_routine, so mixing sets across two different assigned programs
+  // would collide "week 1 of the old one" with "week 1 of the new one".
+  const { data: current } = await supabase
+    .from('athlete_routines')
+    .select('id')
+    .eq('athlete_id', athleteId)
+    .eq('status', 'active')
+    .order('assigned_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (!current) {
+    return NextResponse.json({ weekly: [], byExercise: [], totalVolume: 0 })
+  }
+
   const startDate = new Date()
   startDate.setDate(startDate.getDate() - weeks * 7)
 
@@ -50,6 +66,7 @@ export async function GET(request: NextRequest) {
     .from('sets_log')
     .select('week, weight_kg, reps, exercise_id, exercises(name, category)')
     .eq('athlete_id', athleteId)
+    .eq('athlete_routine_id', current.id)
     .gte('completed_at', startDate.toISOString())
     .order('completed_at', { ascending: true })
 
