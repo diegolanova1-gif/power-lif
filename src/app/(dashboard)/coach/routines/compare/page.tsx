@@ -71,18 +71,18 @@ export default async function CompareRoutinesPage({ searchParams }: { searchPara
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Link href="/coach/routines" className="text-gray-500 hover:text-gray-900">
+        <Link href="/coach/routines" className="text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Comparar Rutinas</h1>
-          <p className="text-gray-500 mt-1">Volumen, intensidad y estructura lado a lado (por semana)</p>
+          <h1 className="text-3xl font-bold text-foreground">Comparar Rutinas</h1>
+          <p className="text-muted-foreground mt-1">Volumen, intensidad y estructura lado a lado (por semana)</p>
         </div>
       </div>
 
       {list.length < 2 ? (
         <Card>
-          <CardContent className="py-12 text-center text-gray-500">Necesitas al menos 2 rutinas para comparar.</CardContent>
+          <CardContent className="py-12 text-center text-muted-foreground">Necesitas al menos 2 rutinas para comparar.</CardContent>
         </Card>
       ) : (
         <>
@@ -105,12 +105,12 @@ export default async function CompareRoutinesPage({ searchParams }: { searchPara
                     </TableHeader>
                     <TableBody>
                       <TableRow>
-                        <TableCell className="text-gray-500">Progresión</TableCell>
+                        <TableCell className="text-muted-foreground">Progresión</TableCell>
                         <TableCell>{PROGRESSION_LABELS[columns[0].summary.progression]}</TableCell>
                         <TableCell>{PROGRESSION_LABELS[columns[1].summary.progression]}</TableCell>
                       </TableRow>
                       <TableRow>
-                        <TableCell className="text-gray-500">Semanas de descarga</TableCell>
+                        <TableCell className="text-muted-foreground">Semanas de descarga</TableCell>
                         <TableCell>{columns[0].summary.deloadWeeks.join(', ') || '—'}</TableCell>
                         <TableCell>{columns[1].summary.deloadWeeks.join(', ') || '—'}</TableCell>
                       </TableRow>
@@ -120,9 +120,9 @@ export default async function CompareRoutinesPage({ searchParams }: { searchPara
                         const higher = va !== null && vb !== null && va !== vb ? (va > vb ? 0 : 1) : null
                         return (
                           <TableRow key={metric.label}>
-                            <TableCell className="text-gray-500">{metric.label}</TableCell>
+                            <TableCell className="text-muted-foreground">{metric.label}</TableCell>
                             {values.map((v, i) => (
-                              <TableCell key={i} className={cn(higher === i && 'font-semibold text-gray-900')}>
+                              <TableCell key={i} className={cn('font-mono tabular-nums', higher === i && 'font-semibold text-foreground')}>
                                 {v === null ? '—' : metric.format ? metric.format(v) : v}
                               </TableCell>
                             ))}
@@ -131,7 +131,7 @@ export default async function CompareRoutinesPage({ searchParams }: { searchPara
                       })}
                     </TableBody>
                   </Table>
-                  <p className="mt-3 text-xs text-gray-500">En negrita, el valor más alto. Tonelaje solo cuenta ejercicios cargados en kg; intensidad solo los cargados en % RM.</p>
+                  <p className="mt-3 text-xs text-muted-foreground">En negrita, el valor más alto. Tonelaje solo cuenta ejercicios cargados en kg; intensidad solo los cargados en % RM.</p>
                 </CardContent>
               </Card>
 
@@ -142,7 +142,7 @@ export default async function CompareRoutinesPage({ searchParams }: { searchPara
                 <CardContent className="space-y-6">
                   {dayNumbers.map(dayNum => (
                     <div key={dayNum}>
-                      <p className="mb-2 text-sm font-semibold text-gray-700">{weekdayName(dayNum)}</p>
+                      <p className="mb-2 text-sm font-semibold text-muted-foreground">{weekdayName(dayNum)}</p>
                       <div className="grid gap-4 sm:grid-cols-2">
                         {columns.map((c, i) => {
                           const day = c!.structure.schedule.find(d => d.day === dayNum)
@@ -150,12 +150,12 @@ export default async function CompareRoutinesPage({ searchParams }: { searchPara
                             <div key={i} className="rounded-lg border p-3">
                               {day ? (
                                 <>
-                                  <p className="mb-2 text-xs text-gray-500">{day.name}</p>
+                                  <p className="mb-2 text-xs text-muted-foreground">{day.name}</p>
                                   <ul className="space-y-1 text-sm">
                                     {[...day.exercises].sort((x, y) => x.order - y.order).map((ex, j) => (
                                       <li key={j} className="flex justify-between gap-2">
                                         <span>{nameById.get(ex.exercise_id) ?? 'Ejercicio'}</span>
-                                        <span className="shrink-0 text-gray-500">
+                                        <span className="shrink-0 text-muted-foreground">
                                           {ex.sets}×{formatReps(ex)}{ex.intensity ? ` · ${ex.intensity}` : ''}{ex.rpe_target ? ` · RPE ${ex.rpe_target}` : ''}
                                         </span>
                                       </li>
@@ -163,7 +163,7 @@ export default async function CompareRoutinesPage({ searchParams }: { searchPara
                                   </ul>
                                 </>
                               ) : (
-                                <p className="text-sm text-gray-400">Descanso</p>
+                                <p className="text-sm text-muted-foreground">Descanso</p>
                               )}
                             </div>
                           )
@@ -176,7 +176,7 @@ export default async function CompareRoutinesPage({ searchParams }: { searchPara
             </>
           ) : (
             <Card>
-              <CardContent className="py-12 text-center text-gray-500">Elige dos rutinas para compararlas.</CardContent>
+              <CardContent className="py-12 text-center text-muted-foreground">Elige dos rutinas para compararlas.</CardContent>
             </Card>
           )}
         </>

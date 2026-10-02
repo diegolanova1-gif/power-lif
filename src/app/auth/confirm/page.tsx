@@ -45,17 +45,17 @@ export default function AuthConfirmPage() {
   }, [])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/[0.06] via-background to-background px-4">
       {error ? (
         <div className="text-center space-y-3">
-          <p className="text-red-600">{error}</p>
-          <Link href="/login" className="text-sm text-gray-500 underline">
+          <p className="text-destructive">{error}</p>
+          <Link href="/login" className="text-sm text-muted-foreground underline">
             Ir al login
           </Link>
         </div>
       ) : (
-        <div className="flex items-center gap-2 text-gray-500">
-          <Loader2 className="h-5 w-5 animate-spin" />
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
           Activando tu cuenta...
         </div>
       )}

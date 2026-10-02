@@ -96,13 +96,13 @@ export function TeamRankingPanel({
           <ShieldCheck className="h-5 w-5 text-primary" />
           Ranking oficial
         </CardTitle>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted-foreground">
           Combina fuerza actual y progreso sobre el ejercicio líder. Los alumnos solo ven el último ranking que apruebes.
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium text-gray-700">Ejercicio líder</span>
+          <span className="text-sm font-medium text-foreground">Ejercicio líder</span>
           <Select
             value={leadExerciseId}
             onValueChange={v => v && handleExerciseChange(v)}
@@ -124,17 +124,17 @@ export function TeamRankingPanel({
         </div>
 
         {rankings.length === 0 ? (
-          <p className="text-sm text-gray-500">Todavía no calculaste ningún ranking para este team.</p>
+          <p className="text-sm text-muted-foreground">Todavía no calculaste ningún ranking para este team.</p>
         ) : (
           <div className="space-y-6">
             {rankings.map(r => (
               <div key={r.id} className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-muted-foreground">
                       Calculado el {format(parseISO(r.calculated_at), "dd MMM yyyy, HH:mm", { locale: es })}
                     </span>
-                    <Badge variant={r.approved_at ? 'default' : 'outline'}>
+                    <Badge variant={r.approved_at ? 'success' : 'outline'}>
                       {r.approved_at ? 'Aprobado' : 'Borrador'}
                     </Badge>
                   </div>
@@ -158,13 +158,13 @@ export function TeamRankingPanel({
                   <TableBody>
                     {r.entries.map(e => (
                       <TableRow key={e.athlete_id}>
-                        <TableCell>{e.rank}</TableCell>
+                        <TableCell className="font-mono tabular-nums">{e.rank}</TableCell>
                         <TableCell>{e.full_name}</TableCell>
-                        <TableCell className="text-right">{e.current_e1rm} kg</TableCell>
-                        <TableCell className={cn('text-right', e.progress_pct > 0 ? 'text-emerald-600' : e.progress_pct < 0 ? 'text-red-600' : 'text-gray-500')}>
+                        <TableCell className="text-right font-mono tabular-nums">{e.current_e1rm} kg</TableCell>
+                        <TableCell className={cn('text-right font-mono tabular-nums', e.progress_pct > 0 ? 'text-success' : e.progress_pct < 0 ? 'text-destructive' : 'text-muted-foreground')}>
                           {e.progress_pct > 0 ? '+' : ''}{e.progress_pct}%
                         </TableCell>
-                        <TableCell className="text-right font-semibold">{e.score}</TableCell>
+                        <TableCell className="text-right font-mono font-semibold tabular-nums">{e.score}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

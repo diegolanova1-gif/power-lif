@@ -13,12 +13,12 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b sticky top-0 z-40">
+    <div className="min-h-screen bg-background">
+      <header className="bg-card border-b sticky top-0 z-40">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            <span className="text-xl font-bold text-gray-900">Power Routine · Admin</span>
-            <Link href="/coach" className="text-sm font-medium text-gray-500 hover:text-gray-900">
+            <span className="text-xl font-bold text-foreground">Power Routine · Admin</span>
+            <Link href="/coach" className="text-sm font-medium text-muted-foreground hover:text-foreground">
               Volver a mi panel
             </Link>
           </div>

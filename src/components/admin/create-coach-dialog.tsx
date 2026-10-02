@@ -98,9 +98,9 @@ export function CreateCoachDialog({ children, triggerClassName }: CreateCoachDia
               <DialogTitle>Coach creado</DialogTitle>
               <DialogDescription>Pásale estos datos para que entre a la app.</DialogDescription>
             </DialogHeader>
-            <div className="rounded-lg border bg-gray-50 p-4 space-y-1 text-sm">
-              <p><span className="text-gray-500">Email:</span> <span className="font-medium">{credentials.email}</span></p>
-              <p><span className="text-gray-500">Contraseña:</span> <span className="font-mono font-medium">{credentials.password}</span></p>
+            <div className="rounded-lg border border-success/20 bg-success/5 p-4 space-y-1 text-sm">
+              <p><span className="text-muted-foreground">Email:</span> <span className="font-medium">{credentials.email}</span></p>
+              <p><span className="text-muted-foreground">Contraseña:</span> <span className="font-mono font-medium">{credentials.password}</span></p>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={copyCredentials}>

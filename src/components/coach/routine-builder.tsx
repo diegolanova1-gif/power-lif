@@ -409,12 +409,12 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <Link href={athlete ? '/coach/athletes' : '/coach/routines'} className="text-gray-500 hover:text-gray-900">
+          <Link href={athlete ? '/coach/athletes' : '/coach/routines'} className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{athlete ? `Rutina para ${athleteName ?? 'tu alumno'}` : 'Nueva Plantilla'}</h1>
-            <p className="text-gray-500 mt-1">
+            <h1 className="text-3xl font-extrabold tracking-tight text-foreground">{athlete ? `Rutina para ${athleteName ?? 'tu alumno'}` : 'Nueva Plantilla'}</h1>
+            <p className="text-muted-foreground mt-1">
               {athlete ? 'Personalizada solo para este alumno.' : 'Una plantilla la puedes reutilizar con varios alumnos.'}
             </p>
           </div>
@@ -428,14 +428,14 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Link href={athlete && !routine ? '/coach/athletes' : '/coach/routines'} className="text-gray-500 hover:text-gray-900">
+          <Link href={athlete && !routine ? '/coach/athletes' : '/coach/routines'} className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
               {routine ? 'Editar Rutina' : athlete ? `Rutina para ${athleteName ?? 'tu alumno'}` : 'Nueva Plantilla'}
             </h1>
-            <p className="text-gray-500 mt-1">
+            <p className="text-muted-foreground mt-1">
               {athlete && !routine ? 'Al guardar, se le asigna y la ve en su app.' : 'Días, ejercicios, series, reps y cargas.'}
             </p>
           </div>
@@ -476,7 +476,7 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
             <Textarea id="description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Objetivo, cómo progresar las cargas, calentamiento..." maxLength={1000} />
           </div>
           <details className="rounded-lg border p-3 text-sm">
-            <summary className="cursor-pointer font-medium text-gray-700">Opciones avanzadas</summary>
+            <summary className="cursor-pointer font-medium text-muted-foreground">Opciones avanzadas</summary>
             <div className="mt-3 grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Tipo de progresión</Label>
@@ -520,7 +520,7 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
                   aria-pressed={on}
                   className={cn(
                     'h-11 min-w-11 rounded-full border px-3 text-sm font-medium transition-colors',
-                    on ? 'border-primary bg-primary text-primary-foreground' : 'bg-white text-gray-600 hover:bg-gray-50'
+                    on ? 'border-primary bg-primary text-primary-foreground' : 'bg-card text-muted-foreground hover:bg-muted'
                   )}
                 >
                   <span className="sm:hidden">{w.short}</span>
@@ -529,7 +529,7 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
               )
             })}
           </div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             {schedule.length === 0
               ? 'Toca los días en que entrena el alumno.'
               : `${schedule.length} ${schedule.length === 1 ? 'día' : 'días'} por semana. Toca un día para agregarlo o quitarlo.`}
@@ -548,7 +548,7 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
                   onClick={() => setCurrentWeek(i)}
                   className={cn(
                     'shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
-                    i === currentWeek ? 'border-primary bg-primary text-primary-foreground' : 'bg-white text-gray-600 hover:bg-gray-50'
+                    i === currentWeek ? 'border-primary bg-primary text-primary-foreground' : 'bg-card text-muted-foreground hover:bg-muted'
                   )}
                 >
                   Semana {i + 1}
@@ -566,13 +566,13 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
                 </Button>
               )}
               {weeks > 1 && (
-                <Button type="button" size="sm" variant="ghost" className="text-red-600" onClick={removeWeek}>
+                <Button type="button" size="sm" variant="ghost" className="text-destructive" onClick={removeWeek}>
                   <Trash2 className="mr-1 h-4 w-4" />
                   Eliminar semana {currentWeek + 1}
                 </Button>
               )}
-              <span className="text-sm text-gray-500">
-                Editando la <span className="font-semibold text-gray-900">semana {currentWeek + 1}</span> de {weeks}
+              <span className="text-sm text-muted-foreground">
+                Editando la <span className="font-mono font-semibold tabular-nums text-foreground">semana {currentWeek + 1}</span> de <span className="font-mono tabular-nums">{weeks}</span>
               </span>
             </div>
           </CardContent>
@@ -605,7 +605,7 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
                   }}
                   items={Object.fromEntries(WEEKDAYS.map(w => [String(w.day), 'Mover a otro día']))}
                 >
-                  <SelectTrigger className="w-auto text-gray-500" aria-label="Mover a otro día">
+                  <SelectTrigger className="w-auto text-muted-foreground" aria-label="Mover a otro día">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -616,11 +616,11 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
                     ))}
                   </SelectContent>
                 </Select>
-                <Button type="button" variant="ghost" size="sm" className="text-gray-500" onClick={() => duplicateDay(dayIndex)} disabled={schedule.length >= 7}>
+                <Button type="button" variant="ghost" size="sm" className="text-muted-foreground" onClick={() => duplicateDay(dayIndex)} disabled={schedule.length >= 7}>
                   <Copy className="mr-1 h-4 w-4" />
                   Duplicar
                 </Button>
-                <Button type="button" variant="ghost" size="icon" className="text-red-600" onClick={() => removeDay(dayIndex)} aria-label={`Quitar ${weekdayName(day.day)}`}>
+                <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => removeDay(dayIndex)} aria-label={`Quitar ${weekdayName(day.day)}`}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
@@ -628,10 +628,10 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
           </CardHeader>
           <CardContent className="space-y-3">
             {day.exercises.map((ex, exIndex) => (
-              <div key={exIndex} className="rounded-lg border bg-gray-50/60 p-3">
+              <div key={exIndex} className="rounded-lg border bg-muted/60 p-3">
                 <div className="flex items-end gap-2">
                   <div className="flex-1 space-y-1">
-                    <Label className="text-xs text-gray-500">Ejercicio {exIndex + 1}</Label>
+                    <Label className="text-xs text-muted-foreground">Ejercicio {exIndex + 1}</Label>
                     <ExerciseCombobox
                       exercises={exercises}
                       value={ex.exercise_id}
@@ -643,7 +643,7 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="text-gray-400 hover:text-red-600"
+                    className="text-muted-foreground hover:text-destructive"
                     onClick={() => removeExercise(dayIndex, exIndex)}
                     disabled={day.exercises.length === 1}
                     aria-label="Quitar ejercicio"
@@ -653,7 +653,7 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
                   <div className="space-y-1">
-                    <Label className="text-xs text-gray-500">Series</Label>
+                    <Label className="text-xs text-muted-foreground">Series</Label>
                     <Input
                       type="number" min={1} max={20} placeholder="ej: 4"
                       value={ex.sets}
@@ -661,7 +661,7 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs text-gray-500">Repeticiones</Label>
+                    <Label className="text-xs text-muted-foreground">Repeticiones</Label>
                     <Input
                       inputMode="numeric" placeholder="ej: 8-12"
                       value={ex.repsText}
@@ -669,7 +669,7 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
                     />
                   </div>
                   <div className="col-span-2 space-y-1 sm:col-span-1">
-                    <Label className="text-xs text-gray-500">Peso <span className="text-gray-400">(opcional)</span></Label>
+                    <Label className="text-xs text-muted-foreground">Peso <span className="text-muted-foreground">(opcional)</span></Label>
                     <div className="flex">
                       <Input
                         className="rounded-r-none"
@@ -690,8 +690,8 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs text-gray-500" title="Esfuerzo percibido: 10 = al fallo, 8 = le quedan 2 reps">
-                      RPE / esfuerzo <span className="text-gray-400">(1-10)</span>
+                    <Label className="text-xs text-muted-foreground" title="Esfuerzo percibido: 10 = al fallo, 8 = le quedan 2 reps">
+                      RPE / esfuerzo <span className="text-muted-foreground">(1-10)</span>
                     </Label>
                     <Input
                       type="number" min={1} max={10} step={0.5} placeholder="ej: 8"
@@ -700,7 +700,7 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs text-gray-500">Descanso <span className="text-gray-400">(seg)</span></Label>
+                    <Label className="text-xs text-muted-foreground">Descanso <span className="text-muted-foreground">(seg)</span></Label>
                     <Input
                       type="number" min={0} max={600} step={15} placeholder="ej: 90"
                       value={ex.rest_seconds ?? ''}
@@ -709,7 +709,7 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
                   </div>
                 </div>
                 <div className="mt-2 space-y-1">
-                  <Label className="text-xs text-gray-500">Nota para el alumno <span className="text-gray-400">(opcional, ej: "codos pegados al cuerpo")</span></Label>
+                  <Label className="text-xs text-muted-foreground">Nota para el alumno <span className="text-muted-foreground">(opcional, ej: "codos pegados al cuerpo")</span></Label>
                   <Input
                     value={ex.note ?? ''}
                     onChange={e => updateExercise(dayIndex, exIndex, { note: e.target.value })}

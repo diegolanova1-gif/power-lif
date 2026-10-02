@@ -30,7 +30,7 @@ export function DeleteRoutineButton({ routineId, routineName }: { routineId: str
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="ghost" size="icon-sm" className="text-gray-400 hover:text-red-600" aria-label="Eliminar rutina" />}>
+      <DialogTrigger render={<Button variant="ghost" size="icon-sm" className="text-muted-foreground hover:text-destructive" aria-label="Eliminar rutina" />}>
         <Trash2 className="h-4 w-4" />
       </DialogTrigger>
       <DialogContent>

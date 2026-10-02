@@ -65,8 +65,8 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Revisiones</h1>
-        <p className="text-gray-500 mt-1">Observaciones, fotos y videos que te mandan tus alumnos</p>
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Revisiones</h1>
+        <p className="text-muted-foreground mt-1">Observaciones, fotos y videos que te mandan tus alumnos</p>
       </div>
 
       <div className="flex gap-1 border-b">
@@ -76,7 +76,7 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
             href={tab.value === 'pending' ? '/coach/reviews' : '/coach/reviews?status=reviewed'}
             className={cn(
               '-mb-px border-b-2 px-4 py-2 text-sm font-medium transition-colors',
-              status === tab.value ? 'border-primary text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-900'
+              status === tab.value ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'
             )}
           >
             {tab.label}
@@ -86,13 +86,13 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
 
       {error ? (
         <Card>
-          <CardContent className="py-12 text-center text-red-600">{error.message}</CardContent>
+          <CardContent className="py-12 text-center text-destructive">{error.message}</CardContent>
         </Card>
       ) : items.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <MessageSquare className="mx-auto mb-3 h-12 w-12 text-gray-300" />
-            <p className="text-gray-500">
+            <MessageSquare className="mx-auto mb-3 h-12 w-12 text-muted-foreground/40" />
+            <p className="text-muted-foreground">
               {status === 'pending' ? 'No tienes revisiones pendientes' : 'Todavía no revisaste nada'}
             </p>
           </CardContent>

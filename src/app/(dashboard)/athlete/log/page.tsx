@@ -166,7 +166,7 @@ export default function AthleteLogPage() {
   if (noRoutine || !currentDay || !session) {
     return (
       <Card>
-        <CardContent className="py-12 text-center text-gray-500">
+        <CardContent className="py-12 text-center text-muted-foreground">
           Todavía no tienes una rutina activa. Tu coach te la va a asignar.
         </CardContent>
       </Card>
@@ -198,15 +198,15 @@ export default function AthleteLogPage() {
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <div className="text-center">
-          <p className="text-sm text-gray-500">Semana {currentDay.week}</p>
-          <p className="text-2xl font-bold text-gray-900">{weekdayName(currentDay.day)}</p>
+          <p className="text-sm font-medium text-muted-foreground">Semana {currentDay.week}</p>
+          <p className="text-2xl font-extrabold tracking-tight text-foreground">{weekdayName(currentDay.day)}</p>
           {startedAt && (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               {format(dateForWeekDay(startedAt, currentDay.week, currentDay.day), "d 'de' MMMM", { locale: es })}
             </p>
           )}
           {currentDay.name && currentDay.name !== weekdayName(currentDay.day) && (
-            <p className="text-sm text-gray-600">{currentDay.name}</p>
+            <p className="text-sm text-muted-foreground">{currentDay.name}</p>
           )}
         </div>
         <Button variant="outline" size="icon" onClick={() => goTo(currentDayIndex + 1)} disabled={currentDayIndex === days.length - 1} aria-label="Sesión siguiente">
@@ -225,8 +225,8 @@ export default function AthleteLogPage() {
               title={startedAt ? format(dateForWeekDay(startedAt, d.week, d.day), "d 'de' MMMM", { locale: es }) : undefined}
               className={cn(
                 'relative flex h-11 min-w-11 flex-col items-center justify-center gap-0 rounded-full px-2 text-sm font-medium leading-none transition-colors',
-                i === currentDayIndex ? 'bg-primary text-primary-foreground' : 'text-gray-500 hover:bg-gray-100',
-                todayChip && i !== currentDayIndex && 'ring-2 ring-blue-400'
+                i === currentDayIndex ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted',
+                todayChip && i !== currentDayIndex && 'ring-2 ring-primary/40'
               )}
             >
               <span>{weekdayShort(d.day)}</span>
@@ -243,21 +243,23 @@ export default function AthleteLogPage() {
       {/* Progress */}
       <div className="space-y-1">
         <div className="flex justify-between text-sm">
-          <span className="font-medium text-gray-700">{doneCount} de {total} ejercicios hechos</span>
-          <span className="text-gray-500">{total ? Math.round((doneCount / total) * 100) : 0}%</span>
+          <span className="font-medium text-foreground">{doneCount} de {total} ejercicios hechos</span>
+          <span className="font-mono tabular-nums text-muted-foreground">{total ? Math.round((doneCount / total) * 100) : 0}%</span>
         </div>
-        <div className="h-2 overflow-hidden rounded-full bg-gray-200">
-          <div className="h-full rounded-full bg-green-500 transition-all" style={{ width: `${total ? (doneCount / total) * 100 : 0}%` }} />
+        <div className="h-2 overflow-hidden rounded-full bg-muted">
+          <div className={`h-full rounded-full transition-all duration-500 ease-out ${allDone ? 'bg-success' : 'bg-primary'}`} style={{ width: `${total ? (doneCount / total) * 100 : 0}%` }} />
         </div>
       </div>
 
       {allDone && (
-        <Card className="border-green-300 bg-green-50">
+        <Card className="animate-in fade-in slide-in-from-bottom-2 border-success/20 bg-success/5 duration-500">
           <CardContent className="flex flex-col items-center gap-3 py-6 text-center sm:flex-row sm:text-left">
-            <PartyPopper className="h-8 w-8 text-green-600" />
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-success/15">
+              <PartyPopper className="h-6 w-6 text-success" />
+            </div>
             <div className="flex-1">
-              <p className="font-semibold text-green-800">¡Entrenamiento completo!</p>
-              <p className="text-sm text-green-700">Tu coach ya puede ver lo que hiciste.</p>
+              <p className="font-semibold text-success">¡Entrenamiento completo!</p>
+              <p className="text-sm text-muted-foreground">Tu coach ya puede ver lo que hiciste. Así se construye el progreso.</p>
             </div>
             {currentDayIndex < days.length - 1 && (
               <Button variant="outline" onClick={() => goTo(currentDayIndex + 1)}>

@@ -30,14 +30,14 @@ export function TeamRankingOfficial({ ranking, currentUserId }: { ranking: Ranki
           Ranking oficial
         </CardTitle>
         {ranking && (
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             Aprobado por tu coach el {format(parseISO(ranking.approved_at), "dd MMM yyyy", { locale: es })}
           </p>
         )}
       </CardHeader>
       <CardContent>
         {!ranking ? (
-          <p className="py-8 text-center text-gray-500">Tu coach todavía no aprobó un ranking para este team.</p>
+          <p className="py-8 text-center text-muted-foreground">Tu coach todavía no aprobó un ranking para este team.</p>
         ) : (
           <Table>
             <TableHeader>
@@ -52,13 +52,13 @@ export function TeamRankingOfficial({ ranking, currentUserId }: { ranking: Ranki
             <TableBody>
               {ranking.entries.map(e => (
                 <TableRow key={e.athlete_id} className={cn(e.athlete_id === currentUserId && 'bg-primary/5 font-medium')}>
-                  <TableCell>{MEDALS[e.rank - 1] ?? e.rank}</TableCell>
+                  <TableCell className="font-mono tabular-nums">{MEDALS[e.rank - 1] ?? e.rank}</TableCell>
                   <TableCell>{e.full_name}{e.athlete_id === currentUserId && ' (vos)'}</TableCell>
-                  <TableCell className="text-right font-semibold">{e.current_e1rm} kg</TableCell>
-                  <TableCell className={cn('text-right', e.progress_pct > 0 ? 'text-emerald-600' : e.progress_pct < 0 ? 'text-red-600' : 'text-gray-500')}>
+                  <TableCell className="text-right font-mono font-semibold tabular-nums">{e.current_e1rm} kg</TableCell>
+                  <TableCell className={cn('text-right font-mono tabular-nums', e.progress_pct > 0 ? 'text-success' : e.progress_pct < 0 ? 'text-destructive' : 'text-muted-foreground')}>
                     {e.progress_pct > 0 ? '+' : ''}{e.progress_pct}%
                   </TableCell>
-                  <TableCell className="text-right font-semibold">{e.score}</TableCell>
+                  <TableCell className="text-right font-mono font-semibold tabular-nums">{e.score}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

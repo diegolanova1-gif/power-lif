@@ -159,7 +159,7 @@ export function AthleteAnalytics({
 
       {error ? (
         <Card>
-          <CardContent className="text-center py-12 text-red-600">{error}</CardContent>
+          <CardContent className="text-center py-12 text-destructive">{error}</CardContent>
         </Card>
       ) : !stats ? (
         <div className="flex justify-center py-16">
@@ -175,8 +175,8 @@ export function AthleteAnalytics({
                     <kpi.icon className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">{kpi.name}</p>
-                    <p className="text-2xl font-bold text-gray-900">{kpi.value}</p>
+                    <p className="text-sm text-muted-foreground">{kpi.name}</p>
+                    <p className="font-mono text-2xl font-extrabold tabular-nums text-foreground">{kpi.value}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -189,8 +189,8 @@ export function AthleteAnalytics({
                 <CardTitle>1RM Estimado</CardTitle>
                 <div className="flex gap-4 text-sm">
                   {LIFTS.map(l => (
-                    <span key={l.category} className="text-gray-500">
-                      {l.label}: <span className="font-semibold text-gray-900">{best[l.category] !== null ? `${best[l.category]!.toFixed(1)} kg` : '—'}</span>
+                    <span key={l.category} className="text-muted-foreground">
+                      {l.label}: <span className="font-mono font-semibold tabular-nums text-foreground">{best[l.category] !== null ? `${best[l.category]!.toFixed(1)} kg` : '—'}</span>
                     </span>
                   ))}
                 </div>
@@ -201,7 +201,7 @@ export function AthleteAnalytics({
                 <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={oneRMChart}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                       <XAxis dataKey="date" tick={{ fontSize: 12 }} tickFormatter={d => format(parseISO(d), 'dd/MM', { locale: es })} />
                       <YAxis tick={{ fontSize: 12 }} tickFormatter={val => `${val} kg`} domain={['auto', 'auto']} />
                       <Tooltip
@@ -224,7 +224,7 @@ export function AthleteAnalytics({
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <div className="text-center py-12 text-gray-500">
+                <div className="text-center py-12 text-muted-foreground">
                   Sin datos de 1RM. Se calcula cuando registra sentadilla, banca o peso muerto.
                 </div>
               )}
@@ -241,19 +241,19 @@ export function AthleteAnalytics({
                   <div className="h-72">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={[...stats.volume.weekly].sort((a, b) => a.week - b.week)}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                         <XAxis dataKey="week" tick={{ fontSize: 12 }} tickFormatter={w => `S${w}`} />
                         <YAxis tick={{ fontSize: 12 }} tickFormatter={val => `${Math.round(val / 1000)}k`} />
                         <Tooltip
                           formatter={value => [`${Math.round(Number(value)).toLocaleString('es-ES')} kg`, 'Volumen']}
                           labelFormatter={w => `Semana ${w}`}
                         />
-                        <Bar dataKey="volume" fill="#10b981" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="volume" fill="var(--success)" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                 ) : (
-                  <div className="text-center py-12 text-gray-500">Sin series en las últimas 12 semanas</div>
+                  <div className="text-center py-12 text-muted-foreground">Sin series en las últimas 12 semanas</div>
                 )}
               </CardContent>
             </Card>
@@ -267,16 +267,16 @@ export function AthleteAnalytics({
                   <div className="h-72">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={stats.adherence.weekly}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                         <XAxis dataKey="week" tick={{ fontSize: 12 }} tickFormatter={w => `S${w}`} />
                         <YAxis tick={{ fontSize: 12 }} domain={[0, 100]} tickFormatter={val => `${val}%`} />
                         <Tooltip formatter={value => [`${value}%`, 'Adherencia']} labelFormatter={w => `Semana ${w}`} />
-                        <Bar dataKey="adherence" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="adherence" fill="var(--primary)" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                 ) : (
-                  <div className="text-center py-12 text-gray-500">Sin programa activo asignado</div>
+                  <div className="text-center py-12 text-muted-foreground">Sin programa activo asignado</div>
                 )}
               </CardContent>
             </Card>

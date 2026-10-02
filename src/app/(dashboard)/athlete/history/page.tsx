@@ -169,15 +169,15 @@ export default function AthleteHistoryPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Historial de Entrenamientos</h1>
-          <p className="text-gray-500 mt-1">{sessions.length} sesiones registradas</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Historial de Entrenamientos</h1>
+          <p className="text-muted-foreground mt-1">{sessions.length} sesiones registradas</p>
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-600">Filtrar por semana:</label>
+          <label className="text-sm text-muted-foreground">Filtrar por semana:</label>
           <select
             value={filterWeek}
             onChange={e => setFilterWeek(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
-            className="ml-2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            className="ml-2 px-3 py-2 border border-border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="all">Todas las semanas</option>
             {weeks.map(w => (
@@ -190,9 +190,9 @@ export default function AthleteHistoryPage() {
       {filteredSessions.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <Dumbbell className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-            <p className="text-gray-500">No hay sesiones registradas</p>
-            <p className="text-sm text-gray-400 mt-1">Empieza a entrenar para ver tu historial aquí</p>
+            <Dumbbell className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
+            <p className="text-muted-foreground">No hay sesiones registradas</p>
+            <p className="text-sm text-muted-foreground/70 mt-1">Empieza a entrenar para ver tu historial aquí</p>
           </CardContent>
         </Card>
       ) : (
@@ -216,23 +216,23 @@ export default function AthleteHistoryPage() {
                       </Button>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-gray-900">
+                          <span className="font-medium text-foreground">
                             Semana {session.week} · {weekdayName(session.day)}
                           </span>
                           <Badge variant="outline">{session.exercises.length} ejercicios</Badge>
                         </div>
-                        <p className="text-sm text-gray-500 flex items-center gap-1">
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
                           <Calendar className="h-3.5 w-3.5" />
                           {format(parseISO(session.date), 'EEEE, dd MMMM yyyy', { locale: es })}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-4 text-sm font-mono tabular-nums text-muted-foreground">
                       <span>{session.total_sets} series</span>
                       <span>{session.total_volume.toLocaleString()} kg vol</span>
                       {session.avg_rpe && (
                         <span className="flex items-center gap-1">
-                          <Badge variant="secondary">RPE {session.avg_rpe.toFixed(1)}</Badge>
+                          <Badge variant="secondary" className="font-mono">RPE {session.avg_rpe.toFixed(1)}</Badge>
                         </span>
                       )}
                     </div>
@@ -267,15 +267,15 @@ export default function AthleteHistoryPage() {
                                   .sort((a, b) => a.set_number - b.set_number)
                                   .map(set => (
                                     <TableRow key={set.set_number}>
-                                      <TableCell>{set.set_number}</TableCell>
-                                      <TableCell className="font-mono font-medium">{set.weight_kg}</TableCell>
-                                      <TableCell>{set.reps}</TableCell>
-                                      <TableCell>{set.rpe?.toFixed(1) || '-'}</TableCell>
-                                      <TableCell>{set.rir?.toFixed(1) || '-'}</TableCell>
-                                      <TableCell className="font-medium">
+                                      <TableCell className="font-mono tabular-nums">{set.set_number}</TableCell>
+                                      <TableCell className="font-mono font-medium tabular-nums">{set.weight_kg}</TableCell>
+                                      <TableCell className="font-mono tabular-nums">{set.reps}</TableCell>
+                                      <TableCell className="font-mono tabular-nums">{set.rpe?.toFixed(1) || '-'}</TableCell>
+                                      <TableCell className="font-mono tabular-nums">{set.rir?.toFixed(1) || '-'}</TableCell>
+                                      <TableCell className="font-mono font-medium tabular-nums">
                                         {(set.weight_kg * set.reps).toLocaleString()}
                                       </TableCell>
-                                      <TableCell className="text-gray-500 max-w-xs truncate">
+                                      <TableCell className="text-muted-foreground max-w-xs truncate">
                                         {set.notes || '-'}
                                       </TableCell>
                                     </TableRow>

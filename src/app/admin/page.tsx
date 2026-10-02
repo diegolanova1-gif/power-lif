@@ -56,8 +56,8 @@ export default async function AdminPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Coaches</h1>
-          <p className="text-gray-500 mt-1">Alta de coaches, planes y límite de alumnos</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Coaches</h1>
+          <p className="text-muted-foreground mt-1">Alta de coaches, planes y límite de alumnos</p>
         </div>
         <CreateCoachDialog>
           <UserPlus className="mr-2 h-4 w-4" />
@@ -69,8 +69,8 @@ export default async function AdminPage() {
         <CardContent>
           {rows.length === 0 ? (
             <div className="text-center py-12">
-              <Users className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-              <p className="text-gray-500">No hay coaches todavía</p>
+              <Users className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
+              <p className="text-muted-foreground">No hay coaches todavía</p>
               <CreateCoachDialog triggerClassName="mt-4">
                 <UserPlus className="mr-2 h-4 w-4" />
                 Crear el primero
@@ -95,13 +95,13 @@ export default async function AdminPage() {
                       <TableCell className="font-medium">{coach.full_name || 'Sin nombre'}</TableCell>
                       <TableCell>{coach.email}</TableCell>
                       <TableCell>{PLANS[coach.plan].label}</TableCell>
-                      <TableCell>
+                      <TableCell className="font-mono tabular-nums">
                         {coach.student_limit === null
                           ? `${coach.athleteCount} · sin límite`
                           : `${coach.athleteCount} / ${coach.student_limit}`}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={coach.active ? 'default' : 'destructive'}>
+                        <Badge variant={coach.active ? 'success' : 'destructive'}>
                           {coach.active ? 'Activo' : 'Desactivado'}
                         </Badge>
                       </TableCell>

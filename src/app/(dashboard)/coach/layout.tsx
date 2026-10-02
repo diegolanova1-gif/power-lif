@@ -60,12 +60,12 @@ export default async function DashboardLayout({
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b sticky top-0 z-40">
+    <div className="min-h-screen bg-background">
+      <header className="bg-card border-b border-border sticky top-0 z-40">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-8">
-              <Link href="/coach" className="text-xl font-bold text-gray-900">
+              <Link href="/coach" className="text-xl font-extrabold tracking-tight text-foreground">
                 Power Routine
               </Link>
               <nav className="hidden md:flex items-center gap-1">
@@ -73,12 +73,12 @@ export default async function DashboardLayout({
                   <Link
                     key={item.name}
                     href={item.href}
-                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                   >
                     <item.icon className="h-4 w-4" />
                     {item.name}
                     {'badge' in item && item.badge > 0 && (
-                      <span className="rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground">{item.badge}</span>
+                      <span className="rounded-full bg-primary px-1.5 font-mono text-xs font-semibold tabular-nums text-primary-foreground">{item.badge}</span>
                     )}
                   </Link>
                 ))}
@@ -95,7 +95,7 @@ export default async function DashboardLayout({
                 <DropdownMenuContent className="w-56" align="end">
                   <div className="px-2 py-1.5">
                     <p className="text-sm font-medium">{profile.full_name}</p>
-                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>

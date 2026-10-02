@@ -158,10 +158,10 @@ export default function AthletesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Mis Alumnos</h1>
-          <p className="text-gray-500 mt-1">Gestiona y supervisa el progreso de tus alumnos</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Mis Alumnos</h1>
+          <p className="text-muted-foreground mt-1">Gestiona y supervisa el progreso de tus alumnos</p>
           {coachPlan && (
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-sm font-mono tabular-nums text-muted-foreground mt-1">
               {coachPlan.student_limit === null
                 ? `${athletes.length} alumnos · Plan ${PLANS[coachPlan.plan].label}, sin límite`
                 : `${athletes.length} de ${coachPlan.student_limit} alumnos (Plan ${PLANS[coachPlan.plan].label})`}
@@ -175,9 +175,9 @@ export default function AthletesPage() {
       </div>
 
       {atLimit && (
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
-          <TriangleAlert className="h-5 w-5 shrink-0 text-amber-600" />
-          <p className="flex-1 text-sm text-amber-800">Llegaste al límite de alumnos de tu plan.</p>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-lg border border-warning/40 bg-warning/20 p-4">
+          <TriangleAlert className="h-5 w-5 shrink-0 text-warning-foreground" />
+          <p className="flex-1 text-sm text-warning-foreground">Llegaste al límite de alumnos de tu plan.</p>
           <Button
             size="sm"
             nativeButton={false}
@@ -193,7 +193,7 @@ export default function AthletesPage() {
           <div className="flex items-center justify-between">
             <CardTitle>Lista de Alumnos ({athletes.length})</CardTitle>
             <div className="relative max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar alumno..."
                 value={search}
@@ -210,8 +210,8 @@ export default function AthletesPage() {
             </div>
           ) : filteredAthletes.length === 0 ? (
             <div className="text-center py-12">
-              <UserPlus className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-              <p className="text-gray-500">{search ? 'No se encontraron alumnos' : 'No tienes alumnos aún'}</p>
+              <UserPlus className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
+              <p className="text-muted-foreground">{search ? 'No se encontraron alumnos' : 'No tienes alumnos aún'}</p>
               {!search && (
                 <CreateAthleteDialog triggerClassName="mt-4" onCreated={fetchAthletes}>
                   <Plus className="mr-2 h-4 w-4" />
@@ -235,11 +235,11 @@ export default function AthletesPage() {
                   {filteredAthletes.map((athlete) => (
                     <TableRow key={athlete.id}>
                       <TableCell className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
                           {athlete.avatar_url ? (
                             <img src={athlete.avatar_url} alt="" className="h-10 w-10 rounded-full" />
                           ) : (
-                            <span className="text-gray-600 font-medium">
+                            <span className="text-primary font-semibold">
                               {athlete.full_name?.charAt(0).toUpperCase() || 'U'}
                             </span>
                           )}
@@ -252,7 +252,7 @@ export default function AthletesPage() {
                       <TableCell>
                         {athlete.current_routine ? (
                           <Link href={`/coach/routines/${athlete.current_routine_id}/edit`} title="Editar su rutina">
-                            <Badge variant="secondary" className="hover:bg-gray-200">{athlete.current_routine}</Badge>
+                            <Badge variant="secondary" className="hover:bg-muted">{athlete.current_routine}</Badge>
                           </Link>
                         ) : (
                           <Button size="sm" variant="outline" nativeButton={false} render={<Link href={`/coach/routines/new?athlete=${athlete.id}`} />}>
@@ -263,13 +263,15 @@ export default function AthletesPage() {
                       </TableCell>
                       <TableCell>
                         {athlete.last_session ? (
-                          new Date(athlete.last_session).toLocaleDateString('es-ES', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: 'numeric',
-                          })
+                          <span className="font-mono tabular-nums">
+                            {new Date(athlete.last_session).toLocaleDateString('es-ES', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                            })}
+                          </span>
                         ) : (
-                          <span className="text-gray-400">Nunca</span>
+                          <span className="text-muted-foreground">Nunca</span>
                         )}
                       </TableCell>
                       <TableCell className="text-right">
@@ -307,7 +309,7 @@ export default function AthletesPage() {
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               onClick={() => removeAthlete(athlete.id)}
-                              className="text-red-600 focus:text-red-600"
+                              className="text-destructive focus:text-destructive"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
                               Eliminar

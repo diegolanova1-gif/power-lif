@@ -18,8 +18,8 @@ export default async function TeamsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Teams</h1>
-          <p className="text-gray-500 mt-1">Grupos de alumnos que comparan estadísticas y ranking entre sí</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Teams</h1>
+          <p className="text-muted-foreground mt-1">Grupos de alumnos que comparan estadísticas y ranking entre sí</p>
         </div>
         <CreateTeamDialog />
       </div>
@@ -27,9 +27,9 @@ export default async function TeamsPage() {
       {!teams || teams.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <Trophy className="mx-auto mb-3 h-12 w-12 text-gray-300" />
-            <p className="text-gray-500">No tienes teams aún</p>
-            <p className="mt-1 text-sm text-gray-400">Los alumnos de un team ven el ranking y el progreso de sus compañeros (no sus videos ni observaciones).</p>
+            <Trophy className="mx-auto mb-3 h-12 w-12 text-muted-foreground/40" />
+            <p className="text-muted-foreground">No tienes teams aún</p>
+            <p className="mt-1 text-sm text-muted-foreground/70">Los alumnos de un team ven el ranking y el progreso de sus compañeros (no sus videos ni observaciones).</p>
           </CardContent>
         </Card>
       ) : (
@@ -46,9 +46,9 @@ export default async function TeamsPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="flex items-center gap-1 text-sm text-gray-500">
+                    <p className="flex items-center gap-1 text-sm text-muted-foreground">
                       <Users className="h-4 w-4" />
-                      {count} {count === 1 ? 'alumno' : 'alumnos'}
+                      <span className="font-mono tabular-nums">{count}</span> {count === 1 ? 'alumno' : 'alumnos'}
                     </p>
                   </CardContent>
                 </Card>

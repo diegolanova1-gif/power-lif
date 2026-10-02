@@ -166,10 +166,12 @@ export default function AthleteTodayPage() {
   if (!workout) {
     return (
       <div className="text-center py-16">
-        <Dumbbell className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">No hay entrenamiento programado</h2>
-        <p className="text-gray-500 mb-6">
-          No tienes una rutina activa asignada para hoy.
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+          <Dumbbell className="h-8 w-8 text-primary" />
+        </div>
+        <h2 className="text-xl font-semibold text-foreground mb-2">No hay entrenamiento programado</h2>
+        <p className="text-muted-foreground mb-6">
+          No tenés una rutina activa asignada para hoy.
         </p>
         <Link href="/athlete/log">
           <Button>Ir a registrar series</Button>
@@ -179,30 +181,44 @@ export default function AthleteTodayPage() {
   }
 
   const { athlete_routine, dayExercises, completedToday, setsLogged, totalSets } = workout
+  const pct = totalSets > 0 ? Math.min(100, Math.round((setsLogged / totalSets) * 100)) : 0
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Entrenamiento de Hoy</h1>
-          <p className="text-gray-500 mt-1">
-            {athlete_routine.routine?.name} - Semana {athlete_routine.current_week} · {weekdayName(athlete_routine.current_day)}
-          </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <div className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+            <Dumbbell className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">Entrenamiento de Hoy</h1>
+            <p className="text-muted-foreground mt-0.5">
+              {athlete_routine.routine?.name} · Semana {athlete_routine.current_week} · {weekdayName(athlete_routine.current_day)}
+            </p>
+          </div>
         </div>
-        <div className="flex items-center gap-4">
-          <Badge variant={completedToday ? 'default' : 'secondary'} className="text-lg px-3 py-1">
-            {completedToday ? (
-              <> <CheckCircle className="mr-1 h-4 w-4" /> Completado </>
-            ) : (
-              <> {setsLogged}/{totalSets} series </>
-            )}
-          </Badge>
-        </div>
+        <Badge
+          variant={completedToday ? 'success' : 'secondary'}
+          className="h-auto px-3 py-1.5 text-base font-mono tabular-nums"
+        >
+          {completedToday ? (
+            <> <CheckCircle className="mr-1 h-4 w-4" /> ¡Completo! </>
+          ) : (
+            <> {setsLogged}/{totalSets} series </>
+          )}
+        </Badge>
+      </div>
+
+      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+        <div
+          className={`h-full rounded-full transition-all duration-700 ease-out ${completedToday ? 'bg-success' : 'bg-primary'}`}
+          style={{ width: `${pct}%` }}
+        />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {dayExercises.map((exercise, index) => (
-          <Card key={exercise.exercise_id}>
+          <Card key={exercise.exercise_id} className="transition-shadow hover:shadow-md">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">{exercise.exercise_name}</CardTitle>
@@ -211,39 +227,45 @@ export default function AthleteTodayPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className={`grid gap-2 text-sm ${exercise.intensity ? 'grid-cols-3' : 'grid-cols-2'}`}>
-                <div className="text-center p-2 bg-gray-50 rounded-lg">
-                  <p className="font-medium text-gray-900">{exercise.sets}</p>
-                  <p className="text-gray-500">Series</p>
+                <div className="text-center p-2.5 bg-muted/60 rounded-lg">
+                  <p className="font-mono text-xl font-bold tabular-nums text-foreground">{exercise.sets}</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Series</p>
                 </div>
-                <div className="text-center p-2 bg-gray-50 rounded-lg">
-                  <p className="font-medium text-gray-900">{exercise.reps}</p>
-                  <p className="text-gray-500">Reps</p>
+                <div className="text-center p-2.5 bg-muted/60 rounded-lg">
+                  <p className="font-mono text-xl font-bold tabular-nums text-foreground">{exercise.reps}</p>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Reps</p>
                 </div>
                 {exercise.intensity && (
-                  <div className="text-center p-2 bg-gray-50 rounded-lg">
-                    <p className="font-medium text-gray-900">{exercise.intensity}</p>
-                    <p className="text-gray-500">Carga</p>
+                  <div className="text-center p-2.5 bg-muted/60 rounded-lg">
+                    <p className="font-mono text-xl font-bold tabular-nums text-foreground">{exercise.intensity}</p>
+                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Carga</p>
                   </div>
                 )}
               </div>
 
               {exercise.rpe_target && (
-                <div className="text-sm text-gray-600">
-                  RPE objetivo: <span className="font-medium">{exercise.rpe_target}</span>
+                <div className="text-sm text-muted-foreground">
+                  RPE objetivo: <span className="font-mono font-medium text-foreground">{exercise.rpe_target}</span>
                 </div>
               )}
 
               {exercise.rest_seconds && (
-                <div className="flex items-center gap-1 text-sm text-gray-500">
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
                   <Clock className="h-4 w-4" />
-                  Descanso: {Math.floor(exercise.rest_seconds / 60)}:{String(exercise.rest_seconds % 60).padStart(2, '0')}
+                  Descanso: <span className="font-mono tabular-nums">{Math.floor(exercise.rest_seconds / 60)}:{String(exercise.rest_seconds % 60).padStart(2, '0')}</span>
                 </div>
               )}
 
               <Link href={`/athlete/log?exercise=${exercise.exercise_id}&week=${athlete_routine.current_week}&day=${athlete_routine.current_day}`}>
-                <Button className="w-full" variant={completedToday ? 'secondary' : 'default'}>
-                  {completedToday ? 'Completado' : 'Registrar series'}
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                <Button
+                  className={`w-full ${completedToday ? 'border-success/30 bg-success/10 text-success hover:bg-success/15' : ''}`}
+                  variant={completedToday ? 'outline' : 'default'}
+                >
+                  {completedToday ? (
+                    <> <CheckCircle className="mr-1 h-4 w-4" /> Completado </>
+                  ) : (
+                    <> Registrar series <ArrowRight className="ml-2 h-4 w-4" /> </>
+                  )}
                 </Button>
               </Link>
             </CardContent>
@@ -252,12 +274,17 @@ export default function AthleteTodayPage() {
       </div>
 
       {completedToday && (
-        <Card className="border-green-200 bg-green-50">
+        <Card className="animate-in fade-in slide-in-from-bottom-2 border-success/20 bg-success/5 duration-500">
           <CardContent className="pt-6">
-            <div className="flex items-center justify-center gap-2 text-green-700">
-              <CheckCircle className="h-6 w-6" />
-              <span className="font-medium">¡Entrenamiento completado! Bien hecho.</span>
+            <div className="flex items-center justify-center gap-2 text-success">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-success/15">
+                <CheckCircle className="h-5 w-5" />
+              </div>
+              <span className="font-semibold">¡Entrenamiento completado! Bien hecho.</span>
             </div>
+            <p className="mt-1 text-center text-sm text-muted-foreground">
+              Un día más cerca de tu objetivo. Así se construye el progreso.
+            </p>
             <div className="mt-4 text-center">
               <Link href="/athlete/progress">
                 <Button variant="outline">Ver mi progreso</Button>

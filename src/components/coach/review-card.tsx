@@ -63,24 +63,24 @@ export function ReviewCard({ item }: { item: ReviewItem }) {
       <CardHeader className="pb-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <Link href={`/coach/athletes/${item.athleteId}?week=${item.week}&day=${item.day}`} className="font-semibold text-gray-900 hover:text-primary hover:underline">
+            <Link href={`/coach/athletes/${item.athleteId}?week=${item.week}&day=${item.day}`} className="font-semibold text-foreground hover:text-primary hover:underline">
               {item.athleteName}
             </Link>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               {item.exerciseName} · Semana {item.week}, {weekdayName(item.day)} ·{' '}
               {new Date(item.updatedAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
             </p>
           </div>
           {item.reviewedAt ? (
-            <Badge variant="secondary" className="gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> Revisado</Badge>
+            <Badge variant="success" className="gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> Revisado</Badge>
           ) : (
-            <Badge>Pendiente</Badge>
+            <Badge variant="warning">Pendiente</Badge>
           )}
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {item.reason && <Badge variant="outline" className="text-amber-700">{FEEDBACK_REASONS[item.reason]}</Badge>}
-        {item.note && <p className="whitespace-pre-wrap rounded-md bg-gray-50 p-3 text-sm text-gray-800">{item.note}</p>}
+        {item.reason && <Badge variant="warning">{FEEDBACK_REASONS[item.reason]}</Badge>}
+        {item.note && <p className="whitespace-pre-wrap rounded-md bg-muted p-3 text-sm text-foreground">{item.note}</p>}
 
         <MediaGrid items={media} onDelete={removeMedia} deletingId={deletingId} />
 

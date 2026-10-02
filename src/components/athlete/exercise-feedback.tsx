@@ -200,7 +200,7 @@ export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week
 
   if (!open) {
     return (
-      <Button type="button" variant="ghost" size="sm" className="mt-3 text-gray-500" onClick={() => setOpen(true)}>
+      <Button type="button" variant="ghost" size="sm" className="mt-3 text-muted-foreground" onClick={() => setOpen(true)}>
         <MessageSquare className="mr-1 h-4 w-4" />
         Agregar observación o video
       </Button>
@@ -208,14 +208,14 @@ export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week
   }
 
   return (
-    <div className="mt-4 space-y-3 rounded-lg border bg-gray-50 p-3">
+    <div className="mt-4 space-y-3 rounded-lg border bg-muted/50 p-3">
       <div className="flex items-center justify-between">
-        <p className="flex items-center gap-1 text-sm font-medium text-gray-700">
+        <p className="flex items-center gap-1 text-sm font-medium text-muted-foreground">
           <MessageSquare className="h-4 w-4" />
           Observaciones para tu coach
         </p>
         {feedback?.reviewed_at && (
-          <span className="flex items-center gap-1 text-xs text-green-600">
+          <span className="flex items-center gap-1 text-xs text-success">
             <CheckCircle2 className="h-3.5 w-3.5" />
             Revisado
           </span>
@@ -223,9 +223,9 @@ export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week
       </div>
 
       {feedback?.coach_reply && (
-        <div className="rounded-md border-l-4 border-primary bg-white p-2 text-sm">
-          <p className="text-xs font-medium text-gray-500">Tu coach:</p>
-          <p className="whitespace-pre-wrap text-gray-800">{feedback.coach_reply}</p>
+        <div className="rounded-md border-l-4 border-primary bg-background p-2 text-sm">
+          <p className="text-xs font-medium text-muted-foreground">Tu coach:</p>
+          <p className="whitespace-pre-wrap text-foreground">{feedback.coach_reply}</p>
         </div>
       )}
 
@@ -233,7 +233,7 @@ export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week
 
       {partial && (
         <div className="space-y-1">
-          <p className="text-xs text-gray-500">¿Por qué no lo completaste tal cual? (opcional)</p>
+          <p className="text-xs text-muted-foreground">¿Por qué no lo completaste tal cual? (opcional)</p>
           <div className="flex flex-wrap gap-2">
             {(Object.entries(FEEDBACK_REASONS) as [FeedbackReason, string][]).map(([value, label]) => (
               <button
@@ -242,7 +242,7 @@ export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week
                 onClick={() => setReason(prev => (prev === value ? null : value))}
                 className={cn(
                   'rounded-full border px-3 py-1 text-sm font-medium transition-colors',
-                  reason === value ? 'border-primary bg-primary text-primary-foreground' : 'bg-white text-gray-600 hover:bg-gray-50'
+                  reason === value ? 'border-primary bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:bg-muted'
                 )}
               >
                 {label}
@@ -257,19 +257,19 @@ export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week
         onChange={e => setNote(e.target.value)}
         placeholder="¿Cómo se sintió? Dolor, técnica, dudas..."
         rows={2}
-        className="bg-white text-sm"
+        className="bg-background text-sm"
         maxLength={2000}
       />
 
       {files.length > 0 && (
         <ul className="space-y-1 text-sm">
           {files.map((file, i) => (
-            <li key={`${file.name}-${i}`} className="flex items-center justify-between rounded bg-white px-2 py-1">
-              <span className="truncate">{file.name} <span className="text-gray-400">({formatBytes(file.size)})</span></span>
+            <li key={`${file.name}-${i}`} className="flex items-center justify-between rounded bg-background px-2 py-1">
+              <span className="truncate">{file.name} <span className="text-muted-foreground">({formatBytes(file.size)})</span></span>
               <button
                 type="button"
                 onClick={() => setFiles(prev => prev.filter((_, j) => j !== i))}
-                className="text-gray-400 hover:text-red-600"
+                className="text-muted-foreground hover:text-destructive"
                 aria-label={`Quitar ${file.name}`}
               >
                 <X className="h-4 w-4" />
@@ -296,7 +296,7 @@ export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week
           {progress ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Send className="mr-1 h-4 w-4" />}
           {progress ?? 'Enviar a mi coach'}
         </Button>
-        <span className="text-xs text-gray-400">Máx. {formatBytes(MAX_MEDIA_BYTES)} por archivo</span>
+        <span className="text-xs text-muted-foreground">Máx. {formatBytes(MAX_MEDIA_BYTES)} por archivo</span>
       </div>
     </div>
   )

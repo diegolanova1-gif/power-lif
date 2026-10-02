@@ -74,8 +74,8 @@ export default async function CoachDashboard() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-500 mt-1">Resumen de tu actividad como coach</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground mt-1">Resumen de tu actividad como coach</p>
         </div>
         <Link href="/coach/athletes">
           <Button>
@@ -88,12 +88,12 @@ export default async function CoachDashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <Link key={stat.name} href={stat.href} className="block">
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <Card className="hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-500">{stat.name}</p>
-                    <p className="text-3xl font-bold text-gray-900 mt-1">{stat.value}</p>
+                    <p className="text-sm font-medium text-muted-foreground">{stat.name}</p>
+                    <p className="font-mono text-3xl font-extrabold tabular-nums text-foreground mt-1">{stat.value}</p>
                   </div>
                   <div className={cn('p-3 rounded-full', stat.color)}>
                     <stat.icon className="h-6 w-6" />
@@ -154,27 +154,27 @@ export default async function CoachDashboard() {
                   <Link
                     key={item.athlete_id}
                     href={`/coach/athletes/${item.athlete_id}`}
-                    className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors"
+                    className="flex items-center gap-3 p-2 hover:bg-muted rounded-lg transition-colors"
                   >
-                    <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
                       {item.profiles?.avatar_url ? (
                         <img src={item.profiles.avatar_url} alt="" className="h-10 w-10 rounded-full" />
                       ) : (
-                        <span className="text-gray-600 font-medium">
+                        <span className="text-primary font-semibold">
                           {item.profiles?.full_name?.charAt(0).toUpperCase() || 'U'}
                         </span>
                       )}
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">{item.profiles?.full_name || 'Sin nombre'}</p>
-                      <p className="text-sm text-gray-500">Ver progreso →</p>
+                      <p className="font-medium text-foreground">{item.profiles?.full_name || 'Sin nombre'}</p>
+                      <p className="text-sm text-muted-foreground">Ver progreso →</p>
                     </div>
                   </Link>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-500">
-                <Users className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+              <div className="text-center py-8 text-muted-foreground">
+                <Users className="h-12 w-12 mx-auto mb-3 text-muted-foreground/40" />
                 <p>No tienes alumnos aún</p>
                 <Link href="/coach/athletes">
                   <Button variant="link" className="mt-2" size="sm">

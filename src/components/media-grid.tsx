@@ -25,7 +25,7 @@ export function MediaGrid({ items, onDelete, deletingId }: MediaGridProps) {
       {items.map(item => (
         <div key={item.id} className="group relative overflow-hidden rounded-lg border bg-black/5">
           {!item.url ? (
-            <div className="flex aspect-video items-center justify-center text-xs text-gray-400">No disponible</div>
+            <div className="flex aspect-video items-center justify-center text-xs text-muted-foreground">No disponible</div>
           ) : item.media_type === 'video' ? (
             <video src={item.url} controls preload="metadata" playsInline className="aspect-video w-full bg-black object-contain" />
           ) : (

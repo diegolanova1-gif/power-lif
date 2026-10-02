@@ -235,8 +235,8 @@ export default function AthleteProgressPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Mi Progreso</h1>
-          <p className="text-gray-500 mt-1">Estadísticas y evolución de tus entrenamientos</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Mi Progreso</h1>
+          <p className="text-muted-foreground mt-1">Estadísticas y evolución de tus entrenamientos</p>
         </div>
         <div className="flex gap-4">
           <Select
@@ -284,7 +284,7 @@ export default function AthleteProgressPage() {
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={filteredOneRM.map(d => ({ ...d, date: formatDate(d.date) }))}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                   <XAxis dataKey="date" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} tickFormatter={val => `${val} kg`} />
                   <Tooltip
@@ -294,10 +294,10 @@ export default function AthleteProgressPage() {
                   <Line
                     type="monotone"
                     dataKey="estimated_1rm"
-                    stroke="#3b82f6"
+                    stroke="var(--primary)"
                     strokeWidth={2}
-                    dot={{ r: 4, fill: '#3b82f6' }}
-                    activeDot={{ r: 6, fill: '#3b82f6' }}
+                    dot={{ r: 4, fill: 'var(--primary)' }}
+                    activeDot={{ r: 6, fill: 'var(--primary)' }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -306,7 +306,7 @@ export default function AthleteProgressPage() {
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={filteredBestWeight.map(d => ({ ...d, date: formatDate(d.date) }))}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                   <XAxis dataKey="date" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} tickFormatter={val => `${val} kg`} />
                   <Tooltip
@@ -316,16 +316,16 @@ export default function AthleteProgressPage() {
                   <Line
                     type="monotone"
                     dataKey="weight_kg"
-                    stroke="#8b5cf6"
+                    stroke="var(--primary)"
                     strokeWidth={2}
-                    dot={{ r: 4, fill: '#8b5cf6' }}
-                    activeDot={{ r: 6, fill: '#8b5cf6' }}
+                    dot={{ r: 4, fill: 'var(--primary)' }}
+                    activeDot={{ r: 6, fill: 'var(--primary)' }}
                   />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           ) : (
-            <div className="text-center py-12 text-gray-500">
+            <div className="text-center py-12 text-muted-foreground">
               Todavía no hay registros con peso para este ejercicio.
             </div>
           )}
@@ -344,18 +344,18 @@ export default function AthleteProgressPage() {
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={volumeData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis type="number" tickFormatter={val => `${val} kg`} />
                     <YAxis dataKey="week" type="category" tick={{ fontSize: 12 }} label={{ value: 'Semana', position: 'insideLeft', offset: -10 }} />
                     <Tooltip formatter={(value: number) => [`${value.toLocaleString()} kg`, 'Volumen']} />
-                    <Bar dataKey="volume" fill="#10b981" radius={[0, 4, 4, 0]}>
-                      {volumeData.map((_, i) => <Cell key={`cell-${i}`} fill={i === volumeData.length - 1 ? '#059669' : '#10b981'} />)}
+                    <Bar dataKey="volume" fill="var(--success)" radius={[0, 4, 4, 0]}>
+                      {volumeData.map((_, i) => <Cell key={`cell-${i}`} fill={i === volumeData.length - 1 ? 'color-mix(in oklch, var(--success), black 20%)' : 'var(--success)'} />)}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="text-center py-12 text-gray-500">No hay datos de volumen aún</div>
+              <div className="text-center py-12 text-muted-foreground">No hay datos de volumen aún</div>
             )}
           </CardContent>
         </Card>
@@ -372,34 +372,31 @@ export default function AthleteProgressPage() {
                   {adherenceData.map((day, i) => (
                     <div
                       key={day.date}
-                      className="w-6 h-6 rounded-sm transition-colors"
-                      style={{
-                        backgroundColor: day.completed ? '#10b981' : '#e5e7eb',
-                      }}
+                      className={`w-6 h-6 rounded-sm transition-colors ${day.completed ? 'bg-success' : 'bg-muted'}`}
                       title={`${format(parseISO(day.date), 'dd MMM', { locale: es })}: ${day.completed ? 'Entrenó' : 'Descanso'}`}
                     />
                   ))}
                 </div>
-                <div className="flex justify-between text-xs text-gray-500 mt-2">
+                <div className="flex justify-between text-xs font-mono tabular-nums text-muted-foreground mt-2">
                   <span>{format(parseISO(adherenceData[0].date), 'dd MMM', { locale: es })}</span>
                   <span>{format(parseISO(adherenceData[adherenceData.length - 1].date), 'dd MMM', { locale: es })}</span>
                 </div>
-                <div className="flex items-center gap-4 mt-3 text-sm text-gray-600">
+                <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-sm bg-green-500" />
+                    <div className="w-4 h-4 rounded-sm bg-success" />
                     <span>Entrenó</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-sm bg-gray-200" />
+                    <div className="w-4 h-4 rounded-sm bg-muted" />
                     <span>Descanso</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 font-mono tabular-nums">
                     <span>Total: {adherenceData.filter(d => d.completed).length} / 90 días</span>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="text-center py-12 text-gray-500">No hay datos de adherencia</div>
+              <div className="text-center py-12 text-muted-foreground">No hay datos de adherencia</div>
             )}
           </CardContent>
         </Card>

@@ -79,7 +79,7 @@ export function NewExerciseDialog({ onCreated }: { onCreated: (exercise: Exercis
           <div className="space-y-2">
             <Label htmlFor="exercise-muscles">Músculos (opcional)</Label>
             <Input id="exercise-muscles" value={muscles} onChange={e => setMuscles(e.target.value)} placeholder="Cuádriceps, Glúteos" />
-            <p className="text-xs text-gray-500">Separados por coma. Solo lo ven vos y tus atletas.</p>
+            <p className="text-xs text-muted-foreground">Separados por coma. Solo lo ven vos y tus atletas.</p>
           </div>
         </div>
         <DialogFooter>

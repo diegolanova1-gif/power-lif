@@ -37,10 +37,10 @@ export default async function TeamDetailPage({ params }: { params: Promise<{ id:
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Link href="/coach/teams" className="text-gray-500 hover:text-gray-900">
+          <Link href="/coach/teams" className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">{team.name}</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">{team.name}</h1>
         </div>
         <DeleteTeamButton teamId={team.id} teamName={team.name} />
       </div>

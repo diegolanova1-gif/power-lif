@@ -41,7 +41,7 @@ export function FeedbackReply({ feedbackId, coachReply, reviewedAt }: FeedbackRe
         }}
         placeholder="Responder al alumno (opcional)..."
         rows={2}
-        className="bg-white text-sm"
+        className="bg-background text-sm"
         maxLength={2000}
       />
       <div className="flex items-center gap-2">
@@ -50,7 +50,7 @@ export function FeedbackReply({ feedbackId, coachReply, reviewedAt }: FeedbackRe
           {reply.trim() ? 'Responder' : 'Marcar como visto'}
         </Button>
         {saved && (
-          <span className="flex items-center gap-1 text-xs text-green-600">
+          <span className="flex items-center gap-1 text-xs text-success">
             <CheckCircle2 className="h-3.5 w-3.5" /> Visto
           </span>
         )}

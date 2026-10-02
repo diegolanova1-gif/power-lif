@@ -29,15 +29,15 @@ export default async function AthleteTeamPage({ searchParams }: { searchParams: 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Mi Team</h1>
-        <p className="text-gray-500 mt-1">Ranking y progreso de tus compañeros</p>
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Mi Team</h1>
+        <p className="text-muted-foreground mt-1">Ranking y progreso de tus compañeros</p>
       </div>
 
       {!team ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <Trophy className="mx-auto mb-3 h-12 w-12 text-gray-300" />
-            <p className="text-gray-500">Todavía no estás en ningún team. Tu coach puede agregarte.</p>
+            <Trophy className="mx-auto mb-3 h-12 w-12 text-muted-foreground/40" />
+            <p className="text-muted-foreground">Todavía no estás en ningún team. Tu coach puede agregarte.</p>
           </CardContent>
         </Card>
       ) : (
@@ -50,7 +50,7 @@ export default async function AthleteTeamPage({ searchParams }: { searchParams: 
                   href={`/athlete/team?team=${t.id}`}
                   className={cn(
                     '-mb-px border-b-2 px-4 py-2 text-sm font-medium',
-                    t.id === team.id ? 'border-primary text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-900'
+                    t.id === team.id ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'
                   )}
                 >
                   {t.name}
@@ -58,7 +58,7 @@ export default async function AthleteTeamPage({ searchParams }: { searchParams: 
               ))}
             </div>
           )}
-          {teams!.length === 1 && <h2 className="text-xl font-semibold text-gray-900">{team.name}</h2>}
+          {teams!.length === 1 && <h2 className="text-xl font-semibold text-foreground">{team.name}</h2>}
           <TeamRankingOfficial ranking={ranking} currentUserId={user?.id} />
         </>
       )}

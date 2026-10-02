@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { Loader2, Mail, Lock, AlertCircle, ArrowLeft, Dumbbell, User } from 'lucide-react'
+import { Loader2, Mail, Lock, AlertCircle, ArrowLeft, Dumbbell, User, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import { whatsappLink, WHATSAPP_MESSAGES } from '@/lib/contact'
 
@@ -75,15 +75,18 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ as
 
   if (!role) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/[0.06] via-background to-background px-4 py-12">
+        <Card className="w-full max-w-md animate-in fade-in slide-in-from-bottom-2 duration-500">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold">Power Routine</CardTitle>
+            <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-sm">
+              <Dumbbell className="h-7 w-7 text-primary-foreground" />
+            </div>
+            <CardTitle className="text-2xl font-extrabold tracking-tight">Power Routine</CardTitle>
             <CardDescription>¿Cómo querés ingresar?</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {isInactive && (
-              <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              <div className="flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>Tu cuenta está desactivada. Contacta al administrador.</span>
               </div>
@@ -103,30 +106,39 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ as
               Soy alumno
             </Button>
           </CardContent>
+          <CardFooter className="justify-center !bg-transparent !border-t-0 pt-0">
+            <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <ShieldCheck className="h-3.5 w-3.5 text-success" />
+              Tus datos y los de tus alumnos, protegidos
+            </p>
+          </CardFooter>
         </Card>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
-      <Card className="w-full max-w-md relative">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/[0.06] via-background to-background px-4 py-12">
+      <Card className="w-full max-w-md relative animate-in fade-in slide-in-from-bottom-2 duration-500">
         <CardHeader className="text-center">
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="absolute left-2 top-2 text-gray-400"
+            className="absolute left-2 top-2 text-muted-foreground"
             onClick={() => setRole(null)}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <CardTitle className="text-2xl font-bold">Power Routine</CardTitle>
+          <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-sm">
+            <Dumbbell className="h-7 w-7 text-primary-foreground" />
+          </div>
+          <CardTitle className="text-2xl font-extrabold tracking-tight">Power Routine</CardTitle>
           <CardDescription>{isAthlete ? 'Ingreso de alumnos' : 'Ingreso de coaches'}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {isInactive && (
-            <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div className="flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>Tu cuenta está desactivada. Contacta al administrador.</span>
             </div>
@@ -135,7 +147,7 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ as
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
                 <Input
                   id="email"
                   type="email"
@@ -153,7 +165,7 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ as
               <div className="space-y-2">
                 <Label htmlFor="password">Contraseña</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
                   <Input
                     id="password"
                     type="password"
@@ -169,7 +181,7 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ as
             )}
 
             {isMagicLink && (
-              <p className="text-sm text-gray-500 text-center">
+              <p className="text-sm text-muted-foreground text-center">
                 Te enviaremos un enlace mágico a {email}
               </p>
             )}
@@ -197,11 +209,11 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ as
           </div>
 
           {isAthlete ? (
-            <p className="text-center text-sm text-gray-500">
+            <p className="text-center text-sm text-muted-foreground">
               Tu coach te da el email y la contraseña para entrar.
             </p>
           ) : (
-            <p className="text-center text-sm text-gray-500">
+            <p className="text-center text-sm text-muted-foreground">
               ¿Eres entrenador y quieres usar Power Routine?{' '}
               <a
                 href={whatsappLink(WHATSAPP_MESSAGES.info)}

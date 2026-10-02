@@ -18,15 +18,15 @@ import { es } from 'date-fns/locale'
 import { dateForWeekDay, isToday as isTodayDate } from '@/lib/schedule-dates'
 
 const STATUS_STYLE: Record<ComplianceStatus, { label: string; className: string }> = {
-  done: { label: 'Hecho', className: 'bg-green-500 text-white border-green-500' },
-  partial: { label: 'Parcial', className: 'bg-amber-400 text-white border-amber-400' },
-  none: { label: 'Sin registrar', className: 'bg-white text-gray-400 border-gray-200' },
+  done: { label: 'Hecho', className: 'bg-success text-success-foreground border-success' },
+  partial: { label: 'Parcial', className: 'bg-warning text-warning-foreground border-warning' },
+  none: { label: 'Sin registrar', className: 'bg-card text-muted-foreground border-border' },
 }
 
 function StatusBadge({ status }: { status: ComplianceStatus }) {
-  if (status === 'done') return <span className="flex items-center gap-1 text-sm font-medium text-green-700"><CheckCircle2 className="h-4 w-4" /> Hecho</span>
-  if (status === 'partial') return <span className="flex items-center gap-1 text-sm font-medium text-amber-700"><AlertTriangle className="h-4 w-4" /> Parcial</span>
-  return <span className="flex items-center gap-1 text-sm text-gray-400"><Circle className="h-4 w-4" /> Sin registrar</span>
+  if (status === 'done') return <span className="flex items-center gap-1 text-sm font-medium text-success"><CheckCircle2 className="h-4 w-4" /> Hecho</span>
+  if (status === 'partial') return <span className="flex items-center gap-1 text-sm font-medium text-warning-foreground"><AlertTriangle className="h-4 w-4" /> Parcial</span>
+  return <span className="flex items-center gap-1 text-sm text-muted-foreground"><Circle className="h-4 w-4" /> Sin registrar</span>
 }
 
 export default async function AthleteFollowUpPage({
@@ -63,12 +63,12 @@ export default async function AthleteFollowUpPage({
   const header = (
     <div className="flex flex-wrap items-center justify-between gap-4">
       <div className="flex items-center gap-3">
-        <Link href="/coach/athletes" className="text-gray-500 hover:text-gray-900">
+        <Link href="/coach/athletes" className="text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">{athlete.full_name || 'Alumno'}</h1>
-          <p className="text-gray-500 mt-1">Seguimiento: lo que indicaste y lo que hizo</p>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">{athlete.full_name || 'Alumno'}</h1>
+          <p className="text-muted-foreground mt-1">Seguimiento: lo que indicaste y lo que hizo</p>
         </div>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -96,7 +96,7 @@ export default async function AthleteFollowUpPage({
       <div className="space-y-6">
         {header}
         <Card>
-          <CardContent className="py-12 text-center text-gray-500">Todavía no tiene rutina asignada.</CardContent>
+          <CardContent className="py-12 text-center text-muted-foreground">Todavía no tiene rutina asignada.</CardContent>
         </Card>
       </div>
     )
@@ -167,23 +167,23 @@ export default async function AthleteFollowUpPage({
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-gray-500">Rutina</p>
-            <p className="font-semibold text-gray-900">{routine.name}</p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">Rutina</p>
+            <p className="font-semibold text-foreground">{routine.name}</p>
+            <p className="text-sm font-mono tabular-nums text-muted-foreground">
               {assignment.status === 'completed' ? 'Terminada' : `Va por semana ${assignment.current_week}, ${weekdayName(assignment.current_day)}`}
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-gray-500">Sesiones cumplidas</p>
-            <p className="text-2xl font-bold text-green-700">{doneSessions} <span className="text-base font-normal text-gray-500">de {pastSessions.length}</span></p>
+            <p className="text-sm text-muted-foreground">Sesiones cumplidas</p>
+            <p className="font-mono text-2xl font-extrabold tabular-nums text-success">{doneSessions} <span className="text-base font-normal text-muted-foreground">de {pastSessions.length}</span></p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-gray-500">Sesiones parciales</p>
-            <p className="text-2xl font-bold text-amber-600">{partialSessions}</p>
+            <p className="text-sm text-muted-foreground">Sesiones parciales</p>
+            <p className="font-mono text-2xl font-extrabold tabular-nums text-warning-foreground">{partialSessions}</p>
           </CardContent>
         </Card>
       </div>
@@ -196,9 +196,9 @@ export default async function AthleteFollowUpPage({
         <CardContent className="space-y-2 overflow-x-auto">
           {Array.from({ length: totalWeeks }, (_, i) => i + 1).map(w => (
             <div key={w} className="flex items-center gap-2">
-              <span className="w-36 shrink-0 text-sm text-gray-500">
+              <span className="w-36 shrink-0 text-sm text-muted-foreground">
                 Semana {w}
-                <span className="ml-1 text-xs text-gray-400">
+                <span className="ml-1 text-xs font-mono tabular-nums text-muted-foreground/80">
                   ({format(dateFor(w, trainingDays[0]), 'd MMM', { locale: es })})
                 </span>
               </span>
@@ -217,24 +217,24 @@ export default async function AthleteFollowUpPage({
                       'relative flex h-12 w-12 shrink-0 flex-col items-center justify-center gap-0.5 rounded-md border text-xs font-medium leading-none',
                       STATUS_STYLE[status].className,
                       selected && 'ring-2 ring-primary ring-offset-2',
-                      todayCell && !selected && 'ring-2 ring-blue-400 ring-offset-1'
+                      todayCell && !selected && 'ring-2 ring-primary/40 ring-offset-1'
                     )}
                   >
                     <span>{weekdayShort(d)}</span>
-                    <span className="text-[10px] font-normal opacity-70">{format(dateFor(w, d), 'd')}</span>
-                    {hasNote && <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-blue-500" />}
-                    {todayCell && <span className="absolute -left-1 -top-1 h-2.5 w-2.5 rounded-full bg-blue-400 ring-2 ring-white" />}
+                    <span className="text-[10px] font-mono font-normal tabular-nums opacity-70">{format(dateFor(w, d), 'd')}</span>
+                    {hasNote && <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-accent-foreground" />}
+                    {todayCell && <span className="absolute -left-1 -top-1 h-2.5 w-2.5 rounded-full bg-primary ring-2 ring-background" />}
                   </Link>
                 )
               })}
             </div>
           ))}
-          <div className="flex flex-wrap gap-4 pt-2 text-xs text-gray-500">
-            <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-sm bg-green-500" /> Hecho</span>
-            <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-sm bg-amber-400" /> Parcial</span>
-            <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-sm border" /> Sin registrar</span>
-            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-blue-500" /> Dejó comentario</span>
-            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-blue-400" /> Hoy</span>
+          <div className="flex flex-wrap gap-4 pt-2 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-sm bg-success" /> Hecho</span>
+            <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-sm bg-warning" /> Parcial</span>
+            <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-sm border border-border" /> Sin registrar</span>
+            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-accent-foreground" /> Dejó comentario</span>
+            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-primary" /> Hoy</span>
           </div>
         </CardContent>
       </Card>
@@ -242,9 +242,9 @@ export default async function AthleteFollowUpPage({
       {/* Selected session */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-xl font-semibold text-foreground">
             Semana {week} · {weekdayName(day)}
-            {plan?.name && plan.name !== weekdayName(day) && <span className="font-normal text-gray-500"> · {plan.name}</span>}
+            {plan?.name && plan.name !== weekdayName(day) && <span className="font-normal text-muted-foreground"> · {plan.name}</span>}
           </h2>
           <StatusBadge status={statusOf(week, day)} />
         </div>
@@ -257,7 +257,7 @@ export default async function AthleteFollowUpPage({
             .sort((a, b) => a.created_at.localeCompare(b.created_at))
             .map(m => ({ id: m.id, storage_path: m.storage_path, media_type: m.media_type, url: urlByPath.get(m.storage_path) ?? null }))
           return (
-            <Card key={`${ex.exercise_id}-${i}`} className={cn(status === 'done' && 'border-green-300', status === 'partial' && 'border-amber-300')}>
+            <Card key={`${ex.exercise_id}-${i}`} className={cn(status === 'done' && 'border-success/40', status === 'partial' && 'border-warning/50')}>
               <CardHeader className="pb-2">
                 <div className="flex items-start justify-between gap-2">
                   <CardTitle className="text-lg">{nameById.get(ex.exercise_id) ?? 'Ejercicio'}</CardTitle>
@@ -266,39 +266,39 @@ export default async function AthleteFollowUpPage({
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-lg bg-gray-50 p-3">
-                    <p className="mb-1 text-xs font-medium uppercase text-gray-500">Indicado</p>
-                    <p className="text-sm text-gray-800">
-                      {ex.sets} series × {formatReps(ex)} reps
+                  <div className="rounded-lg bg-muted/60 p-3">
+                    <p className="mb-1 text-xs font-medium uppercase text-muted-foreground">Indicado</p>
+                    <p className="text-sm text-foreground">
+                      <span className="font-mono tabular-nums">{ex.sets}</span> series × <span className="font-mono tabular-nums">{formatReps(ex)}</span> reps
                       {ex.intensity ? ` · ${ex.intensity}` : ''}
                       {ex.rpe_target ? ` · esfuerzo ${ex.rpe_target}/10` : ''}
                     </p>
-                    {ex.note && <p className="mt-1 text-sm text-blue-700">{ex.note}</p>}
+                    {ex.note && <p className="mt-1 text-sm text-accent-foreground">{ex.note}</p>}
                   </div>
-                  <div className={cn('rounded-lg p-3', status === 'done' ? 'bg-green-50' : status === 'partial' ? 'bg-amber-50' : 'bg-gray-50')}>
-                    <p className="mb-1 text-xs font-medium uppercase text-gray-500">Hizo</p>
+                  <div className={cn('rounded-lg p-3', status === 'done' ? 'bg-success/10' : status === 'partial' ? 'bg-warning/20' : 'bg-muted/60')}>
+                    <p className="mb-1 text-xs font-medium uppercase text-muted-foreground">Hizo</p>
                     {done.length === 0 ? (
-                      <p className="text-sm text-gray-400">Todavía no registró</p>
+                      <p className="text-sm text-muted-foreground">Todavía no registró</p>
                     ) : (
                       <div className="flex flex-wrap gap-1.5">
                         {done.map(s => (
-                          <span key={s.set_number} className="rounded border bg-white px-1.5 py-0.5 text-sm">
+                          <span key={s.set_number} className="rounded border border-border bg-card px-1.5 py-0.5 text-sm font-mono tabular-nums">
                             {s.reps} × {Number(s.weight_kg) > 0 ? `${s.weight_kg} kg` : 'p. corporal'}
                           </span>
                         ))}
-                        {done[0]?.rpe && <span className="text-sm text-gray-500">· esfuerzo {done[0].rpe}/10</span>}
+                        {done[0]?.rpe && <span className="text-sm text-muted-foreground">· esfuerzo {done[0].rpe}/10</span>}
                       </div>
                     )}
                   </div>
                 </div>
 
                 {fb && (
-                  <div className="space-y-2 rounded-lg border border-blue-200 bg-blue-50/50 p-3">
-                    <p className="flex items-center gap-1 text-xs font-medium uppercase text-blue-700">
+                  <div className="space-y-2 rounded-lg border border-accent bg-accent/50 p-3">
+                    <p className="flex items-center gap-1 text-xs font-medium uppercase text-accent-foreground">
                       <MessageSquare className="h-3.5 w-3.5" /> Comentario del alumno
                     </p>
-                    {fb.reason && <Badge variant="outline" className="text-amber-700">{FEEDBACK_REASONS[fb.reason as keyof typeof FEEDBACK_REASONS]}</Badge>}
-                    {fb.note && <p className="whitespace-pre-wrap text-sm text-gray-800">{fb.note}</p>}
+                    {fb.reason && <Badge variant="warning">{FEEDBACK_REASONS[fb.reason as keyof typeof FEEDBACK_REASONS]}</Badge>}
+                    {fb.note && <p className="whitespace-pre-wrap text-sm text-foreground">{fb.note}</p>}
                     <MediaGrid items={media} />
                     <FeedbackReply feedbackId={fb.id} coachReply={fb.coach_reply} reviewedAt={fb.reviewed_at} />
                   </div>

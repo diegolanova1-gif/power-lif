@@ -175,9 +175,9 @@ function ChangeCoachPasswordDialog({ coach }: { coach: Coach }) {
               <DialogTitle>Contraseña cambiada</DialogTitle>
               <DialogDescription>Pásale los nuevos datos a {coach.full_name || 'el coach'}.</DialogDescription>
             </DialogHeader>
-            <div className="space-y-1 rounded-lg border bg-gray-50 p-4 text-sm">
-              <p><span className="text-gray-500">Email:</span> <span className="font-medium">{done.email}</span></p>
-              <p><span className="text-gray-500">Contraseña:</span> <span className="font-mono font-medium">{done.password}</span></p>
+            <div className="space-y-1 rounded-lg border bg-muted p-4 text-sm">
+              <p><span className="text-muted-foreground">Email:</span> <span className="font-medium">{done.email}</span></p>
+              <p><span className="text-muted-foreground">Contraseña:</span> <span className="font-mono font-medium">{done.password}</span></p>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={copy}>
@@ -201,7 +201,7 @@ function ChangeCoachPasswordDialog({ coach }: { coach: Coach }) {
                   <RefreshCw className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-xs text-gray-500">Mínimo 8 caracteres.</p>
+              <p className="text-xs text-muted-foreground">Mínimo 8 caracteres.</p>
             </div>
             <DialogFooter>
               <Button onClick={save} disabled={saving || password.trim().length < 8}>

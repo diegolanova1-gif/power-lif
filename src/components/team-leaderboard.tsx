@@ -78,7 +78,7 @@ export function TeamLeaderboard({ teamId, currentUserId }: { teamId: string; cur
   if (error) {
     return (
       <Card>
-        <CardContent className="py-12 text-center text-red-600">{error}</CardContent>
+        <CardContent className="py-12 text-center text-destructive">{error}</CardContent>
       </Card>
     )
   }
@@ -156,7 +156,7 @@ export function TeamLeaderboard({ teamId, currentUserId }: { teamId: string; cur
         </CardHeader>
         <CardContent>
           {ranking.length === 0 ? (
-            <p className="py-8 text-center text-gray-500">
+            <p className="py-8 text-center text-muted-foreground">
               {selected === TOTAL ? 'Nadie completó todavía los tres levantamientos.' : 'Sin registros en este ejercicio.'}
             </p>
           ) : (
@@ -173,12 +173,12 @@ export function TeamLeaderboard({ teamId, currentUserId }: { teamId: string; cur
               <TableBody>
                 {ranking.map((r, i) => (
                   <TableRow key={r.athleteId} className={cn(r.athleteId === currentUserId && 'bg-primary/5 font-medium')}>
-                    <TableCell>{MEDALS[i] ?? i + 1}</TableCell>
+                    <TableCell className="font-mono tabular-nums">{MEDALS[i] ?? i + 1}</TableCell>
                     <TableCell>{r.name}{r.athleteId === currentUserId && ' (tú)'}</TableCell>
-                    <TableCell className="text-right font-semibold">{r.e1rm.toFixed(1)} kg</TableCell>
-                    {selected !== TOTAL && <TableCell className="hidden text-right sm:table-cell">{r.maxWeight} kg</TableCell>}
+                    <TableCell className="text-right font-mono font-semibold tabular-nums">{r.e1rm.toFixed(1)} kg</TableCell>
+                    {selected !== TOTAL && <TableCell className="hidden text-right font-mono tabular-nums sm:table-cell">{r.maxWeight} kg</TableCell>}
                     {selected !== TOTAL && (
-                      <TableCell className="hidden text-right text-gray-500 md:table-cell">
+                      <TableCell className="hidden text-right text-muted-foreground md:table-cell">
                         {r.lastLogged ? format(parseISO(r.lastLogged), 'dd MMM', { locale: es }) : '—'}
                       </TableCell>
                     )}
@@ -187,7 +187,7 @@ export function TeamLeaderboard({ teamId, currentUserId }: { teamId: string; cur
               </TableBody>
             </Table>
           )}
-          <p className="mt-3 text-xs text-gray-500">1RM estimado con Epley ajustado por RPE, sobre la mejor serie registrada.</p>
+          <p className="mt-3 text-xs text-muted-foreground">1RM estimado con Epley ajustado por RPE, sobre la mejor serie registrada.</p>
         </CardContent>
       </Card>
 
@@ -216,12 +216,12 @@ export function TeamLeaderboard({ teamId, currentUserId }: { teamId: string; cur
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
             ) : chartAthletes.length === 0 ? (
-              <p className="py-8 text-center text-gray-500">Elige alumnos para comparar.</p>
+              <p className="py-8 text-center text-muted-foreground">Elige alumnos para comparar.</p>
             ) : (
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                     <XAxis dataKey="date" tick={{ fontSize: 12 }} tickFormatter={d => format(parseISO(d), 'dd/MM', { locale: es })} />
                     <YAxis tick={{ fontSize: 12 }} tickFormatter={v => `${v} kg`} domain={['auto', 'auto']} />
                     <Tooltip

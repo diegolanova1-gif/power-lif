@@ -38,10 +38,10 @@ export default async function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="border-b bg-white">
+    <div className="min-h-screen bg-background">
+      <header className="border-b bg-card">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Power Routine</h1>
+          <h1 className="text-2xl font-bold text-foreground">Power Routine</h1>
           <nav className="flex items-center gap-4">
             <Link href="/login">
               <Button variant="ghost">Iniciar sesión</Button>
@@ -55,17 +55,17 @@ export default async function Home() {
 
       <main>
         <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+          <h2 className="text-4xl font-bold tracking-tight text-foreground sm:text-6xl">
             Rutinas a medida para <span className="text-primary">cada alumno</span>
           </h2>
-          <p className="mt-6 text-lg leading-8 text-gray-600 max-w-3xl mx-auto">
+          <p className="mt-6 text-lg leading-8 text-muted-foreground max-w-3xl mx-auto">
             Para entrenadores de gimnasio, fuerza e hipertrofia: armas la rutina de cada alumno semana a semana,
             ellos registran lo que hicieron desde el celular y tú ves su progreso.
           </p>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 max-w-2xl mx-auto text-left">
-            <div className="rounded-lg border bg-white p-6 shadow-sm">
-              <h3 className="text-xl font-semibold text-gray-900">Soy Coach</h3>
-              <p className="mt-2 text-gray-600">Crea rutinas, gestiona tus alumnos y sigue sus estadísticas. Las cuentas de coach las crea Power Routine a pedido.</p>
+            <div className="rounded-lg border bg-card p-6 shadow-sm">
+              <h3 className="text-xl font-semibold text-foreground">Soy Coach</h3>
+              <p className="mt-2 text-muted-foreground">Crea rutinas, gestiona tus alumnos y sigue sus estadísticas. Las cuentas de coach las crea Power Routine a pedido.</p>
               <div className="mt-6 flex gap-2">
                 <Button nativeButton={false} render={<Link href="/login" />}>Ingresar</Button>
                 <Button
@@ -77,9 +77,9 @@ export default async function Home() {
                 </Button>
               </div>
             </div>
-            <div className="rounded-lg border bg-white p-6 shadow-sm">
-              <h3 className="text-xl font-semibold text-gray-900">Soy Alumno</h3>
-              <p className="mt-2 text-gray-600">Entra con el email y la contraseña que te dio tu coach.</p>
+            <div className="rounded-lg border bg-card p-6 shadow-sm">
+              <h3 className="text-xl font-semibold text-foreground">Soy Alumno</h3>
+              <p className="mt-2 text-muted-foreground">Entra con el email y la contraseña que te dio tu coach.</p>
               <div className="mt-6">
                 <Button nativeButton={false} render={<Link href="/login?as=alumno" />}>Ingresar como alumno</Button>
               </div>
@@ -123,8 +123,8 @@ export default async function Home() {
         </section>
       </main>
 
-      <footer className="border-t bg-white py-8">
-        <div className="mx-auto max-w-7xl px-4 text-center text-gray-500 text-sm">
+      <footer className="border-t bg-card py-8">
+        <div className="mx-auto max-w-7xl px-4 text-center text-muted-foreground text-sm">
           Power Routine · Hecho para entrenadores
         </div>
       </footer>
@@ -143,10 +143,10 @@ function FeatureCard({ icon: IconName, title, description }: { icon: string; tit
   }
 
   return (
-    <div className="rounded-lg border bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
+    <div className="rounded-lg border bg-card p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
       <div className="text-primary mb-4">{icons[IconName]}</div>
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-      <p className="text-gray-600">{description}</p>
+      <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
+      <p className="text-muted-foreground">{description}</p>
     </div>
   )
 }

@@ -77,7 +77,7 @@ export function DeleteTeamButton({ teamId, teamName }: { teamId: string; teamNam
 
   return (
     <Dialog>
-      <DialogTrigger render={<Button variant="outline" className="text-red-600" />}>
+      <DialogTrigger render={<Button variant="outline" className="text-destructive" />}>
         <Trash2 className="mr-2 h-4 w-4" />
         Eliminar team
       </DialogTrigger>
@@ -127,20 +127,20 @@ export function TeamMembersEditor({ teamId, athletes, memberIds }: TeamMembersEd
   }
 
   if (athletes.length === 0) {
-    return <p className="text-sm text-gray-500">Primero crea alumnos en la sección Alumnos.</p>
+    return <p className="text-sm text-muted-foreground">Primero crea alumnos en la sección Alumnos.</p>
   }
 
   return (
     <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
       {athletes.map(a => (
-        <label key={a.id} className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 hover:bg-gray-50">
+        <label key={a.id} className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-3 hover:bg-muted">
           <Checkbox
             checked={members.has(a.id)}
             onCheckedChange={checked => toggle(a.id, checked)}
             disabled={pending === a.id}
           />
           <span className="text-sm">{a.full_name || 'Sin nombre'}</span>
-          {pending === a.id && <Loader2 className="ml-auto h-4 w-4 animate-spin text-gray-400" />}
+          {pending === a.id && <Loader2 className="ml-auto h-4 w-4 animate-spin text-muted-foreground" />}
         </label>
       ))}
     </div>

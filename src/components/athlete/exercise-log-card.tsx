@@ -175,64 +175,64 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
   const updateRow = (i: number, patch: Partial<Row>) => setRows(prev => prev.map((r, j) => (j === i ? { ...r, ...patch } : r)))
 
   return (
-    <Card className={cn('transition-colors', asPrescribed && 'border-green-300 bg-green-50/40', isDone && !asPrescribed && 'border-amber-300 bg-amber-50/40')}>
+    <Card className={cn('transition-colors', asPrescribed && 'border-success/30 bg-success/5', isDone && !asPrescribed && 'border-warning/40 bg-warning/10')}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <CardTitle className="text-lg">{p.exercise_name}</CardTitle>
           {asPrescribed ? (
-            <span className="flex shrink-0 items-center gap-1 text-sm font-medium text-green-700">
+            <span className="flex shrink-0 items-center gap-1 text-sm font-medium text-success">
               <CheckCircle2 className="h-5 w-5" /> Hecho
             </span>
           ) : isDone ? (
-            <span className="flex shrink-0 items-center gap-1 text-sm font-medium text-amber-700">
+            <span className="flex shrink-0 items-center gap-1 text-sm font-medium text-warning-foreground">
               <AlertTriangle className="h-4 w-4" /> Parcial
             </span>
           ) : null}
         </div>
         {/* What the coach asked for */}
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-700">
-          <span><span className="font-semibold">{p.sets}</span> series</span>
-          <span><span className="font-semibold">{repsLabel}</span> reps</span>
-          {p.load_type === 'kg' && p.load_value !== undefined && <span><span className="font-semibold">{p.load_value} kg</span></span>}
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+          <span><span className="font-mono font-semibold tabular-nums text-foreground">{p.sets}</span> series</span>
+          <span><span className="font-mono font-semibold tabular-nums text-foreground">{repsLabel}</span> reps</span>
+          {p.load_type === 'kg' && p.load_value !== undefined && <span><span className="font-mono font-semibold tabular-nums text-foreground">{p.load_value} kg</span></span>}
           {p.load_type === 'percent' && p.load_value !== undefined && (
             <span>
-              <span className="font-semibold">{p.load_value}% RM</span>
-              {coachKg !== null && <span className="text-gray-500"> ≈ {coachKg} kg</span>}
+              <span className="font-mono font-semibold tabular-nums text-foreground">{p.load_value}% RM</span>
+              {coachKg !== null && <span className="font-mono tabular-nums text-muted-foreground"> ≈ {coachKg} kg</span>}
             </span>
           )}
-          {p.rpe_target !== undefined && <span>Esfuerzo <span className="font-semibold">{p.rpe_target}/10</span></span>}
-          {p.rest_seconds !== undefined && <span>Descanso <span className="font-semibold">{p.rest_seconds >= 60 ? `${Math.floor(p.rest_seconds / 60)}:${String(p.rest_seconds % 60).padStart(2, '0')} min` : `${p.rest_seconds} s`}</span></span>}
+          {p.rpe_target !== undefined && <span>Esfuerzo <span className="font-mono font-semibold tabular-nums text-foreground">{p.rpe_target}/10</span></span>}
+          {p.rest_seconds !== undefined && <span>Descanso <span className="font-mono font-semibold tabular-nums text-foreground">{p.rest_seconds >= 60 ? `${Math.floor(p.rest_seconds / 60)}:${String(p.rest_seconds % 60).padStart(2, '0')} min` : `${p.rest_seconds} s`}</span></span>}
         </div>
-        {p.note && <p className="mt-2 rounded-md bg-blue-50 px-2 py-1.5 text-sm text-blue-800">{p.note}</p>}
+        {p.note && <p className="mt-2 rounded-md bg-accent px-2 py-1.5 text-sm text-accent-foreground">{p.note}</p>}
       </CardHeader>
 
       <CardContent className="space-y-3">
         {editing ? (
           <div className="space-y-3">
-            <p className="text-sm font-medium text-gray-700">Anota lo que hiciste en cada serie</p>
+            <p className="text-sm font-medium text-muted-foreground">Anota lo que hiciste en cada serie</p>
             {rows.map((row, i) => (
-              <div key={i} className={cn('flex items-end gap-2 rounded-lg border bg-white p-2', !row.done && 'opacity-50')}>
+              <div key={i} className={cn('flex items-end gap-2 rounded-lg border bg-background p-2', !row.done && 'opacity-50')}>
                 <button
                   type="button"
                   onClick={() => updateRow(i, { done: !row.done })}
                   aria-label={row.done ? `Marcar serie ${i + 1} como no hecha` : `Marcar serie ${i + 1} como hecha`}
                   className={cn(
                     'mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2',
-                    row.done ? 'border-green-600 bg-green-600 text-white' : 'border-gray-300 text-transparent'
+                    row.done ? 'border-success bg-success text-success-foreground' : 'border-border text-transparent'
                   )}
                 >
                   <Check className="h-5 w-5" />
                 </button>
-                <div className="w-14 shrink-0 pb-2 text-sm font-medium text-gray-600">Serie {i + 1}</div>
+                <div className="w-14 shrink-0 pb-2 text-sm font-medium text-muted-foreground">Serie {i + 1}</div>
                 <div className="flex-1 space-y-1">
-                  <Label className="text-xs text-gray-500">Reps</Label>
+                  <Label className="text-xs text-muted-foreground">Reps</Label>
                   <Input inputMode="numeric" value={row.reps} onChange={e => updateRow(i, { reps: e.target.value })} disabled={!row.done} />
                 </div>
                 <div className="flex-1 space-y-1">
-                  <Label className="text-xs text-gray-500">Peso (kg)</Label>
+                  <Label className="text-xs text-muted-foreground">Peso (kg)</Label>
                   <Input inputMode="decimal" placeholder="0" value={row.weight} onChange={e => updateRow(i, { weight: e.target.value })} disabled={!row.done} />
                 </div>
-                <Button type="button" variant="ghost" size="icon" className="text-gray-400" onClick={() => setRows(prev => prev.filter((_, j) => j !== i))} aria-label={`Quitar serie ${i + 1}`}>
+                <Button type="button" variant="ghost" size="icon" className="text-muted-foreground" onClick={() => setRows(prev => prev.filter((_, j) => j !== i))} aria-label={`Quitar serie ${i + 1}`}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>
@@ -248,7 +248,7 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
                 Agregar serie
               </Button>
               <div className="w-40 space-y-1">
-                <Label className="text-xs text-gray-500">Esfuerzo (1-10, opcional)</Label>
+                <Label className="text-xs text-muted-foreground">Esfuerzo (1-10, opcional)</Label>
                 <Input inputMode="decimal" placeholder="ej: 8" value={rpe} onChange={e => setRpe(e.target.value)} />
               </div>
             </div>
@@ -266,8 +266,8 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
           <div className="space-y-3">
             <div className="flex flex-wrap gap-2">
               {logged.map(s => (
-                <span key={s.set_number} className="rounded-md border bg-white px-2 py-1 text-sm">
-                  <span className="text-gray-500">S{s.set_number}:</span> {s.reps} × {s.weight_kg > 0 ? `${s.weight_kg} kg` : 'peso corporal'}
+                <span key={s.set_number} className="rounded-md border bg-background px-2 py-1 text-sm font-mono tabular-nums">
+                  <span className="text-muted-foreground">S{s.set_number}:</span> {s.reps} × {s.weight_kg > 0 ? `${s.weight_kg} kg` : 'peso corporal'}
                 </span>
               ))}
             </div>
@@ -276,7 +276,7 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
                 <Pencil className="mr-1 h-4 w-4" />
                 Editar
               </Button>
-              <Button type="button" variant="ghost" size="sm" className="text-gray-500" onClick={undo} disabled={saving}>
+              <Button type="button" variant="ghost" size="sm" className="text-muted-foreground" onClick={undo} disabled={saving}>
                 <RotateCcw className="mr-1 h-4 w-4" />
                 Deshacer
               </Button>
@@ -286,7 +286,7 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
           <div className="space-y-3">
             {coachKg === null && (
               <div className="max-w-xs space-y-1">
-                <Label className="text-xs text-gray-500">¿Con cuánto peso? (kg)</Label>
+                <Label className="text-xs text-muted-foreground">¿Con cuánto peso? (kg)</Label>
                 <Input
                   inputMode="decimal"
                   placeholder={lastWeight !== null ? `Última vez: ${lastWeight}` : 'Vacío = peso corporal'}
@@ -296,7 +296,7 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
               </div>
             )}
             <div className="flex flex-col gap-2 sm:flex-row">
-              <Button type="button" size="lg" className="h-12 bg-green-600 text-base hover:bg-green-700" onClick={markDoneAsPrescribed} disabled={saving}>
+              <Button type="button" variant="success" size="lg" className="h-12 text-base" onClick={markDoneAsPrescribed} disabled={saving}>
                 {saving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Check className="mr-2 h-5 w-5" />}
                 Hecho tal cual
               </Button>

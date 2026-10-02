@@ -71,7 +71,7 @@ export function ExerciseCombobox({ exercises, value, onChange, onCreate }: Exerc
 
   return (
     <div className="relative">
-      <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+      <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         ref={inputRef}
         role="combobox"
@@ -95,13 +95,13 @@ export function ExerciseCombobox({ exercises, value, onChange, onCreate }: Exerc
         onKeyDown={onKeyDown}
         disabled={creating}
       />
-      {creating && <Loader2 className="absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-gray-400" />}
+      {creating && <Loader2 className="absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />}
 
       {open && (
         <ul
           id={listId}
           role="listbox"
-          className="absolute z-50 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border bg-white p-1 shadow-lg"
+          className="absolute z-50 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border bg-popover p-1 shadow-lg"
         >
           {matches.map((e, i) => (
             <li
@@ -113,7 +113,7 @@ export function ExerciseCombobox({ exercises, value, onChange, onCreate }: Exerc
               onMouseEnter={() => setActive(i)}
               className={cn(
                 'flex cursor-pointer items-center justify-between rounded-md px-2 py-1.5 text-sm',
-                i === active && 'bg-gray-100'
+                i === active && 'bg-muted'
               )}
             >
               {e.name}
@@ -129,14 +129,14 @@ export function ExerciseCombobox({ exercises, value, onChange, onCreate }: Exerc
               onMouseEnter={() => setActive(matches.length)}
               className={cn(
                 'flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-primary',
-                active === matches.length && 'bg-gray-100'
+                active === matches.length && 'bg-muted'
               )}
             >
               <Plus className="h-4 w-4" />
               Crear &quot;{query.trim()}&quot;
             </li>
           )}
-          {optionCount === 0 && <li className="px-2 py-1.5 text-sm text-gray-500">Escribe al menos 2 letras para crear uno nuevo</li>}
+          {optionCount === 0 && <li className="px-2 py-1.5 text-sm text-muted-foreground">Escribe al menos 2 letras para crear uno nuevo</li>}
         </ul>
       )}
     </div>

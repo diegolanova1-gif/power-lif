@@ -93,9 +93,9 @@ export function CreateAthleteDialog({ children, triggerClassName, onCreated }: C
               </DialogDescription>
             </DialogHeader>
             {credentials.created && (
-              <div className="rounded-lg border bg-gray-50 p-4 space-y-1 text-sm">
-                <p><span className="text-gray-500">Email:</span> <span className="font-medium">{credentials.email}</span></p>
-                <p><span className="text-gray-500">Contraseña:</span> <span className="font-mono font-medium">{credentials.password}</span></p>
+              <div className="rounded-lg border border-success/20 bg-success/5 p-4 space-y-1 text-sm">
+                <p><span className="text-muted-foreground">Email:</span> <span className="font-medium">{credentials.email}</span></p>
+                <p><span className="text-muted-foreground">Contraseña:</span> <span className="font-mono font-medium">{credentials.password}</span></p>
               </div>
             )}
             <DialogFooter>
@@ -108,8 +108,8 @@ export function CreateAthleteDialog({ children, triggerClassName, onCreated }: C
               <Button variant={credentials.created ? 'outline' : 'default'} onClick={() => setOpen(false)}>Listo</Button>
             </DialogFooter>
             <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
-              <p className="text-sm font-medium text-gray-900">Siguiente paso: su rutina</p>
-              <p className="mt-1 text-sm text-gray-600">Arma un plan personalizado para {credentials.name}: desde cero, con un modelo o una plantilla tuya.</p>
+              <p className="text-sm font-medium text-foreground">Siguiente paso: su rutina</p>
+              <p className="mt-1 text-sm text-muted-foreground">Arma un plan personalizado para {credentials.name}: desde cero, con un modelo o una plantilla tuya.</p>
               <Button className="mt-3 w-full" nativeButton={false} render={<Link href={`/coach/routines/new?athlete=${credentials.athleteId}`} />}>
                 <Dumbbell className="mr-2 h-4 w-4" />
                 Armar su rutina ahora
@@ -123,12 +123,12 @@ export function CreateAthleteDialog({ children, triggerClassName, onCreated }: C
               <DialogDescription>Creas la cuenta y le pasas el email y la contraseña.</DialogDescription>
             </DialogHeader>
             {limitError ? (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-3">
+              <div className="rounded-lg border border-warning/30 bg-warning/15 p-4 space-y-3">
                 <div className="flex items-start gap-2">
-                  <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                  <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-warning-foreground" />
                   <div>
-                    <p className="font-medium text-amber-900">Llegaste al límite de tu plan</p>
-                    <p className="mt-1 text-sm text-amber-700">{limitError}</p>
+                    <p className="font-medium text-warning-foreground">Llegaste al límite de tu plan</p>
+                    <p className="mt-1 text-sm text-warning-foreground/90">{limitError}</p>
                   </div>
                 </div>
                 <Button
@@ -145,14 +145,14 @@ export function CreateAthleteDialog({ children, triggerClassName, onCreated }: C
                 <Label htmlFor="full_name">Nombre completo</Label>
                 <Input id="full_name" placeholder="Juan Pérez" {...form.register('full_name')} />
                 {form.formState.errors.full_name && (
-                  <p className="text-sm text-red-500">{form.formState.errors.full_name.message}</p>
+                  <p className="text-sm text-destructive">{form.formState.errors.full_name.message}</p>
                 )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input id="email" type="email" placeholder="alumno@email.com" {...form.register('email')} />
                 {form.formState.errors.email && (
-                  <p className="text-sm text-red-500">{form.formState.errors.email.message}</p>
+                  <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
                 )}
               </div>
               <div className="space-y-2">
@@ -171,7 +171,7 @@ export function CreateAthleteDialog({ children, triggerClassName, onCreated }: C
                   </Button>
                 </div>
                 {form.formState.errors.password && (
-                  <p className="text-sm text-red-500">{form.formState.errors.password.message}</p>
+                  <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
                 )}
               </div>
               <DialogFooter>

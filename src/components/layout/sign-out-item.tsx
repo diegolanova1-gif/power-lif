@@ -13,7 +13,7 @@ export function SignOutItem() {
   return (
     <DropdownMenuItem
       onClick={signOut}
-      className="flex items-center gap-2 text-red-600 focus:text-red-600"
+      className="flex items-center gap-2 text-destructive focus:text-destructive"
     >
       <LogOut className="h-4 w-4" />
       Cerrar sesión

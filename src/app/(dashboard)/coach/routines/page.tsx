@@ -55,8 +55,8 @@ export default async function RoutinesPage({ searchParams }: { searchParams: Pro
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Rutinas</h1>
-          <p className="text-gray-500 mt-1">
+          <h1 className="text-3xl font-bold text-foreground">Rutinas</h1>
+          <p className="text-muted-foreground mt-1">
             {assignTarget
               ? `Elige una plantilla para ${assignTarget.full_name || 'tu alumno'} (se le crea una copia personal)`
               : 'Personalizadas por alumno y plantillas reutilizables'}
@@ -84,13 +84,13 @@ export default async function RoutinesPage({ searchParams }: { searchParams: Pro
 
       {!assignTarget && (
         <section className="space-y-3">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
             <User className="h-5 w-5" />
             Personalizadas ({personalized.length})
           </h2>
           {personalized.length === 0 ? (
             <Card>
-              <CardContent className="py-8 text-center text-sm text-gray-500">
+              <CardContent className="py-8 text-center text-sm text-muted-foreground">
                 Para armar una rutina a medida, ve a <Link href="/coach/athletes" className="text-primary hover:underline">Alumnos</Link> y elige
                 &quot;Nueva rutina personalizada&quot;.
               </CardContent>
@@ -117,15 +117,15 @@ export default async function RoutinesPage({ searchParams }: { searchParams: Pro
       )}
 
       <section className="space-y-3">
-        <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground">
           <LayoutTemplate className="h-5 w-5" />
           Plantillas ({templates.length})
         </h2>
         {templates.length === 0 ? (
           <Card>
             <CardContent className="py-8 text-center">
-              <FileText className="mx-auto mb-3 h-10 w-10 text-gray-300" />
-              <p className="text-sm text-gray-500">Guarda aquí las rutinas que usas seguido para asignarlas en un clic.</p>
+              <FileText className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
+              <p className="text-sm text-muted-foreground">Guarda aquí las rutinas que usas seguido para asignarlas en un clic.</p>
             </CardContent>
           </Card>
         ) : (
@@ -165,7 +165,7 @@ function RoutineCard({
         {routine.description && <CardDescription className="line-clamp-2">{routine.description}</CardDescription>}
       </CardHeader>
       <CardContent className="mt-auto space-y-4">
-        <div className="space-y-1 text-sm text-gray-500">
+        <div className="space-y-1 text-sm text-muted-foreground">
           <p className="flex items-center gap-1">
             <Calendar className="h-4 w-4" />
             {structure.weeks} sem · {structure.schedule.length} días/sem
