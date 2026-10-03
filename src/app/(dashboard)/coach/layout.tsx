@@ -152,7 +152,8 @@ export default async function DashboardLayout({
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      {/* pb-24 keeps content clear of the fixed dumbbell FAB (h-14 at bottom-6, ~80px footprint) */}
+      <main className="mx-auto max-w-7xl px-4 pt-8 pb-24 sm:px-6 lg:px-8">
         {children}
       </main>
       <FabMenu
