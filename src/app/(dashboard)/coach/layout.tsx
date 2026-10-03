@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { LayoutDashboard, Users, FileText, BarChart, User, Settings, MessageSquare, Trophy, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SignOutItem } from '@/components/layout/sign-out-item'
+import { FabMenu } from '@/components/layout/fab-menu'
 
 export default async function DashboardLayout({
   children,
@@ -154,6 +155,14 @@ export default async function DashboardLayout({
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {children}
       </main>
+      <FabMenu
+        items={navigation.map(item => ({
+          name: item.name,
+          href: item.href,
+          badge: 'badge' in item ? item.badge : undefined,
+          icon: <item.icon className="h-5 w-5" />,
+        }))}
+      />
     </div>
   )
 }

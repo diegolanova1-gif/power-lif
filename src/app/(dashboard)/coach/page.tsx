@@ -71,32 +71,32 @@ export default async function CoachDashboard() {
   ]
 
   return (
-    <div className="space-y-8">
+    <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Resumen de tu actividad como coach</p>
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground">Dashboard</h1>
+          <p className="hidden text-sm text-muted-foreground sm:block">Resumen de tu actividad como coach</p>
         </div>
         <Link href="/coach/athletes">
-          <Button>
+          <Button size="sm">
             <Plus className="mr-2 h-4 w-4" />
             Nuevo Alumno
           </Button>
         </Link>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {stats.map((stat) => (
           <Link key={stat.name} href={stat.href} className="block">
-            <Card className="hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer">
-              <CardContent className="p-6">
+            <Card size="sm" className="hover:shadow-md hover:-translate-y-0.5 transition-all cursor-pointer">
+              <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">{stat.name}</p>
-                    <p className="font-mono text-3xl font-extrabold tabular-nums text-foreground mt-1">{stat.value}</p>
+                    <p className="text-xs font-medium text-muted-foreground sm:text-sm">{stat.name}</p>
+                    <p className="font-mono text-xl font-extrabold tabular-nums text-foreground mt-0.5 sm:text-2xl">{stat.value}</p>
                   </div>
-                  <div className={cn('p-3 rounded-full', stat.color)}>
-                    <stat.icon className="h-6 w-6" />
+                  <div className={cn('hidden p-2.5 rounded-full sm:block', stat.color)}>
+                    <stat.icon className="h-5 w-5" />
                   </div>
                 </div>
               </CardContent>
@@ -105,60 +105,61 @@ export default async function CoachDashboard() {
         ))}
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+      {/* Quick Actions: same destinations as the dumbbell FAB, so skip the
+          repeat on phones where vertical space is scarce. */}
+      <div className="grid gap-3 md:grid-cols-3">
+        <Card size="sm" className="hidden md:block">
           <CardHeader>
-            <CardTitle className="text-lg">Acciones Rápidas</CardTitle>
+            <CardTitle className="text-base">Acciones Rápidas</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="grid grid-cols-2 gap-2">
             <Link href="/coach/athletes">
-              <Button variant="outline" className="w-full justify-start gap-2">
+              <Button variant="outline" size="sm" className="w-full justify-start gap-2">
                 <Users className="h-4 w-4" />
-                Gestionar Alumnos
+                Alumnos
               </Button>
             </Link>
             <Link href="/coach/routines/new">
-              <Button variant="outline" className="w-full justify-start gap-2">
+              <Button variant="outline" size="sm" className="w-full justify-start gap-2">
                 <FileText className="h-4 w-4" />
                 Crear Rutina
               </Button>
             </Link>
             <Link href="/coach/routines">
-              <Button variant="outline" className="w-full justify-start gap-2">
+              <Button variant="outline" size="sm" className="w-full justify-start gap-2">
                 <FileText className="h-4 w-4" />
-                Ver Biblioteca
+                Biblioteca
               </Button>
             </Link>
             <Link href="/coach/analytics">
-              <Button variant="outline" className="w-full justify-start gap-2">
+              <Button variant="outline" size="sm" className="w-full justify-start gap-2">
                 <BarChart className="h-4 w-4" />
-                Ver Analytics
+                Analytics
               </Button>
             </Link>
           </CardContent>
         </Card>
 
         {/* Recent Athletes */}
-        <Card className="md:col-span-2">
+        <Card size="sm" className="md:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg">Alumnos Recientes</CardTitle>
+            <CardTitle className="text-base">Alumnos Recientes</CardTitle>
             <Link href="/coach/athletes" className="text-sm text-primary hover:underline">
               Ver todos
             </Link>
           </CardHeader>
           <CardContent>
             {athletes && athletes.length > 0 ? (
-              <div className="space-y-3">
-                {athletes.slice(0, 5).map((item: any) => (
+              <div className="max-h-64 space-y-1 overflow-y-auto sm:max-h-none sm:overflow-visible">
+                {athletes.slice(0, 6).map((item: any) => (
                   <Link
                     key={item.athlete_id}
                     href={`/coach/athletes/${item.athlete_id}`}
-                    className="flex items-center gap-3 p-2 hover:bg-muted rounded-lg transition-colors"
+                    className="flex items-center gap-3 p-1.5 hover:bg-muted rounded-lg transition-colors"
                   >
-                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <div className="h-9 w-9 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
                       {item.profiles?.avatar_url ? (
-                        <img src={item.profiles.avatar_url} alt="" className="h-10 w-10 rounded-full" />
+                        <img src={item.profiles.avatar_url} alt="" className="h-9 w-9 rounded-full" />
                       ) : (
                         <span className="text-primary font-semibold">
                           {item.profiles?.full_name?.charAt(0).toUpperCase() || 'U'}
@@ -173,11 +174,11 @@ export default async function CoachDashboard() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Users className="h-12 w-12 mx-auto mb-3 text-muted-foreground/40" />
+              <div className="text-center py-6 text-muted-foreground">
+                <Users className="h-10 w-10 mx-auto mb-2 text-muted-foreground/40" />
                 <p>No tienes alumnos aún</p>
                 <Link href="/coach/athletes">
-                  <Button variant="link" className="mt-2" size="sm">
+                  <Button variant="link" className="mt-1" size="sm">
                     Agregar tu primer alumno
                   </Button>
                 </Link>
