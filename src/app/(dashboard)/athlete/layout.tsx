@@ -56,9 +56,12 @@ export default async function AthleteLayout({
     <div className="min-h-screen bg-background">
       <header className="bg-background border-b sticky top-0 z-40">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
+          <div className="relative flex h-16 items-center justify-between">
             <div className="flex items-center gap-8">
-              <Link href="/athlete" className="text-xl font-extrabold tracking-tight text-foreground">
+              <Link
+                href="/athlete"
+                className="absolute left-1/2 -translate-x-1/2 text-xl font-extrabold tracking-tight text-foreground md:static md:left-auto md:translate-x-0"
+              >
                 Power Routine
               </Link>
               <nav className="hidden md:flex items-center gap-1">
