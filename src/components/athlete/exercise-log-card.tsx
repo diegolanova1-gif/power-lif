@@ -76,10 +76,10 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
   const repsLabel = p.reps_max && p.reps_max > p.reps ? `${p.reps}-${p.reps_max}` : String(p.reps)
 
   const isDone = logged.length > 0
-  const asPrescribed =
-    isDone &&
-    logged.length >= p.sets &&
-    logged.every(s => s.reps >= p.reps && (coachKg === null || s.weight_kg >= coachKg))
+  // Todas las series cargadas = hecho, aunque alguna haya quedado corta de
+  // reps/peso — eso se marca aparte al coach (ver flagRepsShortfall), no se
+  // le muestra al alumno como "no lo hiciste".
+  const fullyLogged = isDone && logged.length >= p.sets
 
   function openEditor() {
     const base = isDone
@@ -92,6 +92,22 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
     setRows(base)
     setRpe(String(logged[0]?.rpe ?? p.rpe_target ?? ''))
     setEditing(true)
+  }
+
+  // Hizo todas las series pero se quedó corto de reps/peso: le avisa solo al
+  // coach (bandeja de Revisiones), sin pisar una observación que el alumno
+  // ya haya dejado a mano.
+  async function flagRepsShortfall(sets: LoggedSet[], key: { athlete_routine_id: string; exercise_id: string; week: number; day: number }) {
+    if (sets.length < p.sets || sets.every(s => s.reps >= p.reps && (coachKg === null || s.weight_kg >= coachKg))) return
+    const { data: existing } = await supabase.from('exercise_feedback').select('id').match(key).maybeSingle()
+    if (existing) return
+    await supabase.from('exercise_feedback').insert({
+      athlete_id: session.athleteId,
+      ...key,
+      reason: 'reps_incomplete',
+      note: 'Completó todas las series pero no llegó a las repeticiones/peso pedidos.',
+      reviewed_at: null,
+    })
   }
 
   async function persist(sets: LoggedSet[]) {
@@ -117,6 +133,8 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
         .match(key)
         .gt('set_number', sets.length)
       if (deleteError) throw deleteError
+
+      if (sets.length) await flagRepsShortfall(sets, key).catch(err => console.error('Error flagging reps shortfall:', err))
 
       onSaved(sets)
       return true
@@ -179,11 +197,11 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
   const updateRow = (i: number, patch: Partial<Row>) => setRows(prev => prev.map((r, j) => (j === i ? { ...r, ...patch } : r)))
 
   return (
-    <Card className={cn('transition-colors', asPrescribed && 'border-success/30 bg-success/5', isDone && !asPrescribed && 'border-warning/40 bg-warning/10')}>
+    <Card className={cn('transition-colors', fullyLogged && 'border-success/30 bg-success/5', isDone && !fullyLogged && 'border-warning/40 bg-warning/10')}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <CardTitle className="text-lg">{p.exercise_name}</CardTitle>
-          {asPrescribed ? (
+          {fullyLogged ? (
             <span className="flex shrink-0 items-center gap-1 text-sm font-medium text-success">
               <CheckCircle2 className="h-5 w-5" /> Hecho
             </span>

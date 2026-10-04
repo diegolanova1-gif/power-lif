@@ -14,15 +14,19 @@ export interface LoggedSetLike {
 
 /**
  * Did the athlete do what the coach asked?
- * done: all sets, at least the minimum reps, and at least the kg prescribed (when given in kg).
- * %RM loads can't be checked without the athlete's 1RM, so only sets/reps count there.
+ * done: every prescribed set got logged (regardless of reps/kg actually hit —
+ * that shortfall is flagged to the coach separately, see `repsShortfall`).
+ * partial: fewer sets logged than prescribed. none: nothing logged.
  */
 export function exerciseCompliance(p: PrescribedExercise, logged: LoggedSetLike[]): ComplianceStatus {
   if (logged.length === 0) return 'none'
+  return logged.length >= p.sets ? 'done' : 'partial'
+}
+
+/** All sets were logged, but reps or kg fell short of the prescription — still "done", just worth the coach's attention. */
+export function repsShortfall(p: PrescribedExercise, logged: LoggedSetLike[]): boolean {
   const minKg = p.load_type === 'kg' && p.load_value !== undefined ? p.load_value : null
-  const complete =
-    logged.length >= p.sets && logged.every(s => s.reps >= p.reps && (minKg === null || Number(s.weight_kg) >= minKg))
-  return complete ? 'done' : 'partial'
+  return logged.length >= p.sets && !logged.every(s => s.reps >= p.reps && (minKg === null || Number(s.weight_kg) >= minKg))
 }
 
 export function sessionCompliance(statuses: ComplianceStatus[]): ComplianceStatus {

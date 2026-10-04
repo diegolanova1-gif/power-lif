@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { MediaGrid, type MediaItem } from '@/components/media-grid'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
-import { FEEDBACK_REASONS, type FeedbackReason } from '@/lib/feedback-reason'
+import { FEEDBACK_REASONS, SELECTABLE_FEEDBACK_REASONS, type FeedbackReason } from '@/lib/feedback-reason'
 import {
   MEDIA_BUCKET,
   MAX_MEDIA_BYTES,
@@ -235,7 +235,7 @@ export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground">¿Por qué no lo completaste tal cual? (opcional)</p>
           <div className="flex flex-wrap gap-2">
-            {(Object.entries(FEEDBACK_REASONS) as [FeedbackReason, string][]).map(([value, label]) => (
+            {SELECTABLE_FEEDBACK_REASONS.map(value => (
               <button
                 key={value}
                 type="button"
@@ -245,7 +245,7 @@ export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week
                   reason === value ? 'border-primary bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:bg-muted'
                 )}
               >
-                {label}
+                {FEEDBACK_REASONS[value]}
               </button>
             ))}
           </div>
