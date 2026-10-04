@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { calculateAdherence, calculateWeeklyAdherence, getAdherenceHeatmap, calculateStreak } from '@/lib/calculations/adherence'
 import type { RoutineStructure } from '@/lib/validations/routine'
-import { STREAK_MILESTONES } from '@/lib/achievements'
+import { MILESTONES } from '@/lib/achievements'
 
 export async function GET(request: NextRequest) {
   const cookieStore = await cookies()
@@ -98,21 +98,24 @@ export async function GET(request: NextRequest) {
   })
 
   const heatmap = getAdherenceHeatmap(routine, sets || [], programWeeks)
-  const { streak, currentWeekDays, currentWeekRequired } = calculateStreak(allSets || [], structure)
+  const { streak, currentWeekDays, currentWeekRequired, firstWeekCompleted, monthCompleted } = calculateStreak(allSets || [], structure)
 
-  // Achievements unlock permanently once the streak crosses a milestone —
-  // only the athlete's own session can write them (RLS), so a coach viewing
-  // an athlete's stats just reads whatever is already unlocked.
+  // Achievements unlock permanently once their condition is met — only the
+  // athlete's own session can write them (RLS), so a coach viewing an
+  // athlete's stats just reads whatever is already unlocked.
   const { data: existing } = await supabase.from('streak_achievements').select('milestone').eq('athlete_id', athleteId)
   const unlockedSet = new Set(existing?.map(r => r.milestone) ?? [])
+  const isUnlocked = (m: (typeof MILESTONES)[number]) =>
+    m.type === 'days' ? streak >= (m.days ?? Infinity) : m.type === 'first_week' ? firstWeekCompleted : monthCompleted
+
   if (user.id === athleteId) {
-    const toUnlock = STREAK_MILESTONES.filter(m => streak >= m && !unlockedSet.has(m))
+    const toUnlock = MILESTONES.filter(m => isUnlocked(m) && !unlockedSet.has(m.id))
     if (toUnlock.length) {
       await supabase.from('streak_achievements').upsert(
-        toUnlock.map(milestone => ({ athlete_id: athleteId, milestone })),
+        toUnlock.map(m => ({ athlete_id: athleteId, milestone: m.id })),
         { onConflict: 'athlete_id,milestone', ignoreDuplicates: true }
       )
-      toUnlock.forEach(m => unlockedSet.add(m))
+      toUnlock.forEach(m => unlockedSet.add(m.id))
     }
   }
 
@@ -123,6 +126,6 @@ export async function GET(request: NextRequest) {
     streak,
     currentWeekDays,
     currentWeekRequired,
-    unlockedMilestones: [...unlockedSet].sort((a, b) => a - b),
+    unlockedMilestones: [...unlockedSet],
   })
 }

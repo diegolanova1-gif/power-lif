@@ -64,7 +64,7 @@ export default function AthleteProgressPage() {
   const [volumeData, setVolumeData] = useState<VolumeDataPoint[]>([])
   const [adherenceData, setAdherenceData] = useState<AdherenceDataPoint[]>([])
   const [streak, setStreak] = useState<{ streak: number; currentWeekDays: number; currentWeekRequired: number } | null>(null)
-  const [unlockedMilestones, setUnlockedMilestones] = useState<number[]>([])
+  const [unlockedMilestones, setUnlockedMilestones] = useState<string[]>([])
   const [athleteName, setAthleteName] = useState('')
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [selectedExercise, setSelectedExercise] = useState<string>('')

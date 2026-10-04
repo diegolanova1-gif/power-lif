@@ -142,6 +142,10 @@ export interface StreakInfo {
   streak: number
   currentWeekDays: number
   currentWeekRequired: number
+  /** At least one real week (ever) reached its day target. */
+  firstWeekCompleted: boolean
+  /** 4 consecutive real weeks (ever), each reaching its day target. */
+  monthCompleted: boolean
 }
 
 const mondayKey = (date: Date) => mondayOf(date).toISOString().split('T')[0]
@@ -223,5 +227,24 @@ export function calculateStreak(setsLog: StreakSetLog[], structure: RoutineStruc
     cursor = shiftWeekKey(cursor, -1)
   }
 
-  return { streak, currentWeekDays, currentWeekRequired }
+  // Scan every real week from the first one ever trained up to today — unlike
+  // the streak above (which stops at the first break), these two look at the
+  // athlete's whole history, since a past achievement stays earned forever.
+  const weekKeys = [...weekTally.keys()]
+  let firstWeekCompleted = false
+  let longestRun = 0
+  if (weekKeys.length) {
+    const earliest = weekKeys.reduce((min, k) => (k < min ? k : min))
+    let run = 0
+    let scan = earliest
+    while (scan <= currentWeekKey) {
+      const met = (weekTally.get(scan) ?? 0) >= requiredFor(scan)
+      run = met ? run + 1 : 0
+      if (met) firstWeekCompleted = true
+      longestRun = Math.max(longestRun, run)
+      scan = shiftWeekKey(scan, 1)
+    }
+  }
+
+  return { streak, currentWeekDays, currentWeekRequired, firstWeekCompleted, monthCompleted: longestRun >= 4 }
 }
