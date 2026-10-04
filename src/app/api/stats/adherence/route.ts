@@ -67,7 +67,8 @@ export async function GET(request: NextRequest) {
       streak: 0,
       currentWeekDays: 0,
       currentWeekRequired: 0,
-      unlockedMilestones: [],
+      unlockedCards: [],
+      unlockedDates: {},
     })
   }
 
@@ -89,7 +90,7 @@ export async function GET(request: NextRequest) {
   })
 
   const heatmap = getAdherenceHeatmap(routine, sets || [], programWeeks)
-  const { streak, currentWeekDays, currentWeekRequired, unlockedMilestones } = await getStreakAndAchievements(
+  const { streak, currentWeekDays, currentWeekRequired, unlockedCards, unlockedDates } = await getStreakAndAchievements(
     supabase,
     athleteId,
     structure,
@@ -103,6 +104,7 @@ export async function GET(request: NextRequest) {
     streak,
     currentWeekDays,
     currentWeekRequired,
-    unlockedMilestones,
+    unlockedCards,
+    unlockedDates,
   })
 }

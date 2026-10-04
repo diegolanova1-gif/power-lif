@@ -177,7 +177,7 @@ export default async function AthleteFollowUpPage({
 
   // Read-only here: only the athlete's own session can unlock a new
   // achievement (RLS), so a coach just sees whatever is already earned.
-  const { unlockedMilestones } = await getStreakAndAchievements(supabase, id, structure, false)
+  const { streak, currentWeekDays, currentWeekRequired, unlockedCards, unlockedDates } = await getStreakAndAchievements(supabase, id, structure, false)
 
   return (
     <div className="space-y-6">
@@ -207,7 +207,14 @@ export default async function AthleteFollowUpPage({
         </Card>
       </div>
 
-      <StreakAchievements unlockedMilestones={unlockedMilestones} athleteName={athlete.full_name ?? ''} />
+      <StreakAchievements
+        unlockedCards={unlockedCards}
+        unlockedDates={unlockedDates}
+        streakDays={streak}
+        currentWeekDays={currentWeekDays}
+        currentWeekRequired={currentWeekRequired}
+        athleteName={athlete.full_name ?? ''}
+      />
 
       {/* Week × day grid */}
       <Card>

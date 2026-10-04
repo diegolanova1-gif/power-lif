@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Flame, Loader2 } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 import { StreakAchievements } from '@/components/athlete/streak-achievements'
 import { celebrateNewMilestones } from '@/lib/celebrate-milestones'
 import { format, parseISO } from 'date-fns'
@@ -65,7 +65,8 @@ export default function AthleteProgressPage() {
   const [volumeData, setVolumeData] = useState<VolumeDataPoint[]>([])
   const [adherenceData, setAdherenceData] = useState<AdherenceDataPoint[]>([])
   const [streak, setStreak] = useState<{ streak: number; currentWeekDays: number; currentWeekRequired: number } | null>(null)
-  const [unlockedMilestones, setUnlockedMilestones] = useState<string[]>([])
+  const [unlockedCards, setUnlockedCards] = useState<string[]>([])
+  const [unlockedDates, setUnlockedDates] = useState<Record<string, string>>({})
   const [athleteName, setAthleteName] = useState('')
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [selectedExercise, setSelectedExercise] = useState<string>('')
@@ -227,8 +228,9 @@ export default function AthleteProgressPage() {
           currentWeekDays: streakJson.currentWeekDays,
           currentWeekRequired: streakJson.currentWeekRequired,
         })
-        setUnlockedMilestones(streakJson.unlockedMilestones ?? [])
-        celebrateNewMilestones(streakJson.unlockedMilestones ?? [], user.id)
+        setUnlockedCards(streakJson.unlockedCards ?? [])
+        setUnlockedDates(streakJson.unlockedDates ?? {})
+        celebrateNewMilestones(streakJson.unlockedCards ?? [], user.id)
       }
     } catch (error) {
       console.error(error)
@@ -295,24 +297,15 @@ export default function AthleteProgressPage() {
       </div>
 
       {streak && (
-        <Card>
-          <CardContent className="flex items-center gap-4 py-5">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-orange-100">
-              <Flame className="h-6 w-6 text-orange-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-extrabold tracking-tight text-foreground">
-                {streak.streak} {streak.streak === 1 ? 'día' : 'días'}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Racha actual · esta semana {streak.currentWeekDays}/{streak.currentWeekRequired}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <StreakAchievements
+          unlockedCards={unlockedCards}
+          unlockedDates={unlockedDates}
+          streakDays={streak.streak}
+          currentWeekDays={streak.currentWeekDays}
+          currentWeekRequired={streak.currentWeekRequired}
+          athleteName={athleteName}
+        />
       )}
-
-      {streak && <StreakAchievements unlockedMilestones={unlockedMilestones} athleteName={athleteName} />}
 
       {/* 1RM (sentadilla/banca/peso muerto) o mejor peso por sesión (accesorios) */}
       <Card>

@@ -170,7 +170,7 @@ export default function AthleteLogPage() {
       setE1rmByExercise(result.best)
       if (weekRes) {
         setWeekProgress({ currentWeekDays: weekRes.currentWeekDays, currentWeekRequired: weekRes.currentWeekRequired })
-        celebrateNewMilestones(weekRes.unlockedMilestones ?? [], result.session.userId)
+        celebrateNewMilestones(weekRes.unlockedCards ?? [], result.session.userId)
       }
     } catch (error) {
       console.error('Error loading workout:', error)

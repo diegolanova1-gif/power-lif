@@ -1,15 +1,15 @@
 import { toast } from 'sonner'
-import { MILESTONES } from '@/lib/achievements'
+import { STREAK_CARDS } from '@/lib/achievements'
 
-const storageKey = (userId: string) => `power-routine:seen-milestones:${userId}`
+const storageKey = (userId: string) => `power-routine:seen-cards:${userId}`
 
 /**
- * Toasts any milestone that's unlocked but hasn't been celebrated yet on
+ * Toasts any Carta de Racha that's unlocked but hasn't been celebrated yet on
  * this device, then remembers it (localStorage) so it only fires once.
- * Achievements unlock silently server-side on every stats fetch — this is
- * what turns that into the "you just earned it" moment.
+ * Cards unlock silently server-side on every stats fetch — this is what
+ * turns that into the "la desbloqueaste" moment.
  */
-export function celebrateNewMilestones(unlockedMilestones: string[], userId: string) {
+export function celebrateNewMilestones(unlockedCards: string[], userId: string) {
   if (typeof window === 'undefined' || !userId) return
 
   let seen: string[] = []
@@ -19,12 +19,12 @@ export function celebrateNewMilestones(unlockedMilestones: string[], userId: str
     seen = []
   }
   const seenSet = new Set(seen)
-  const fresh = unlockedMilestones.filter(id => !seenSet.has(id))
+  const fresh = unlockedCards.filter(id => !seenSet.has(id))
   if (fresh.length === 0) return
 
   for (const id of fresh) {
-    const milestone = MILESTONES.find(m => m.id === id)
-    if (milestone) toast.success(`¡Desbloqueaste "${milestone.label}"! 🔥`, { description: milestone.description })
+    const card = STREAK_CARDS.find(c => c.id === id)
+    if (card) toast.success(`Desbloqueaste "${card.name.toUpperCase()}"`, { description: `Carta ${String(card.number).padStart(3, '0')} / 050` })
   }
 
   try {
