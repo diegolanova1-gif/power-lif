@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { calculateAdherence, calculateWeeklyAdherence, getAdherenceHeatmap, calculateStreak } from '@/lib/calculations/adherence'
 import type { RoutineStructure } from '@/lib/validations/routine'
+import { STREAK_MILESTONES } from '@/lib/achievements'
 
 export async function GET(request: NextRequest) {
   const cookieStore = await cookies()
@@ -66,6 +67,7 @@ export async function GET(request: NextRequest) {
       streak: 0,
       currentWeekDays: 0,
       currentWeekRequired: 0,
+      unlockedMilestones: [],
     })
   }
 
@@ -98,6 +100,22 @@ export async function GET(request: NextRequest) {
   const heatmap = getAdherenceHeatmap(routine, sets || [], programWeeks)
   const { streak, currentWeekDays, currentWeekRequired } = calculateStreak(allSets || [], structure)
 
+  // Achievements unlock permanently once the streak crosses a milestone —
+  // only the athlete's own session can write them (RLS), so a coach viewing
+  // an athlete's stats just reads whatever is already unlocked.
+  const { data: existing } = await supabase.from('streak_achievements').select('milestone').eq('athlete_id', athleteId)
+  const unlockedSet = new Set(existing?.map(r => r.milestone) ?? [])
+  if (user.id === athleteId) {
+    const toUnlock = STREAK_MILESTONES.filter(m => streak >= m && !unlockedSet.has(m))
+    if (toUnlock.length) {
+      await supabase.from('streak_achievements').upsert(
+        toUnlock.map(milestone => ({ athlete_id: athleteId, milestone })),
+        { onConflict: 'athlete_id,milestone', ignoreDuplicates: true }
+      )
+      toUnlock.forEach(m => unlockedSet.add(m))
+    }
+  }
+
   return NextResponse.json({
     overall: overallAdherence,
     weekly: weeklyAdherence,
@@ -105,5 +123,6 @@ export async function GET(request: NextRequest) {
     streak,
     currentWeekDays,
     currentWeekRequired,
+    unlockedMilestones: [...unlockedSet].sort((a, b) => a - b),
   })
 }

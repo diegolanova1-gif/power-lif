@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Flame, Loader2 } from 'lucide-react'
+import { StreakAchievements } from '@/components/athlete/streak-achievements'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 import {
@@ -63,6 +64,8 @@ export default function AthleteProgressPage() {
   const [volumeData, setVolumeData] = useState<VolumeDataPoint[]>([])
   const [adherenceData, setAdherenceData] = useState<AdherenceDataPoint[]>([])
   const [streak, setStreak] = useState<{ streak: number; currentWeekDays: number; currentWeekRequired: number } | null>(null)
+  const [unlockedMilestones, setUnlockedMilestones] = useState<number[]>([])
+  const [athleteName, setAthleteName] = useState('')
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [selectedExercise, setSelectedExercise] = useState<string>('')
   const [loading, setLoading] = useState(true)
@@ -79,6 +82,9 @@ export default function AthleteProgressPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
+
+      const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', user.id).single()
+      setAthleteName(profile?.full_name ?? '')
 
       // Fetch 1RM data (within the selected period)
       let oneRMQuery = supabase
@@ -220,6 +226,7 @@ export default function AthleteProgressPage() {
           currentWeekDays: streakJson.currentWeekDays,
           currentWeekRequired: streakJson.currentWeekRequired,
         })
+        setUnlockedMilestones(streakJson.unlockedMilestones ?? [])
       }
     } catch (error) {
       console.error(error)
@@ -302,6 +309,8 @@ export default function AthleteProgressPage() {
           </CardContent>
         </Card>
       )}
+
+      {streak && <StreakAchievements unlockedMilestones={unlockedMilestones} athleteName={athleteName} />}
 
       {/* 1RM (sentadilla/banca/peso muerto) o mejor peso por sesión (accesorios) */}
       <Card>
