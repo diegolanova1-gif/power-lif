@@ -7,6 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Flame, Loader2 } from 'lucide-react'
 import { StreakAchievements } from '@/components/athlete/streak-achievements'
+import { celebrateNewMilestones } from '@/lib/celebrate-milestones'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 import {
@@ -227,6 +228,7 @@ export default function AthleteProgressPage() {
           currentWeekRequired: streakJson.currentWeekRequired,
         })
         setUnlockedMilestones(streakJson.unlockedMilestones ?? [])
+        celebrateNewMilestones(streakJson.unlockedMilestones ?? [], user.id)
       }
     } catch (error) {
       console.error(error)

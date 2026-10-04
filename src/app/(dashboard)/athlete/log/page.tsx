@@ -14,6 +14,7 @@ import { weekdayName, weekdayShort } from '@/lib/weekdays'
 import { scheduleForWeek, type RoutineStructure } from '@/lib/validations/routine'
 import { exerciseCompliance } from '@/lib/calculations/compliance'
 import { dateForWeekDay, isToday } from '@/lib/schedule-dates'
+import { celebrateNewMilestones } from '@/lib/celebrate-milestones'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -167,7 +168,10 @@ export default function AthleteLogPage() {
       setRealDateByDay(result.realDateByDay)
       setLastWeightByExercise(result.lastWeight)
       setE1rmByExercise(result.best)
-      if (weekRes) setWeekProgress({ currentWeekDays: weekRes.currentWeekDays, currentWeekRequired: weekRes.currentWeekRequired })
+      if (weekRes) {
+        setWeekProgress({ currentWeekDays: weekRes.currentWeekDays, currentWeekRequired: weekRes.currentWeekRequired })
+        celebrateNewMilestones(weekRes.unlockedMilestones ?? [], result.session.userId)
+      }
     } catch (error) {
       console.error('Error loading workout:', error)
       toast.error('Error cargando el entrenamiento')
