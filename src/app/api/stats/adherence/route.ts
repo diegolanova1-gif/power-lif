@@ -1,9 +1,9 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
-import { calculateAdherence, calculateWeeklyAdherence, getAdherenceHeatmap, calculateStreak } from '@/lib/calculations/adherence'
+import { calculateAdherence, calculateWeeklyAdherence, getAdherenceHeatmap } from '@/lib/calculations/adherence'
 import type { RoutineStructure } from '@/lib/validations/routine'
-import { MILESTONES } from '@/lib/achievements'
+import { getStreakAndAchievements } from '@/lib/server/achievements'
 
 export async function GET(request: NextRequest) {
   const cookieStore = await cookies()
@@ -71,21 +71,12 @@ export async function GET(request: NextRequest) {
     })
   }
 
-  // Get sets. The streak is per-athlete (not per-routine): a program swap
-  // mid-week shouldn't zero out days already trained this real week.
-  const [{ data: sets }, { data: allSets }] = await Promise.all([
-    supabase
-      .from('sets_log')
-      .select('week, day, completed_at, rpe')
-      .eq('athlete_id', athleteId)
-      .eq('athlete_routine_id', routine.id)
-      .order('completed_at', { ascending: true }),
-    supabase
-      .from('sets_log')
-      .select('week, day, exercise_id, completed_at, extra_type')
-      .eq('athlete_id', athleteId)
-      .order('completed_at', { ascending: true }),
-  ])
+  const { data: sets } = await supabase
+    .from('sets_log')
+    .select('week, day, completed_at, rpe')
+    .eq('athlete_id', athleteId)
+    .eq('athlete_routine_id', routine.id)
+    .order('completed_at', { ascending: true })
 
   const overallAdherence = calculateAdherence(routine, sets || [])
 
@@ -98,26 +89,12 @@ export async function GET(request: NextRequest) {
   })
 
   const heatmap = getAdherenceHeatmap(routine, sets || [], programWeeks)
-  const { streak, currentWeekDays, currentWeekRequired, firstWeekCompleted, monthCompleted } = calculateStreak(allSets || [], structure)
-
-  // Achievements unlock permanently once their condition is met — only the
-  // athlete's own session can write them (RLS), so a coach viewing an
-  // athlete's stats just reads whatever is already unlocked.
-  const { data: existing } = await supabase.from('streak_achievements').select('milestone').eq('athlete_id', athleteId)
-  const unlockedSet = new Set(existing?.map(r => r.milestone) ?? [])
-  const isUnlocked = (m: (typeof MILESTONES)[number]) =>
-    m.type === 'days' ? streak >= (m.days ?? Infinity) : m.type === 'first_week' ? firstWeekCompleted : monthCompleted
-
-  if (user.id === athleteId) {
-    const toUnlock = MILESTONES.filter(m => isUnlocked(m) && !unlockedSet.has(m.id))
-    if (toUnlock.length) {
-      await supabase.from('streak_achievements').upsert(
-        toUnlock.map(m => ({ athlete_id: athleteId, milestone: m.id })),
-        { onConflict: 'athlete_id,milestone', ignoreDuplicates: true }
-      )
-      toUnlock.forEach(m => unlockedSet.add(m.id))
-    }
-  }
+  const { streak, currentWeekDays, currentWeekRequired, unlockedMilestones } = await getStreakAndAchievements(
+    supabase,
+    athleteId,
+    structure,
+    user.id === athleteId
+  )
 
   return NextResponse.json({
     overall: overallAdherence,
@@ -126,6 +103,6 @@ export async function GET(request: NextRequest) {
     streak,
     currentWeekDays,
     currentWeekRequired,
-    unlockedMilestones: [...unlockedSet],
+    unlockedMilestones,
   })
 }

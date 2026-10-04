@@ -16,6 +16,8 @@ import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { dateForWeekDay, isToday as isTodayDate } from '@/lib/schedule-dates'
+import { getStreakAndAchievements } from '@/lib/server/achievements'
+import { StreakAchievements } from '@/components/athlete/streak-achievements'
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
@@ -173,6 +175,10 @@ export default async function AthleteFollowUpPage({
   const doneSessions = pastSessions.filter(s => s === 'done').length
   const partialSessions = pastSessions.filter(s => s === 'partial').length
 
+  // Read-only here: only the athlete's own session can unlock a new
+  // achievement (RLS), so a coach just sees whatever is already earned.
+  const { unlockedMilestones } = await getStreakAndAchievements(supabase, id, structure, false)
+
   return (
     <div className="space-y-6">
       {header}
@@ -200,6 +206,8 @@ export default async function AthleteFollowUpPage({
           </CardContent>
         </Card>
       </div>
+
+      <StreakAchievements unlockedMilestones={unlockedMilestones} athleteName={athlete.full_name ?? ''} />
 
       {/* Week × day grid */}
       <Card>
