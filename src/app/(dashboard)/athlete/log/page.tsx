@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { ChevronLeft, ChevronRight, Loader2, PartyPopper } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { ChevronLeft, ChevronRight, Flame, Loader2, PartyPopper } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { ExerciseFeedback } from '@/components/athlete/exercise-feedback'
 import { ExerciseLogCard, type LoggedSet, type Prescription } from '@/components/athlete/exercise-log-card'
+import { ExtraDayDialog } from '@/components/athlete/extra-day-dialog'
 import { weekdayName, weekdayShort } from '@/lib/weekdays'
 import { scheduleForWeek, type RoutineStructure } from '@/lib/validations/routine'
 import { exerciseCompliance } from '@/lib/calculations/compliance'
@@ -51,7 +52,7 @@ async function loadWorkout(supabase: Supabase) {
     supabase.from('exercises').select('id, name').in('id', exerciseIds),
     supabase
       .from('sets_log')
-      .select('week, day, exercise_id, set_number, reps, weight_kg, rpe')
+      .select('week, day, exercise_id, set_number, reps, weight_kg, rpe, completed_at, extra_type')
       .eq('athlete_routine_id', routine.id),
     // Last weight used per exercise (any routine) to prefill
     supabase
@@ -97,6 +98,20 @@ async function loadWorkout(supabase: Supabase) {
   }
   Object.values(setsByKey).forEach(list => list.sort((a, b) => a.set_number - b.set_number))
 
+  // Real date the athlete actually logged each session, falling back to the
+  // theoretical schedule date for sessions not done yet — training a day's
+  // content on a different real calendar day than pautado is expected now.
+  const realDateByDay: Record<string, Date> = {}
+  for (const s of sets ?? []) {
+    // A freeform "día extra" exercise is tagged with the pending day's week/day
+    // but isn't actually that day's prescribed content — it shouldn't mark the
+    // real session as logged.
+    if (s.extra_type === 'freeform') continue
+    const key = `${s.week}-${s.day}`
+    const completed = new Date(s.completed_at)
+    if (!realDateByDay[key] || completed < realDateByDay[key]) realDateByDay[key] = completed
+  }
+
   const lastWeight = new Map<string, number>()
   for (const h of history ?? []) if (!lastWeight.has(h.exercise_id)) lastWeight.set(h.exercise_id, Number(h.weight_kg))
 
@@ -109,6 +124,7 @@ async function loadWorkout(supabase: Supabase) {
     days,
     currentIndex: target >= 0 ? target : 0,
     setsByKey,
+    realDateByDay,
     lastWeight,
     best,
   }
@@ -119,7 +135,11 @@ export default function AthleteLogPage() {
 
   const [days, setDays] = useState<DayData[]>([])
   const [currentDayIndex, setCurrentDayIndex] = useState(0)
+  const [pointerIndex, setPointerIndex] = useState(0)
+  const [weekProgress, setWeekProgress] = useState<{ currentWeekDays: number; currentWeekRequired: number } | null>(null)
+  const [extraDayOpen, setExtraDayOpen] = useState(false)
   const [setsByKey, setSetsByKey] = useState<Record<string, LoggedSet[]>>({})
+  const [realDateByDay, setRealDateByDay] = useState<Record<string, Date>>({})
   const [e1rmByExercise, setE1rmByExercise] = useState<Map<string, number>>(new Map())
   const [lastWeightByExercise, setLastWeightByExercise] = useState<Map<string, number>>(new Map())
   const [session, setSession] = useState<{ userId: string; athleteRoutineId: string } | null>(null)
@@ -127,32 +147,65 @@ export default function AthleteLogPage() {
   const [loading, setLoading] = useState(true)
   const [noRoutine, setNoRoutine] = useState(false)
 
-  useEffect(() => {
-    let active = true
-    loadWorkout(supabase)
-      .then(result => {
-        if (!active) return
-        if (!result) {
-          setNoRoutine(true)
-          return
-        }
-        setSession(result.session)
-        setStartedAt(result.startedAt)
-        setDays(result.days)
-        setCurrentDayIndex(result.currentIndex)
-        setSetsByKey(result.setsByKey)
-        setLastWeightByExercise(result.lastWeight)
-        setE1rmByExercise(result.best)
-      })
-      .catch(error => {
-        console.error('Error loading workout:', error)
-        toast.error('Error cargando el entrenamiento')
-      })
-      .finally(() => active && setLoading(false))
-    return () => {
-      active = false
+  async function refresh(showSpinner: boolean, resetIndex: boolean = true) {
+    if (showSpinner) setLoading(true)
+    try {
+      const [result, weekRes] = await Promise.all([
+        loadWorkout(supabase),
+        fetch('/api/stats/adherence?weeks=1').then(r => (r.ok ? r.json() : null)).catch(() => null),
+      ])
+      if (!result) {
+        setNoRoutine(true)
+        return
+      }
+      setSession(result.session)
+      setStartedAt(result.startedAt)
+      setDays(result.days)
+      if (resetIndex) setCurrentDayIndex(result.currentIndex)
+      setPointerIndex(result.currentIndex)
+      setSetsByKey(result.setsByKey)
+      setRealDateByDay(result.realDateByDay)
+      setLastWeightByExercise(result.lastWeight)
+      setE1rmByExercise(result.best)
+      if (weekRes) setWeekProgress({ currentWeekDays: weekRes.currentWeekDays, currentWeekRequired: weekRes.currentWeekRequired })
+    } catch (error) {
+      console.error('Error loading workout:', error)
+      toast.error('Error cargando el entrenamiento')
+    } finally {
+      if (showSpinner) setLoading(false)
     }
+  }
+
+  useEffect(() => {
+    refresh(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase])
+
+  const currentDay = days[currentDayIndex]
+  const doneCount = currentDay ? currentDay.exercises.filter(e => setsByKey[setsKey(currentDay.week, currentDay.day, e.exercise_id)]?.length).length : 0
+  const total = currentDay ? currentDay.exercises.length : 0
+  const currentLoggedFlag = currentDay ? `${currentDay.week}-${currentDay.day}` in realDateByDay : false
+  const showExtraDayPrompt =
+    !!weekProgress &&
+    currentDayIndex === pointerIndex &&
+    !currentLoggedFlag &&
+    weekProgress.currentWeekDays >= weekProgress.currentWeekRequired
+  const allDone = total > 0 && doneCount === total
+
+  // Finishing a day moves current_week/current_day server-side right away
+  // (advance_athlete_routine trigger) and can push this real week past its
+  // target — refetch so pointerIndex/weekProgress aren't stale by the time
+  // the athlete looks at the next session.
+  const refreshedForDay = useRef<string | null>(null)
+  useEffect(() => {
+    if (!currentDay) return
+    const key = `${currentDay.week}-${currentDay.day}`
+    if (allDone && !currentLoggedFlag && refreshedForDay.current !== key) {
+      refreshedForDay.current = key
+      refresh(false, false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allDone, currentLoggedFlag, currentDay?.week, currentDay?.day])
 
   if (loading) {
     return (
@@ -162,7 +215,6 @@ export default function AthleteLogPage() {
     )
   }
 
-  const currentDay = days[currentDayIndex]
   if (noRoutine || !currentDay || !session) {
     return (
       <Card>
@@ -172,10 +224,6 @@ export default function AthleteLogPage() {
       </Card>
     )
   }
-
-  const doneCount = currentDay.exercises.filter(e => setsByKey[setsKey(currentDay.week, currentDay.day, e.exercise_id)]?.length).length
-  const total = currentDay.exercises.length
-  const allDone = total > 0 && doneCount === total
 
   function saveSets(exerciseId: string, sets: LoggedSet[]) {
     setSetsByKey(prev => ({ ...prev, [setsKey(currentDay.week, currentDay.day, exerciseId)]: sets }))
@@ -190,6 +238,17 @@ export default function AthleteLogPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  // Real date the session actually happened on (from completed_at), or the
+  // theoretical pautado date while it's still pending. The athlete can train
+  // a day's content on any real day, in order, so the real one wins once set.
+  const dateOf = (w: number, d: number) =>
+    realDateByDay[`${w}-${d}`] ?? (startedAt ? dateForWeekDay(startedAt, w, d) : null)
+  const isLogged = (w: number, d: number) => `${w}-${d}` in realDateByDay
+  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+
+  const currentDate = dateOf(currentDay.week, currentDay.day)
+  const currentLogged = isLogged(currentDay.week, currentDay.day)
+
   return (
     <div className="space-y-6 pb-8">
       {/* Session navigation */}
@@ -199,10 +258,13 @@ export default function AthleteLogPage() {
         </Button>
         <div className="text-center">
           <p className="text-sm font-medium text-muted-foreground">Semana {currentDay.week}</p>
-          <p className="text-2xl font-extrabold tracking-tight text-foreground">{weekdayName(currentDay.day)}</p>
-          {startedAt && (
+          <p className="text-2xl font-extrabold tracking-tight text-foreground">
+            {currentDate && currentLogged ? capitalize(format(currentDate, 'EEEE', { locale: es })) : weekdayName(currentDay.day)}
+          </p>
+          {currentDate && (
             <p className="text-sm text-muted-foreground">
-              {format(dateForWeekDay(startedAt, currentDay.week, currentDay.day), "d 'de' MMMM", { locale: es })}
+              {format(currentDate, "d 'de' MMMM", { locale: es })}
+              {!currentLogged && ' · pautado'}
             </p>
           )}
           {currentDay.name && currentDay.name !== weekdayName(currentDay.day) && (
@@ -217,22 +279,23 @@ export default function AthleteLogPage() {
       <div className="flex justify-center gap-2">
         {days.map((d, i) => {
           if (d.week !== currentDay.week) return null
-          const todayChip = startedAt ? isToday(dateForWeekDay(startedAt, d.week, d.day)) : false
+          const chipDate = dateOf(d.week, d.day)
+          const todayChip = chipDate ? isToday(chipDate) : false
           return (
             <button
               key={`${d.week}-${d.day}`}
               onClick={() => goTo(i)}
-              title={startedAt ? format(dateForWeekDay(startedAt, d.week, d.day), "d 'de' MMMM", { locale: es }) : undefined}
+              title={chipDate ? format(chipDate, "d 'de' MMMM", { locale: es }) : undefined}
               className={cn(
                 'relative flex h-11 min-w-11 flex-col items-center justify-center gap-0 rounded-full px-2 text-sm font-medium leading-none transition-colors',
                 i === currentDayIndex ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted',
                 todayChip && i !== currentDayIndex && 'ring-2 ring-primary/40'
               )}
             >
-              <span>{weekdayShort(d.day)}</span>
-              {startedAt && (
+              <span>{isLogged(d.week, d.day) && chipDate ? capitalize(format(chipDate, 'EEEEEE', { locale: es })) : weekdayShort(d.day)}</span>
+              {chipDate && (
                 <span className={cn('text-[10px] font-normal', i === currentDayIndex ? 'opacity-80' : 'opacity-60')}>
-                  {format(dateForWeekDay(startedAt, d.week, d.day), 'd')}
+                  {format(chipDate, 'd')}
                 </span>
               )}
             </button>
@@ -269,6 +332,38 @@ export default function AthleteLogPage() {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {showExtraDayPrompt && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="flex flex-col items-center gap-3 py-5 text-center sm:flex-row sm:text-left">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/15">
+              <Flame className="h-6 w-6 text-primary" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-foreground">¡Ya cumpliste tus días de esta semana!</p>
+              <p className="text-sm text-muted-foreground">¿Querés entrenar de nuevo? Elegí cómo contarlo.</p>
+            </div>
+            <Button onClick={() => setExtraDayOpen(true)}>Elegir</Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {session && (
+        <ExtraDayDialog
+          open={extraDayOpen}
+          onOpenChange={setExtraDayOpen}
+          exercises={currentDay.exercises}
+          athleteId={session.userId}
+          athleteRoutineId={session.athleteRoutineId}
+          week={currentDay.week}
+          day={currentDay.day}
+          setsByKey={setsByKey}
+          e1rmByExercise={e1rmByExercise}
+          lastWeightByExercise={lastWeightByExercise}
+          onExerciseSaved={saveSets}
+          onDone={() => refresh(false)}
+        />
       )}
 
       <div className="space-y-4">

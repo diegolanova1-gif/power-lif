@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2 } from 'lucide-react'
+import { Flame, Loader2 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 import {
@@ -62,6 +62,7 @@ export default function AthleteProgressPage() {
   const [bestWeightData, setBestWeightData] = useState<Record<string, BestWeightPoint[]>>({})
   const [volumeData, setVolumeData] = useState<VolumeDataPoint[]>([])
   const [adherenceData, setAdherenceData] = useState<AdherenceDataPoint[]>([])
+  const [streak, setStreak] = useState<{ streak: number; currentWeekDays: number; currentWeekRequired: number } | null>(null)
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [selectedExercise, setSelectedExercise] = useState<string>('')
   const [loading, setLoading] = useState(true)
@@ -210,6 +211,16 @@ export default function AthleteProgressPage() {
         }
         setAdherenceData(heatmap)
       }
+
+      const streakRes = await fetch('/api/stats/adherence?weeks=12')
+      if (streakRes.ok) {
+        const streakJson = await streakRes.json()
+        setStreak({
+          streak: streakJson.streak,
+          currentWeekDays: streakJson.currentWeekDays,
+          currentWeekRequired: streakJson.currentWeekRequired,
+        })
+      }
     } catch (error) {
       console.error(error)
     } finally {
@@ -233,18 +244,18 @@ export default function AthleteProgressPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Mi Progreso</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">Mi Progreso</h1>
           <p className="text-muted-foreground mt-1">Estadísticas y evolución de tus entrenamientos</p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-3">
           <Select
             value={timeRange}
             onValueChange={(v) => v && setTimeRange(v as 'all' | '3m' | '6m' | '1y')}
             items={{ all: 'Todo el historial', '3m': 'Últimos 3 meses', '6m': 'Últimos 6 meses', '1y': 'Último año' }}
           >
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-40">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -260,7 +271,7 @@ export default function AthleteProgressPage() {
             disabled={exercises.length === 0}
             items={Object.fromEntries(exercises.map(ex => [ex.id, ex.name]))}
           >
-            <SelectTrigger className="w-60">
+            <SelectTrigger className="w-full sm:w-60">
               <SelectValue placeholder="Selecciona ejercicio" />
             </SelectTrigger>
             <SelectContent>
@@ -273,6 +284,24 @@ export default function AthleteProgressPage() {
           </Select>
         </div>
       </div>
+
+      {streak && (
+        <Card>
+          <CardContent className="flex items-center gap-4 py-5">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-orange-100">
+              <Flame className="h-6 w-6 text-orange-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-extrabold tracking-tight text-foreground">
+                {streak.streak} {streak.streak === 1 ? 'día' : 'días'}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Racha actual · esta semana {streak.currentWeekDays}/{streak.currentWeekRequired}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* 1RM (sentadilla/banca/peso muerto) o mejor peso por sesión (accesorios) */}
       <Card>
@@ -367,27 +396,32 @@ export default function AthleteProgressPage() {
           </CardHeader>
           <CardContent>
             {adherenceData.length > 0 ? (
-              <div className="overflow-x-auto">
-                <div className="flex gap-1 min-w-max" style={{ minWidth: '90 * 28px' }}>
-                  {adherenceData.map((day, i) => (
-                    <div
-                      key={day.date}
-                      className={`w-6 h-6 rounded-sm transition-colors ${day.completed ? 'bg-success' : 'bg-muted'}`}
-                      title={`${format(parseISO(day.date), 'dd MMM', { locale: es })}: ${day.completed ? 'Entrenó' : 'Descanso'}`}
-                    />
-                  ))}
+              <div>
+                {/* GitHub-style contribution grid: 7 rows deep, wraps into as
+                    many columns as needed, so it always fits the card width
+                    instead of forcing a 90-cell horizontal scroll. */}
+                <div className="flex justify-center">
+                  <div className="grid grid-flow-col grid-rows-7 gap-1">
+                    {adherenceData.map(day => (
+                      <div
+                        key={day.date}
+                        className={`h-3 w-3 rounded-sm transition-colors sm:h-3.5 sm:w-3.5 ${day.completed ? 'bg-success' : 'bg-muted'}`}
+                        title={`${format(parseISO(day.date), 'dd MMM', { locale: es })}: ${day.completed ? 'Entrenó' : 'Descanso'}`}
+                      />
+                    ))}
+                  </div>
                 </div>
-                <div className="flex justify-between text-xs font-mono tabular-nums text-muted-foreground mt-2">
+                <div className="flex justify-between text-xs font-mono tabular-nums text-muted-foreground mt-3">
                   <span>{format(parseISO(adherenceData[0].date), 'dd MMM', { locale: es })}</span>
                   <span>{format(parseISO(adherenceData[adherenceData.length - 1].date), 'dd MMM', { locale: es })}</span>
                 </div>
-                <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-sm text-muted-foreground">
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-sm bg-success" />
+                    <div className="w-3.5 h-3.5 rounded-sm bg-success" />
                     <span>Entrenó</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-sm bg-muted" />
+                    <div className="w-3.5 h-3.5 rounded-sm bg-muted" />
                     <span>Descanso</span>
                   </div>
                   <div className="flex items-center gap-2 font-mono tabular-nums">

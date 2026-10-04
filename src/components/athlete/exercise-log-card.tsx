@@ -38,6 +38,10 @@ interface ExerciseLogCardProps {
   /** Last weight this athlete used on this exercise */
   lastWeight: number | null
   session: { athleteId: string; athleteRoutineId: string; week: number; day: number }
+  /** Set when this card is logging a "día extra" session rather than the
+   * athlete's actual current day — tags the rows so the streak/order rules
+   * treat them differently. Undefined = normal session (the common case). */
+  extraType?: 'advance_credit' | 'advance_no_credit'
   onSaved: (sets: LoggedSet[]) => void
   children?: React.ReactNode
 }
@@ -53,7 +57,7 @@ const roundTo = (value: number, step: number) => Math.round(value / step) * step
 // Accepts "62,5" and "62.5"; empty = bodyweight (0)
 const parseKg = (text: string) => (text.trim() === '' ? 0 : Number(text.trim().replace(',', '.')))
 
-export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, session, onSaved, children }: ExerciseLogCardProps) {
+export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, session, extraType, onSaved, children }: ExerciseLogCardProps) {
   const [supabase] = useState(() => createClient())
   const [editing, setEditing] = useState(false)
   const [rows, setRows] = useState<Row[]>([])
@@ -101,7 +105,7 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
       }
       if (sets.length) {
         const { error } = await supabase.from('sets_log').upsert(
-          sets.map(s => ({ ...key, athlete_id: session.athleteId, ...s })),
+          sets.map(s => ({ ...key, athlete_id: session.athleteId, extra_type: extraType ?? null, ...s })),
           { onConflict: 'athlete_routine_id,exercise_id,week,day,set_number' }
         )
         if (error) throw error

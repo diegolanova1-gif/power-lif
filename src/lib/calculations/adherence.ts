@@ -1,4 +1,6 @@
 import type { Tables } from '@/types/database'
+import { scheduleForWeek, type RoutineStructure } from '@/lib/validations/routine'
+import { mondayOf } from '@/lib/schedule-dates'
 
 // sessions_per_week comes from the routine structure (schedule length) when the caller has it
 export type AthleteRoutine = Tables<'athlete_routines'> & { sessions_per_week?: number }
@@ -127,27 +129,99 @@ function estimateSessionsPerWeek(routine: AthleteRoutine): number {
   return routine.sessions_per_week || 4
 }
 
+export type ExtraType = 'advance_credit' | 'advance_no_credit' | 'freeform' | null
+
+// Minimal shape needed to compute the streak: which (week, day) got worked,
+// on what real date, and whether it was a normal session or one of the 3
+// "día extra" variants.
+export type StreakSetLog = Pick<Tables<'sets_log'>, 'week' | 'day' | 'exercise_id' | 'completed_at'> & {
+  extra_type?: ExtraType
+}
+
+export interface StreakInfo {
+  streak: number
+  currentWeekDays: number
+  currentWeekRequired: number
+}
+
+const mondayKey = (date: Date) => mondayOf(date).toISOString().split('T')[0]
+
+function shiftWeekKey(weekKey: string, weeks: number): string {
+  const d = new Date(`${weekKey}T00:00:00`)
+  d.setDate(d.getDate() + weeks * 7)
+  return mondayKey(d)
+}
+
 /**
- * Calculate streak (consecutive weeks with > 0 sessions)
+ * Racha = días reales distintos entrenados, evaluados por semana calendario
+ * real (lunes-domingo). Una semana ya cerrada que no llegó a los N días
+ * pautados corta la racha; la semana en curso suma en caliente, optimista.
+ * Las 3 variantes de "día extra" suman todas — "advance_credit" además le
+ * resta un día al requisito de la semana real SIGUIENTE.
  */
-export function calculateStreak(setsLog: SetLog[]): number {
-  if (setsLog.length === 0) return 0
+export function calculateStreak(setsLog: StreakSetLog[], structure: RoutineStructure): StreakInfo {
+  const baseRequired = scheduleForWeek(structure, 1).length
 
-  // Group by week
-  const weeksWithSessions = new Set(setsLog.map(s => s.week))
-  const sortedWeeks = Array.from(weeksWithSessions).sort((a, b) => b - a)
-
-  let streak = 0
-  let expectedWeek = Math.max(...sortedWeeks)
-
-  for (const week of sortedWeeks) {
-    if (week === expectedWeek) {
-      streak++
-      expectedWeek--
-    } else {
-      break
+  // One "session" per (week, day) of the routine — except freeform, which
+  // isn't tied to a prescribed day and always counts on its own real date.
+  const bySessionKey = new Map<string, StreakSetLog[]>()
+  const freeformDateKeys: string[] = []
+  for (const row of setsLog) {
+    if (row.extra_type === 'freeform') {
+      freeformDateKeys.push(completedAtToLocalDateKey(row.completed_at))
+      continue
     }
+    const key = `${row.week}-${row.day}`
+    const list = bySessionKey.get(key)
+    if (list) list.push(row)
+    else bySessionKey.set(key, [row])
   }
 
-  return streak
+  const trainedDateKeys = new Set<string>(freeformDateKeys)
+  const creditDateKeys: string[] = []
+
+  for (const [key, rows] of bySessionKey) {
+    const [week, day] = key.split('-').map(Number)
+    const daySchedule = scheduleForWeek(structure, week).find(d => d.day === day)
+    if (!daySchedule) continue
+
+    const countByExercise = new Map<string, number>()
+    for (const r of rows) countByExercise.set(r.exercise_id, (countByExercise.get(r.exercise_id) ?? 0) + 1)
+    const complete = daySchedule.exercises.every(e => (countByExercise.get(e.exercise_id) ?? 0) >= e.sets)
+    if (!complete) continue
+
+    const dateKeys = rows.map(r => completedAtToLocalDateKey(r.completed_at))
+    const sessionDateKey = dateKeys.reduce((min, d) => (d < min ? d : min))
+    trainedDateKeys.add(sessionDateKey)
+    if (rows[0].extra_type === 'advance_credit') creditDateKeys.push(sessionDateKey)
+  }
+
+  const weekTally = new Map<string, number>()
+  for (const dateKey of trainedDateKeys) {
+    const wk = mondayKey(new Date(`${dateKey}T00:00:00`))
+    weekTally.set(wk, (weekTally.get(wk) ?? 0) + 1)
+  }
+  const creditByWeek = new Map<string, number>()
+  for (const dateKey of creditDateKeys) {
+    const wk = mondayKey(new Date(`${dateKey}T00:00:00`))
+    creditByWeek.set(wk, (creditByWeek.get(wk) ?? 0) + 1)
+  }
+
+  // Credit earned in a week discounts the FOLLOWING real week's requirement.
+  const requiredFor = (weekKey: string) => Math.max(0, baseRequired - (creditByWeek.get(shiftWeekKey(weekKey, -1)) ?? 0))
+
+  const currentWeekKey = mondayKey(new Date())
+  const currentWeekDays = weekTally.get(currentWeekKey) ?? 0
+  const currentWeekRequired = requiredFor(currentWeekKey)
+
+  let streak = currentWeekDays
+  let cursor = shiftWeekKey(currentWeekKey, -1)
+  while (true) {
+    const done = weekTally.get(cursor) ?? 0
+    if (done < requiredFor(cursor)) break
+    streak += done
+    cursor = shiftWeekKey(cursor, -1)
+  }
+
+  return { streak, currentWeekDays, currentWeekRequired }
 }

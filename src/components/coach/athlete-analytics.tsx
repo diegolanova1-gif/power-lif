@@ -30,7 +30,7 @@ interface OneRMSeries {
 interface Stats {
   oneRM: OneRMSeries[]
   volume: { weekly: { week: number; volume: number }[]; totalVolume: number }
-  adherence: { overall: number; weekly: { week: number; adherence: number }[]; streak: number }
+  adherence: { overall: number; weekly: { week: number; adherence: number }[]; streak: number; currentWeekDays: number; currentWeekRequired: number }
 }
 
 const LIFTS = [
@@ -125,7 +125,7 @@ export function AthleteAnalytics({
     { name: 'Total estimado', value: total !== null ? `${total.toFixed(1)} kg` : '—', icon: Trophy, color: 'text-orange-600 bg-orange-100' },
     { name: 'Volumen (12 sem)', value: stats ? `${Math.round(stats.volume.totalVolume).toLocaleString('es-ES')} kg` : '—', icon: Dumbbell, color: 'text-blue-600 bg-blue-100' },
     { name: 'Adherencia', value: stats ? `${stats.adherence.overall}%` : '—', icon: CalendarCheck, color: 'text-green-600 bg-green-100' },
-    { name: 'Racha', value: stats ? `${stats.adherence.streak} sem` : '—', icon: Flame, color: 'text-purple-600 bg-purple-100' },
+    { name: 'Racha', value: stats ? `${stats.adherence.streak} ${stats.adherence.streak === 1 ? 'día' : 'días'}` : '—', icon: Flame, color: 'text-purple-600 bg-purple-100' },
   ]
 
   return (

@@ -17,6 +17,8 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { dateForWeekDay, isToday as isTodayDate } from '@/lib/schedule-dates'
 
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+
 const STATUS_STYLE: Record<ComplianceStatus, { label: string; className: string }> = {
   done: { label: 'Hecho', className: 'bg-success text-success-foreground border-success' },
   partial: { label: 'Parcial', className: 'bg-warning text-warning-foreground border-warning' },
@@ -106,9 +108,6 @@ export default async function AthleteFollowUpPage({
   const totalWeeks = structure.weeks || 1
   const trainingDays = [...structure.schedule].map(d => d.day).sort((a, b) => a - b)
 
-  const dateFor = (w: number, d: number) => dateForWeekDay(assignment.started_at, w, d)
-  const isToday = (w: number, d: number) => isTodayDate(dateFor(w, d))
-
   const [{ data: sets }, { data: feedback }] = await Promise.all([
     supabase
       .from('sets_log')
@@ -120,6 +119,20 @@ export default async function AthleteFollowUpPage({
       .eq('athlete_routine_id', assignment.id),
   ])
   const feedbackRows = feedback?.map(f => ({ ...f, media: f.media.filter(m => !m.deleted_at) }))
+
+  // Real date the athlete actually logged each session (earliest set for that
+  // week/day), falling back to the theoretical schedule date for sessions
+  // that haven't happened yet — the athlete may train a day's content on a
+  // different real calendar day than the one originally pautado.
+  const realDateByDay = new Map<string, Date>()
+  for (const s of sets ?? []) {
+    const key = `${s.week}-${s.day}`
+    const existing = realDateByDay.get(key)
+    const completed = new Date(s.completed_at)
+    if (!existing || completed < existing) realDateByDay.set(key, completed)
+  }
+  const dateFor = (w: number, d: number) => realDateByDay.get(`${w}-${d}`) ?? dateForWeekDay(assignment.started_at, w, d)
+  const isToday = (w: number, d: number) => isTodayDate(dateFor(w, d))
 
   const setsFor = (week: number, day: number, exerciseId: string) =>
     (sets ?? [])
@@ -212,7 +225,7 @@ export default async function AthleteFollowUpPage({
                     key={d}
                     href={`/coach/athletes/${id}?week=${w}&day=${d}`}
                     scroll={false}
-                    title={`${weekdayName(d)} ${format(dateFor(w, d), 'd MMM', { locale: es })} · ${STATUS_STYLE[status].label}${todayCell ? ' · Hoy' : ''}`}
+                    title={`${realDateByDay.has(`${w}-${d}`) ? capitalize(format(dateFor(w, d), 'EEEE', { locale: es })) : weekdayName(d)} ${format(dateFor(w, d), 'd MMM', { locale: es })} · ${STATUS_STYLE[status].label}${todayCell ? ' · Hoy' : ''}`}
                     className={cn(
                       'relative flex h-12 w-12 shrink-0 flex-col items-center justify-center gap-0.5 rounded-md border text-xs font-medium leading-none',
                       STATUS_STYLE[status].className,
@@ -220,7 +233,7 @@ export default async function AthleteFollowUpPage({
                       todayCell && !selected && 'ring-2 ring-primary/40 ring-offset-1'
                     )}
                   >
-                    <span>{weekdayShort(d)}</span>
+                    <span>{realDateByDay.has(`${w}-${d}`) ? capitalize(format(dateFor(w, d), 'EEEEEE', { locale: es })) : weekdayShort(d)}</span>
                     <span className="text-[10px] font-mono font-normal tabular-nums opacity-70">{format(dateFor(w, d), 'd')}</span>
                     {hasNote && <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-accent-foreground" />}
                     {todayCell && <span className="absolute -left-1 -top-1 h-2.5 w-2.5 rounded-full bg-primary ring-2 ring-background" />}
@@ -243,7 +256,9 @@ export default async function AthleteFollowUpPage({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-foreground">
-            Semana {week} · {weekdayName(day)}
+            Semana {week} · {realDateByDay.has(`${week}-${day}`)
+              ? capitalize(format(dateFor(week, day), 'EEEE', { locale: es }))
+              : weekdayName(day)}
             {plan?.name && plan.name !== weekdayName(day) && <span className="font-normal text-muted-foreground"> · {plan.name}</span>}
           </h2>
           <StatusBadge status={statusOf(week, day)} />
