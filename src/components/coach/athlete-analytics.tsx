@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Loader2, Trophy, Dumbbell, CalendarCheck, Flame } from 'lucide-react'
+import { Loader2, Trophy, Dumbbell, CalendarCheck, Flame, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import type { Trend } from '@/lib/calculations/progression'
 import {
   LineChart,
   Line,
@@ -27,10 +28,29 @@ interface OneRMSeries {
   dataPoints: { date: string; estimated_1rm: number }[]
 }
 
+interface ExerciseProgress {
+  exercise_id: string
+  exercise_name: string
+  category: string
+  dataPoints: { date: string; weight_kg: number }[]
+  trend: Trend
+  deltaPct: number | null
+  recentBest: number | null
+  olderBest: number | null
+}
+
 interface Stats {
   oneRM: OneRMSeries[]
   volume: { weekly: { week: number; volume: number }[]; totalVolume: number }
   adherence: { overall: number; weekly: { week: number; adherence: number }[]; streak: number; currentWeekDays: number; currentWeekRequired: number }
+  exercises: ExerciseProgress[]
+}
+
+const TREND_META: Record<Trend, { icon: typeof TrendingUp; color: string; label: (pct: number | null) => string }> = {
+  down: { icon: TrendingDown, color: 'text-destructive', label: pct => `${pct!.toFixed(0)}%` },
+  up: { icon: TrendingUp, color: 'text-success', label: pct => `+${pct!.toFixed(0)}%` },
+  flat: { icon: Minus, color: 'text-muted-foreground', label: () => 'estable' },
+  insufficient: { icon: Minus, color: 'text-muted-foreground', label: () => '—' },
 }
 
 const LIFTS = [
@@ -61,6 +81,7 @@ export function AthleteAnalytics({
   const [range, setRange] = useState<Range>('all')
   const [stats, setStats] = useState<Stats | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [selectedProgressExercise, setSelectedProgressExercise] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -70,9 +91,13 @@ export function AthleteAnalytics({
       fetchJson<{ data: OneRMSeries[] }>(`/api/stats/1rm?${q}&range=${range}`),
       fetchJson<Stats['volume']>(`/api/stats/volume?${q}&weeks=12`),
       fetchJson<Stats['adherence']>(`/api/stats/adherence?${q}&weeks=12`),
+      fetchJson<{ data: ExerciseProgress[] }>(`/api/stats/exercises?${q}`),
     ])
-      .then(([oneRM, volume, adherence]) => {
-        if (!cancelled) setStats({ oneRM: oneRM.data, volume, adherence })
+      .then(([oneRM, volume, adherence, exercises]) => {
+        if (!cancelled) {
+          setStats({ oneRM: oneRM.data, volume, adherence, exercises: exercises.data })
+          setSelectedProgressExercise(exercises.data[0]?.exercise_id ?? null)
+        }
       })
       .catch(err => {
         if (!cancelled) setError(err.message)
@@ -226,6 +251,69 @@ export function AthleteAnalytics({
               ) : (
                 <div className="text-center py-12 text-muted-foreground">
                   Sin datos de 1RM. Se calcula cuando registra sentadilla, banca o peso muerto.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Progresión por ejercicio</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {stats.exercises.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">Todavía no hay series con peso registradas</div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-[minmax(0,260px)_1fr]">
+                  <div className="space-y-1">
+                    {stats.exercises.map(ex => {
+                      const meta = TREND_META[ex.trend]
+                      const Icon = meta.icon
+                      const selected = ex.exercise_id === selectedProgressExercise
+                      const latest = ex.dataPoints.at(-1)?.weight_kg
+                      return (
+                        <button
+                          key={ex.exercise_id}
+                          type="button"
+                          onClick={() => setSelectedProgressExercise(ex.exercise_id)}
+                          className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${selected ? 'bg-muted' : 'hover:bg-muted/50'}`}
+                        >
+                          <span className="min-w-0">
+                            <span className="block truncate font-medium text-foreground">{ex.exercise_name}</span>
+                            <span className="font-mono text-xs tabular-nums text-muted-foreground">{latest !== undefined ? `${latest} kg` : '—'}</span>
+                          </span>
+                          <span className={`flex shrink-0 items-center gap-1 font-mono text-xs tabular-nums ${meta.color}`}>
+                            <Icon className="h-3.5 w-3.5" />
+                            {meta.label(ex.deltaPct)}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {(() => {
+                    const selected = stats.exercises.find(ex => ex.exercise_id === selectedProgressExercise)
+                    if (!selected) return null
+                    return (
+                      <div className="h-80">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={selected.dataPoints.map(d => ({ ...d, date: format(parseISO(d.date), 'dd/MM', { locale: es }) }))}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                            <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                            <YAxis tick={{ fontSize: 12 }} tickFormatter={val => `${val} kg`} domain={['auto', 'auto']} />
+                            <Tooltip formatter={(value: number) => [`${value} kg`, selected.exercise_name]} labelFormatter={label => `Fecha: ${label}`} />
+                            <Line
+                              type="monotone"
+                              dataKey="weight_kg"
+                              stroke={selected.trend === 'down' ? 'var(--destructive)' : 'var(--primary)'}
+                              strokeWidth={2}
+                              dot={{ r: 3 }}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )
+                  })()}
                 </div>
               )}
             </CardContent>
