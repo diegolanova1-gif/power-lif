@@ -2,12 +2,13 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Check, CheckCircle2, AlertTriangle, Loader2, Pencil, Plus, RotateCcw, X } from 'lucide-react'
+import { Check, CheckCircle2, AlertTriangle, Loader2, Pencil, Plus, Repeat, RotateCcw, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
+import { createExercise } from '@/actions/exercises'
 import { cn } from '@/lib/utils'
 
 export interface Prescription {
@@ -28,6 +29,9 @@ export interface LoggedSet {
   reps: number
   weight_kg: number
   rpe: number | null
+  /** Si hizo otro ejercicio en vez del pautado (misma cantidad de series/reps pedida, solo cambia cuál) */
+  substitutedExerciseId?: string | null
+  substitutedExerciseName?: string | null
 }
 
 interface ExerciseLogCardProps {
@@ -64,6 +68,8 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
   const [rpe, setRpe] = useState('')
   const [quickWeight, setQuickWeight] = useState('')
   const [saving, setSaving] = useState(false)
+  const [substituting, setSubstituting] = useState(false)
+  const [substituteName, setSubstituteName] = useState('')
 
   // Weight the coach asked for, in kg
   const coachKg =
@@ -91,7 +97,24 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
         }))
     setRows(base)
     setRpe(String(logged[0]?.rpe ?? p.rpe_target ?? ''))
+    setSubstituting(!!logged[0]?.substitutedExerciseId)
+    setSubstituteName(logged[0]?.substitutedExerciseName ?? '')
     setEditing(true)
+  }
+
+  // Mismo patrón que "ejercicio aparte" del día extra: busca por nombre en lo
+  // que el alumno puede ver (catálogo + lo propio) y si no existe lo crea.
+  async function resolveSubstituteId(name: string): Promise<string | null> {
+    const trimmed = name.trim()
+    const created = await createExercise({ name: trimmed, category: 'other' })
+    if (created.success && created.exercise) return created.exercise.id
+    const { data } = await supabase
+      .from('exercises')
+      .select('id')
+      .ilike('name', trimmed.replace(/[%_\\]/g, '\\$&'))
+      .limit(1)
+      .maybeSingle()
+    return data?.id ?? null
   }
 
   // Hizo todas las series pero se quedó corto de reps/peso: le avisa solo al
@@ -121,7 +144,16 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
       }
       if (sets.length) {
         const { error } = await supabase.from('sets_log').upsert(
-          sets.map(s => ({ ...key, athlete_id: session.athleteId, extra_type: extraType ?? null, ...s })),
+          sets.map(s => ({
+            ...key,
+            athlete_id: session.athleteId,
+            extra_type: extraType ?? null,
+            set_number: s.set_number,
+            reps: s.reps,
+            weight_kg: s.weight_kg,
+            rpe: s.rpe,
+            substituted_exercise_id: s.substitutedExerciseId ?? null,
+          })),
           { onConflict: 'athlete_routine_id,exercise_id,week,day,set_number' }
         )
         if (error) throw error
@@ -176,12 +208,32 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
       toast.error('El esfuerzo va de 1 a 10')
       return
     }
+    if (substituting && substituteName.trim().length < 2) {
+      toast.error('Poné el nombre del ejercicio que hiciste en su lugar')
+      return
+    }
+
+    let substitutedExerciseId: string | null = null
+    let substitutedExerciseName: string | null = null
+    if (substituting && done.length) {
+      const trimmed = substituteName.trim()
+      const id = await resolveSubstituteId(trimmed)
+      if (!id) {
+        toast.error('No se pudo guardar el ejercicio de reemplazo')
+        return
+      }
+      substitutedExerciseId = id
+      substitutedExerciseName = trimmed
+    }
+
     const ok = await persist(
       done.map((r, i) => ({
         set_number: i + 1,
         reps: Number(r.reps),
         weight_kg: parseKg(r.weight),
         rpe: effort,
+        substitutedExerciseId,
+        substitutedExerciseName,
       }))
     )
     if (ok) {
@@ -211,6 +263,11 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
             </span>
           ) : null}
         </div>
+        {logged[0]?.substitutedExerciseName && (
+          <p className="mt-1 text-sm text-muted-foreground">
+            Hiciste <span className="font-medium text-foreground">{logged[0].substitutedExerciseName}</span> en vez de {p.exercise_name}
+          </p>
+        )}
         {/* What the coach asked for */}
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
           <span><span className="font-mono font-semibold tabular-nums text-foreground">{p.sets}</span> series</span>
@@ -231,6 +288,32 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
       <CardContent className="space-y-3">
         {editing ? (
           <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => setSubstituting(v => !v)}
+              className={cn(
+                'flex w-full items-center justify-between rounded-lg border px-3 py-2 text-sm font-medium transition-colors',
+                substituting ? 'border-primary bg-primary/5 text-primary' : 'text-muted-foreground hover:bg-muted'
+              )}
+            >
+              <span className="flex items-center gap-2">
+                <Repeat className="h-4 w-4" />
+                Hice otro ejercicio en vez de este
+              </span>
+              <span className="text-xs">{substituting ? 'Quitar' : 'Cambiar'}</span>
+            </button>
+            {substituting && (
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">¿Qué ejercicio hiciste en su lugar?</Label>
+                <Input
+                  value={substituteName}
+                  onChange={e => setSubstituteName(e.target.value)}
+                  placeholder="Ej: Prensa de piernas"
+                  maxLength={100}
+                />
+                <p className="text-xs text-muted-foreground">Mismas series/reps pedidas, solo cambia el ejercicio. Si no existe en el catálogo, se crea.</p>
+              </div>
+            )}
             <p className="text-sm font-medium text-muted-foreground">Anota lo que hiciste en cada serie</p>
             {rows.map((row, i) => (
               <div key={i} className={cn('flex items-end gap-2 rounded-lg border bg-background p-2', !row.done && 'opacity-50')}>

@@ -53,7 +53,7 @@ async function loadWorkout(supabase: Supabase) {
     supabase.from('exercises').select('id, name').in('id', exerciseIds),
     supabase
       .from('sets_log')
-      .select('week, day, exercise_id, set_number, reps, weight_kg, rpe, completed_at, extra_type')
+      .select('week, day, exercise_id, set_number, reps, weight_kg, rpe, completed_at, extra_type, substituted_exercise_id')
       .eq('athlete_routine_id', routine.id),
     // Last weight used per exercise (any routine) to prefill
     supabase
@@ -67,6 +67,14 @@ async function loadWorkout(supabase: Supabase) {
   ])
 
   const nameById = new Map(exercises?.map(e => [e.id, e.name as string]) ?? [])
+
+  // Los reemplazos ("hice otro ejercicio en vez de este") pueden apuntar a
+  // un ejercicio fuera del catálogo de la rutina — trae esos nombres aparte.
+  const substituteIds = [...new Set((sets ?? []).map(s => s.substituted_exercise_id).filter((id): id is string => !!id && !nameById.has(id)))]
+  if (substituteIds.length) {
+    const { data: substitutes } = await supabase.from('exercises').select('id, name').in('id', substituteIds)
+    substitutes?.forEach(e => nameById.set(e.id, e.name))
+  }
 
   // One entry per session across all weeks, so prev/next can move between weeks
   const days: DayData[] = Array.from({ length: structure.weeks || 1 }, (_, i) => i + 1).flatMap(week =>
@@ -95,7 +103,14 @@ async function loadWorkout(supabase: Supabase) {
   const setsByKey: Record<string, LoggedSet[]> = {}
   for (const s of sets ?? []) {
     const key = setsKey(s.week, s.day, s.exercise_id)
-    ;(setsByKey[key] ??= []).push({ set_number: s.set_number, reps: s.reps, weight_kg: Number(s.weight_kg), rpe: s.rpe })
+    ;(setsByKey[key] ??= []).push({
+      set_number: s.set_number,
+      reps: s.reps,
+      weight_kg: Number(s.weight_kg),
+      rpe: s.rpe,
+      substitutedExerciseId: s.substituted_exercise_id,
+      substitutedExerciseName: s.substituted_exercise_id ? (nameById.get(s.substituted_exercise_id) ?? null) : null,
+    })
   }
   Object.values(setsByKey).forEach(list => list.sort((a, b) => a.set_number - b.set_number))
 

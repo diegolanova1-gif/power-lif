@@ -113,7 +113,7 @@ export default async function AthleteFollowUpPage({
   const [{ data: sets }, { data: feedback }] = await Promise.all([
     supabase
       .from('sets_log')
-      .select('week, day, exercise_id, set_number, reps, weight_kg, rpe, completed_at')
+      .select('week, day, exercise_id, set_number, reps, weight_kg, rpe, completed_at, substituted_exercise_id')
       .eq('athlete_routine_id', assignment.id),
     supabase
       .from('exercise_feedback')
@@ -157,6 +157,13 @@ export default async function AthleteFollowUpPage({
     ? await supabase.from('exercises').select('id, name').in('id', exerciseIds)
     : { data: [] }
   const nameById = new Map((exercises ?? []).map(e => [e.id, e.name as string]))
+
+  // Reemplazos ("hizo otro ejercicio en vez de este") pueden apuntar fuera del catálogo de la sesión
+  const substituteIds = [...new Set((sets ?? []).map(s => s.substituted_exercise_id).filter((id): id is string => !!id && !nameById.has(id)))]
+  if (substituteIds.length) {
+    const { data: substitutes } = await supabase.from('exercises').select('id, name').in('id', substituteIds)
+    substitutes?.forEach(e => nameById.set(e.id, e.name))
+  }
 
   const sessionFeedback = (feedbackRows ?? []).filter(f => f.week === week && f.day === day)
   const mediaPaths = sessionFeedback.flatMap(f => (f.media as unknown as { storage_path: string }[]).map(m => m.storage_path))
@@ -311,6 +318,11 @@ export default async function AthleteFollowUpPage({
                       <p className="text-sm text-muted-foreground">Todavía no registró</p>
                     ) : (
                       <div className="flex flex-wrap gap-1.5">
+                        {done[0]?.substituted_exercise_id && (
+                          <span className="w-full text-sm text-muted-foreground">
+                            Cambió por <span className="font-medium text-foreground">{nameById.get(done[0].substituted_exercise_id) ?? 'otro ejercicio'}</span>
+                          </span>
+                        )}
                         {done.map(s => (
                           <span key={s.set_number} className="rounded border border-border bg-card px-1.5 py-0.5 text-sm font-mono tabular-nums">
                             {s.reps} × {Number(s.weight_kg) > 0 ? `${s.weight_kg} kg` : 'p. corporal'}
