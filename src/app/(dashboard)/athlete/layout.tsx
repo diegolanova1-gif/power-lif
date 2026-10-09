@@ -9,6 +9,17 @@ import { Dumbbell, BarChart, History, LayoutDashboard, User, Trophy } from 'luci
 import { cn } from '@/lib/utils'
 import { SignOutItem } from '@/components/layout/sign-out-item'
 import { FabMenu } from '@/components/layout/fab-menu'
+import { OneTimeNotice } from '@/components/athlete/one-time-notice'
+
+// Nota puntual para una sola alumna — no es un sistema de anuncios general.
+// Se guarda en athlete_notices así no vuelve a aparecer, ni a ella ni (por
+// el chequeo de athleteId) a nadie más.
+const PERSONAL_NOTICE = {
+  athleteId: '609facc9-14a2-4277-8dc1-64a838d589ae',
+  key: 'diego-2026-10',
+  title: 'Un mensaje para vos',
+  message: 'Te amo un montón, gracias por ser tan hermosa persona conmigo.\n\nTe amo,\nDiego',
+}
 
 export default async function AthleteLayout({
   children,
@@ -42,6 +53,19 @@ export default async function AthleteLayout({
 
   if (!profile || profile.role !== 'athlete') {
     redirect('/coach')
+  }
+
+  // Bail out immediately for everyone except the one athlete it's for —
+  // the query (and the message text) never run/reach anyone else.
+  let showPersonalNotice = false
+  if (user.id === PERSONAL_NOTICE.athleteId) {
+    const { data: dismissed } = await supabase
+      .from('athlete_notices')
+      .select('athlete_id')
+      .eq('athlete_id', user.id)
+      .eq('notice_key', PERSONAL_NOTICE.key)
+      .maybeSingle()
+    showPersonalNotice = !dismissed
   }
 
   const navigation = [
@@ -140,6 +164,14 @@ export default async function AthleteLayout({
           icon: <item.icon className="h-5 w-5" />,
         }))}
       />
+      {showPersonalNotice && (
+        <OneTimeNotice
+          athleteId={PERSONAL_NOTICE.athleteId}
+          noticeKey={PERSONAL_NOTICE.key}
+          title={PERSONAL_NOTICE.title}
+          message={PERSONAL_NOTICE.message}
+        />
+      )}
     </div>
   )
 }
