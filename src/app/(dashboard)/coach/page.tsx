@@ -3,8 +3,16 @@ import { cookies } from 'next/headers'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Users, FileText, BarChart, Plus, TrendingUp, Clock } from 'lucide-react'
+import { Users, FileText, BarChart, Plus, TrendingUp, Clock, AlertTriangle, Flame, TrendingDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getAthleteAlerts } from '@/lib/server/alerts'
+import type { AlertType } from '@/lib/calculations/alerts'
+
+const ALERT_ICON: Record<AlertType, typeof Flame> = {
+  streak_broken: Flame,
+  adherence_dropping: TrendingDown,
+  one_rm_stalled: AlertTriangle,
+}
 
 export default async function CoachDashboard() {
   const cookieStore = await cookies()
@@ -20,17 +28,21 @@ export default async function CoachDashboard() {
     }
   )
 
+  const { data: { user } } = await supabase.auth.getUser()
+
   // Get coach's athletes count
   const { data: athletes } = await supabase
     .from('coach_athletes')
     .select('athlete_id, profiles:athlete_id(full_name, avatar_url)')
-    .eq('coach_id', (await supabase.auth.getUser()).data.user?.id || '')
+    .eq('coach_id', user?.id || '')
+
+  const athleteAlerts = user ? await getAthleteAlerts(supabase, user.id) : []
 
   // Get routines count
   const { data: routines } = await supabase
     .from('routines')
     .select('id')
-    .eq('coach_id', (await supabase.auth.getUser()).data.user?.id || '')
+    .eq('coach_id', user?.id || '')
 
   // Get active athlete routines (athletes currently on a program)
   const { data: activeRoutines } = await supabase
@@ -84,6 +96,39 @@ export default async function CoachDashboard() {
           </Button>
         </Link>
       </div>
+
+      {athleteAlerts.length > 0 && (
+        <Card size="sm" className="border-warning/40 bg-warning/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <AlertTriangle className="h-4 w-4 text-warning-foreground" />
+              Necesitan atención
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1">
+            {athleteAlerts.map(({ athleteId, athleteName, alerts }) => (
+              <Link
+                key={athleteId}
+                href={`/coach/athletes/${athleteId}`}
+                className="flex flex-col gap-1 rounded-lg p-2 hover:bg-muted transition-colors sm:flex-row sm:items-center sm:gap-3"
+              >
+                <span className="font-medium text-foreground shrink-0">{athleteName}</span>
+                <div className="flex flex-wrap gap-x-4 gap-y-1">
+                  {alerts.map((alert, i) => {
+                    const Icon = ALERT_ICON[alert.type]
+                    return (
+                      <span key={i} className="flex items-center gap-1 text-sm text-warning-foreground">
+                        <Icon className="h-3.5 w-3.5" />
+                        {alert.message}
+                      </span>
+                    )
+                  })}
+                </div>
+              </Link>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {stats.map((stat) => (
