@@ -80,7 +80,7 @@ export default function AthleteHistoryPage() {
           rir,
           notes,
           exercise_id,
-          exercises(name, category)
+          exercises!sets_log_exercise_id_fkey(name, category)
         `)
         .eq('athlete_routine_id', routine.id)
         .order('completed_at', { ascending: false })

@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
 
   const { data: sets, error } = await supabase
     .from('sets_log')
-    .select('week, weight_kg, reps, exercise_id, exercises(name, category)')
+    .select('week, weight_kg, reps, exercise_id, exercises!sets_log_exercise_id_fkey(name, category)')
     .eq('athlete_id', athleteId)
     .eq('athlete_routine_id', current.id)
     .gte('completed_at', startDate.toISOString())

@@ -126,7 +126,7 @@ export default function AthleteProgressPage() {
       // que no tienen 1RM estimado porque no son sentadilla/banca/peso muerto)
       let bestWeightQuery = supabase
         .from('sets_log')
-        .select('exercise_id, weight_kg, reps, completed_at, exercises(name, category)')
+        .select('exercise_id, weight_kg, reps, completed_at, exercises!sets_log_exercise_id_fkey(name, category)')
         .eq('athlete_id', user.id)
         .gt('weight_kg', 0)
         .gt('reps', 0)
