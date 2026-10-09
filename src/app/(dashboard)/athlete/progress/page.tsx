@@ -3,11 +3,8 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2 } from 'lucide-react'
-import { StreakAchievements } from '@/components/athlete/streak-achievements'
-import { celebrateNewMilestones } from '@/lib/celebrate-milestones'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 import {
@@ -64,10 +61,6 @@ export default function AthleteProgressPage() {
   const [bestWeightData, setBestWeightData] = useState<Record<string, BestWeightPoint[]>>({})
   const [volumeData, setVolumeData] = useState<VolumeDataPoint[]>([])
   const [adherenceData, setAdherenceData] = useState<AdherenceDataPoint[]>([])
-  const [streak, setStreak] = useState<{ streak: number; currentWeekDays: number; currentWeekRequired: number } | null>(null)
-  const [unlockedCards, setUnlockedCards] = useState<string[]>([])
-  const [unlockedDates, setUnlockedDates] = useState<Record<string, string>>({})
-  const [athleteName, setAthleteName] = useState('')
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [selectedExercise, setSelectedExercise] = useState<string>('')
   const [loading, setLoading] = useState(true)
@@ -84,9 +77,6 @@ export default function AthleteProgressPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-
-      const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', user.id).single()
-      setAthleteName(profile?.full_name ?? '')
 
       // Fetch 1RM data (within the selected period)
       let oneRMQuery = supabase
@@ -219,19 +209,6 @@ export default function AthleteProgressPage() {
         }
         setAdherenceData(heatmap)
       }
-
-      const streakRes = await fetch('/api/stats/adherence?weeks=12')
-      if (streakRes.ok) {
-        const streakJson = await streakRes.json()
-        setStreak({
-          streak: streakJson.streak,
-          currentWeekDays: streakJson.currentWeekDays,
-          currentWeekRequired: streakJson.currentWeekRequired,
-        })
-        setUnlockedCards(streakJson.unlockedCards ?? [])
-        setUnlockedDates(streakJson.unlockedDates ?? {})
-        celebrateNewMilestones(streakJson.unlockedCards ?? [], user.id)
-      }
     } catch (error) {
       console.error(error)
     } finally {
@@ -295,17 +272,6 @@ export default function AthleteProgressPage() {
           </Select>
         </div>
       </div>
-
-      {streak && (
-        <StreakAchievements
-          unlockedCards={unlockedCards}
-          unlockedDates={unlockedDates}
-          streakDays={streak.streak}
-          currentWeekDays={streak.currentWeekDays}
-          currentWeekRequired={streak.currentWeekRequired}
-          athleteName={athleteName}
-        />
-      )}
 
       {/* 1RM (sentadilla/banca/peso muerto) o mejor peso por sesión (accesorios) */}
       <Card>
