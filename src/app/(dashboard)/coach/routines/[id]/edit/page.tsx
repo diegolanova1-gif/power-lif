@@ -16,7 +16,7 @@ export default async function EditRoutinePage({ params }: { params: Promise<{ id
       .maybeSingle(),
     supabase
       .from('exercises')
-      .select('id, name, category, is_competition_lift')
+      .select('id, name, category, is_competition_lift, video_url')
       .order('is_competition_lift', { ascending: false })
       .order('name'),
   ])

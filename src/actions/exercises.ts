@@ -56,3 +56,25 @@ export async function createExercise(input: CreateExerciseInput) {
     return { error: `No se pudo crear el ejercicio: ${message}` }
   }
 }
+
+// Link de video de referencia: una propiedad del ejercicio (no de cada
+// prescripción), así se reusa solo cada vez que se agrega a una rutina.
+export async function updateExerciseVideo(exerciseId: string, videoUrl: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const trimmed = videoUrl.trim()
+  if (trimmed) {
+    const validation = z.string().url('Link no válido').safeParse(trimmed)
+    if (!validation.success) return { error: validation.error.issues[0].message }
+  }
+
+  const { error } = await supabase
+    .from('exercises')
+    .update({ video_url: trimmed || null })
+    .eq('id', exerciseId)
+
+  if (error) return { error: 'No se pudo guardar el link (¿es un ejercicio de otro coach?)' }
+  return { success: true, video_url: trimmed || null }
+}

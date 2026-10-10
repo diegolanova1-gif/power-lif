@@ -50,7 +50,7 @@ async function loadWorkout(supabase: Supabase) {
   const allSchedules = [structure.schedule, ...(structure.week_plans ?? []).map(p => p.schedule)]
   const exerciseIds = [...new Set(allSchedules.flatMap(s => s.flatMap(d => d.exercises.map(e => e.exercise_id))))]
   const [{ data: exercises }, { data: sets }, { data: history }, { data: estimates }] = await Promise.all([
-    supabase.from('exercises').select('id, name').in('id', exerciseIds),
+    supabase.from('exercises').select('id, name, video_url').in('id', exerciseIds),
     supabase
       .from('sets_log')
       .select('week, day, exercise_id, set_number, reps, duration_seconds, weight_kg, rpe, completed_at, extra_type, substituted_exercise_id')
@@ -67,6 +67,7 @@ async function loadWorkout(supabase: Supabase) {
   ])
 
   const nameById = new Map(exercises?.map(e => [e.id, e.name as string]) ?? [])
+  const videoById = new Map(exercises?.map(e => [e.id, e.video_url as string | null]) ?? [])
 
   // Los reemplazos ("hice otro ejercicio en vez de este") pueden apuntar a
   // un ejercicio fuera del catálogo de la rutina — trae esos nombres aparte.
@@ -87,6 +88,7 @@ async function loadWorkout(supabase: Supabase) {
         .map(e => ({
           exercise_id: e.exercise_id,
           exercise_name: nameById.get(e.exercise_id) ?? 'Ejercicio',
+          video_url: videoById.get(e.exercise_id) ?? null,
           sets: e.sets,
           reps: e.reps,
           reps_max: e.reps_max,

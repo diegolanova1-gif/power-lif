@@ -11,7 +11,7 @@ export default async function NewRoutinePage({ searchParams }: { searchParams: P
   const [{ data: exercises }, { data: templates }, { data: link }] = await Promise.all([
     supabase
       .from('exercises')
-      .select('id, name, category, is_competition_lift')
+      .select('id, name, category, is_competition_lift, video_url')
       .order('is_competition_lift', { ascending: false })
       .order('name'),
     supabase

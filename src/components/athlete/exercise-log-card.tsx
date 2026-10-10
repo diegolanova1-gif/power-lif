@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Check, CheckCircle2, AlertTriangle, Loader2, Pencil, Plus, Repeat, RotateCcw, X } from 'lucide-react'
+import { Check, CheckCircle2, AlertTriangle, Loader2, Pencil, Plus, Repeat, RotateCcw, Video, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -25,6 +25,7 @@ export interface Prescription {
   rpe_target?: number
   rest_seconds?: number
   note?: string
+  video_url?: string | null
 }
 
 export interface LoggedSet {
@@ -268,7 +269,20 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
     <Card className={cn('transition-colors', fullyLogged && 'border-success/30 bg-success/5', isDone && !fullyLogged && 'border-warning/40 bg-warning/10')}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
-          <CardTitle className="text-lg">{p.exercise_name}</CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-lg">{p.exercise_name}</CardTitle>
+            {p.video_url && (
+              <a
+                href={p.video_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
+                <Video className="h-3.5 w-3.5" />
+                Ver video
+              </a>
+            )}
+          </div>
           {fullyLogged ? (
             <span className="flex shrink-0 items-center gap-1 text-sm font-medium text-success">
               <CheckCircle2 className="h-5 w-5" /> Hecho

@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { Plus, Trash2, Loader2, ArrowLeft, Copy } from 'lucide-react'
+import { Plus, Trash2, Loader2, ArrowLeft, Copy, Video, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { createRoutine, updateRoutine } from '@/actions/routines'
-import { createExercise, type CreateExerciseInput } from '@/actions/exercises'
+import { createExercise, updateExerciseVideo, type CreateExerciseInput } from '@/actions/exercises'
 import { ExerciseCombobox } from '@/components/coach/exercise-combobox'
 import { WEEKDAYS, weekdayName } from '@/lib/weekdays'
 import { cn } from '@/lib/utils'
@@ -25,6 +25,7 @@ export interface ExerciseOption {
   name: string
   category: string | null
   is_competition_lift: boolean | null
+  video_url?: string | null
 }
 
 interface BuilderExercise {
@@ -303,6 +304,18 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
     setExercises(prev => [...prev, result.exercise].sort((a, b) => a.name.localeCompare(b.name)))
     toast.success(`"${result.exercise.name}" agregado a tus ejercicios`)
     return result.exercise
+  }
+
+  // El link de video vive en el ejercicio del catálogo, no en esta
+  // prescripción puntual — se guarda solo y se repite donde sea que se use.
+  async function saveExerciseVideo(exerciseId: string, url: string) {
+    const result = await updateExerciseVideo(exerciseId, url)
+    if (result.error) {
+      toast.error(result.error)
+      return
+    }
+    setExercises(prev => prev.map(e => (e.id === exerciseId ? { ...e, video_url: result.video_url } : e)))
+    toast.success(result.video_url ? 'Video guardado' : 'Video quitado')
   }
 
   function updateExercise(dayIndex: number, exIndex: number, patch: Partial<BuilderExercise>) {
@@ -759,6 +772,34 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
                     maxLength={300}
                   />
                 </div>
+                {ex.exercise_id && (() => {
+                  const catalogExercise = exercises.find(opt => opt.id === ex.exercise_id)
+                  return (
+                    <div className="mt-2 space-y-1">
+                      <Label className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Video className="h-3 w-3" />
+                        Link de video <span className="text-muted-foreground">(opcional, se guarda en el ejercicio — vale para todas las rutinas)</span>
+                      </Label>
+                      <div className="flex gap-2">
+                        <Input
+                          key={ex.exercise_id}
+                          type="url"
+                          defaultValue={catalogExercise?.video_url ?? ''}
+                          placeholder="https://..."
+                          onBlur={e => {
+                            const url = e.target.value.trim()
+                            if (url !== (catalogExercise?.video_url ?? '')) saveExerciseVideo(ex.exercise_id, url)
+                          }}
+                        />
+                        {catalogExercise?.video_url && (
+                          <Button type="button" variant="outline" size="icon" title="Ver video" nativeButton={false} render={<a href={catalogExercise.video_url} target="_blank" rel="noopener noreferrer" />}>
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })()}
               </div>
             ))}
             <Button type="button" variant="outline" size="sm" onClick={() => addExercise(dayIndex)}>
