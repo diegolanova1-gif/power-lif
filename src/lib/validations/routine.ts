@@ -1,11 +1,12 @@
 import { z } from 'zod'
 
-// Exercise within a day
+// Exercise within a day — either rep-based (reps required) or timed (duration_seconds required)
 export const routineExerciseSchema = z.object({
   exercise_id: z.string().uuid('ID de ejercicio inválido'),
   sets: z.number().int().min(1).max(20),
-  reps: z.number().int().min(1).max(50),
+  reps: z.number().int().min(1).max(50).optional(),
   reps_max: z.number().int().min(1).max(100).optional(), // rep range, e.g. 8-12
+  duration_seconds: z.number().int().min(1).max(3600).optional(), // for planks, carries, cardio, etc.
   intensity: z.string().optional(), // display text, e.g. "100 kg" or "75% RM"
   load_type: z.enum(['kg', 'percent']).optional(),
   load_value: z.number().min(0).max(500).optional(),
@@ -13,6 +14,9 @@ export const routineExerciseSchema = z.object({
   rest_seconds: z.number().int().min(0).max(600).optional(),
   note: z.string().max(300).optional(), // coach's tip/cue for this exercise
   order: z.number().int().min(0),
+}).refine(e => e.reps !== undefined || e.duration_seconds !== undefined, {
+  message: 'Definí repeticiones o duración',
+  path: ['reps'],
 })
 
 // Day within a week
@@ -79,8 +83,16 @@ export const ROUTINE_GOALS: Record<NonNullable<RoutineStructure['goal']>, string
   general: 'General / Salud',
 }
 
-export function formatReps(e: { reps: number; reps_max?: number }) {
+export function formatReps(e: { reps?: number; reps_max?: number }) {
+  if (e.reps === undefined) return ''
   return e.reps_max && e.reps_max > e.reps ? `${e.reps}-${e.reps_max}` : String(e.reps)
+}
+
+/** 90 -> "1:30", 45 -> "45s" */
+export function formatDuration(seconds: number) {
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return m > 0 ? `${m}:${String(s).padStart(2, '0')}` : `${s}s`
 }
 
 /** Schedule the athlete follows in a given week (week plan if any, else week 1) */

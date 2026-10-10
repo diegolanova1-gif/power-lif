@@ -2,14 +2,16 @@ export type ComplianceStatus = 'done' | 'partial' | 'none'
 
 interface PrescribedExercise {
   sets: number
-  reps: number
+  reps?: number
+  duration_seconds?: number
   load_type?: 'kg' | 'percent'
   load_value?: number
 }
 
 export interface LoggedSetLike {
-  reps: number
+  reps: number | null
   weight_kg: number
+  duration_seconds?: number | null
 }
 
 /**
@@ -23,10 +25,13 @@ export function exerciseCompliance(p: PrescribedExercise, logged: LoggedSetLike[
   return logged.length >= p.sets ? 'done' : 'partial'
 }
 
-/** All sets were logged, but reps or kg fell short of the prescription — still "done", just worth the coach's attention. */
+/** All sets were logged, but reps/duration or kg fell short of the prescription — still "done", just worth the coach's attention. */
 export function repsShortfall(p: PrescribedExercise, logged: LoggedSetLike[]): boolean {
   const minKg = p.load_type === 'kg' && p.load_value !== undefined ? p.load_value : null
-  return logged.length >= p.sets && !logged.every(s => s.reps >= p.reps && (minKg === null || Number(s.weight_kg) >= minKg))
+  if (p.duration_seconds !== undefined) {
+    return logged.length >= p.sets && !logged.every(s => (s.duration_seconds ?? 0) >= p.duration_seconds! && (minKg === null || Number(s.weight_kg) >= minKg))
+  }
+  return logged.length >= p.sets && !logged.every(s => (s.reps ?? 0) >= (p.reps ?? 0) && (minKg === null || Number(s.weight_kg) >= minKg))
 }
 
 export function sessionCompliance(statuses: ComplianceStatus[]): ComplianceStatus {

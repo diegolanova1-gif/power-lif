@@ -30,8 +30,11 @@ export interface ExerciseOption {
 interface BuilderExercise {
   exercise_id: string
   sets: number
-  /** "8" or a range "8-12" */
+  /** "8" or a range "8-12" — ignored when isTimed */
   repsText: string
+  /** Planks, carries, cardio, etc.: measured in seconds instead of reps */
+  isTimed?: boolean
+  duration_seconds?: number
   load_type: LoadType
   load_value?: number
   rpe_target?: number
@@ -83,7 +86,7 @@ function guessCategory(exerciseName: string): CreateExerciseInput['category'] {
   return 'accessory'
 }
 
-const emptyExercise = (loadType: LoadType = 'kg'): BuilderExercise => ({ exercise_id: '', sets: 3, repsText: '10', load_type: loadType })
+const emptyExercise = (loadType: LoadType = 'kg'): BuilderExercise => ({ exercise_id: '', sets: 3, repsText: '10', isTimed: false, load_type: loadType })
 
 // "8" → {reps: 8}; "8-12" / "8 a 12" → {reps: 8, reps_max: 12}
 function parseReps(text: string): { reps: number; reps_max?: number } | null {
@@ -105,6 +108,8 @@ function toBuilderDays(schedule: RoutineStructure['schedule']): BuilderDay[] {
         exercise_id: e.exercise_id,
         sets: e.sets,
         repsText: formatReps(e),
+        isTimed: e.duration_seconds !== undefined,
+        duration_seconds: e.duration_seconds,
         ...parseLoad(e),
         rpe_target: e.rpe_target,
         rest_seconds: e.rest_seconds,
@@ -127,7 +132,7 @@ function toStructureSchedule(days: BuilderDay[]): RoutineStructure['schedule'] {
     exercises: d.exercises.map((ex, order) => ({
       exercise_id: ex.exercise_id,
       sets: ex.sets,
-      ...parseReps(ex.repsText)!,
+      ...(ex.isTimed ? { duration_seconds: ex.duration_seconds! } : parseReps(ex.repsText)!),
       // intensity = readable text the athlete pages display
       ...(ex.load_value !== undefined && {
         load_type: ex.load_type,
@@ -345,10 +350,16 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
         toast.error(`El % de RM no puede superar 110%${where}`)
         return
       }
-      const badReps = all.find(ex => !parseReps(ex.repsText))
+      const badReps = all.find(ex => !ex.isTimed && !parseReps(ex.repsText))
       if (badReps) {
         setCurrentWeek(w)
         toast.error(`Reps "${badReps.repsText}" no válidas${where}: escribe un número (10) o un rango (8-12)`)
+        return
+      }
+      const badDuration = all.find(ex => ex.isTimed && !(ex.duration_seconds! > 0))
+      if (badDuration) {
+        setCurrentWeek(w)
+        toast.error(`Poné una duración válida${where}`)
         return
       }
     }
@@ -675,12 +686,29 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs text-muted-foreground">Repeticiones</Label>
-                    <Input
-                      inputMode="numeric" placeholder="ej: 8-12"
-                      value={ex.repsText}
-                      onChange={e => updateExercise(dayIndex, exIndex, { repsText: e.target.value })}
-                    />
+                    <div className="flex items-center justify-between gap-1">
+                      <Label className="text-xs text-muted-foreground">{ex.isTimed ? 'Duración (seg)' : 'Repeticiones'}</Label>
+                      <button
+                        type="button"
+                        className="text-[11px] text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                        onClick={() => updateExercise(dayIndex, exIndex, { isTimed: !ex.isTimed })}
+                      >
+                        {ex.isTimed ? 'usar reps' : 'usar tiempo'}
+                      </button>
+                    </div>
+                    {ex.isTimed ? (
+                      <Input
+                        type="number" min={1} max={3600} placeholder="ej: 30"
+                        value={ex.duration_seconds ?? ''}
+                        onChange={e => updateExercise(dayIndex, exIndex, { duration_seconds: parseOptionalNumber(e.target.value) })}
+                      />
+                    ) : (
+                      <Input
+                        inputMode="numeric" placeholder="ej: 8-12"
+                        value={ex.repsText}
+                        onChange={e => updateExercise(dayIndex, exIndex, { repsText: e.target.value })}
+                      />
+                    )}
                   </div>
                   <div className="col-span-2 space-y-1 sm:col-span-1">
                     <Label className="text-xs text-muted-foreground">Peso <span className="text-muted-foreground">(opcional)</span></Label>

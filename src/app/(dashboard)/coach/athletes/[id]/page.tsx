@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { MediaGrid } from '@/components/media-grid'
 import { FeedbackReply } from '@/components/coach/feedback-reply'
 import { exerciseCompliance, sessionCompliance, type ComplianceStatus } from '@/lib/calculations/compliance'
-import { formatReps, scheduleForWeek, type RoutineStructure } from '@/lib/validations/routine'
+import { formatReps, formatDuration, scheduleForWeek, type RoutineStructure } from '@/lib/validations/routine'
 import { MEDIA_BUCKET, SIGNED_URL_TTL_SECONDS, signedUrlMap, type MediaType } from '@/lib/media'
 import { FEEDBACK_REASONS } from '@/lib/feedback-reason'
 import { Badge } from '@/components/ui/badge'
@@ -113,7 +113,7 @@ export default async function AthleteFollowUpPage({
   const [{ data: sets }, { data: feedback }] = await Promise.all([
     supabase
       .from('sets_log')
-      .select('week, day, exercise_id, set_number, reps, weight_kg, rpe, completed_at, substituted_exercise_id')
+      .select('week, day, exercise_id, set_number, reps, duration_seconds, weight_kg, rpe, completed_at, substituted_exercise_id')
       .eq('athlete_routine_id', assignment.id),
     supabase
       .from('exercise_feedback')
@@ -306,7 +306,12 @@ export default async function AthleteFollowUpPage({
                   <div className="rounded-lg bg-muted/60 p-3">
                     <p className="mb-1 text-xs font-medium uppercase text-muted-foreground">Indicado</p>
                     <p className="text-sm text-foreground">
-                      <span className="font-mono tabular-nums">{ex.sets}</span> series × <span className="font-mono tabular-nums">{formatReps(ex)}</span> reps
+                      <span className="font-mono tabular-nums">{ex.sets}</span> series
+                      {ex.duration_seconds !== undefined ? (
+                        <> × <span className="font-mono tabular-nums">{formatDuration(ex.duration_seconds)}</span></>
+                      ) : (
+                        <> × <span className="font-mono tabular-nums">{formatReps(ex)}</span> reps</>
+                      )}
                       {ex.intensity ? ` · ${ex.intensity}` : ''}
                       {ex.rpe_target ? ` · esfuerzo ${ex.rpe_target}/10` : ''}
                     </p>
@@ -325,7 +330,7 @@ export default async function AthleteFollowUpPage({
                         )}
                         {done.map(s => (
                           <span key={s.set_number} className="rounded border border-border bg-card px-1.5 py-0.5 text-sm font-mono tabular-nums">
-                            {s.reps} × {Number(s.weight_kg) > 0 ? `${s.weight_kg} kg` : 'p. corporal'}
+                            {s.duration_seconds ? formatDuration(s.duration_seconds) : s.reps} × {Number(s.weight_kg) > 0 ? `${s.weight_kg} kg` : 'p. corporal'}
                           </span>
                         ))}
                         {done[0]?.rpe && <span className="text-sm text-muted-foreground">· esfuerzo {done[0].rpe}/10</span>}

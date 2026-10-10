@@ -10,6 +10,7 @@ import { Loader2, ChevronDown, ChevronUp, Calendar, Dumbbell } from 'lucide-reac
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { weekdayName } from '@/lib/weekdays'
+import { formatDuration } from '@/lib/validations/routine'
 import { cn } from '@/lib/utils'
 
 interface Session {
@@ -23,7 +24,8 @@ interface Session {
     sets: Array<{
       set_number: number
       weight_kg: number
-      reps: number
+      reps: number | null
+      duration_seconds: number | null
       rpe: number | null
       rir: number | null
       notes: string
@@ -76,6 +78,7 @@ export default function AthleteHistoryPage() {
           set_number,
           weight_kg,
           reps,
+          duration_seconds,
           rpe,
           rir,
           notes,
@@ -111,7 +114,7 @@ export default function AthleteHistoryPage() {
         }
 
         const session = sessionMap.get(key)!
-        session.total_volume += set.weight_kg * set.reps
+        if (set.reps !== null) session.total_volume += set.weight_kg * set.reps
         session.total_sets += 1
         if (set.rpe) {
           session.avg_rpe = session.avg_rpe === null ? set.rpe : (session.avg_rpe + set.rpe) / 2
@@ -133,6 +136,7 @@ export default function AthleteHistoryPage() {
           set_number: set.set_number,
           weight_kg: set.weight_kg,
           reps: set.reps,
+          duration_seconds: set.duration_seconds,
           rpe: set.rpe,
           rir: set.rir,
           notes: set.notes || '',
@@ -269,11 +273,11 @@ export default function AthleteHistoryPage() {
                                     <TableRow key={set.set_number}>
                                       <TableCell className="font-mono tabular-nums">{set.set_number}</TableCell>
                                       <TableCell className="font-mono font-medium tabular-nums">{set.weight_kg}</TableCell>
-                                      <TableCell className="font-mono tabular-nums">{set.reps}</TableCell>
+                                      <TableCell className="font-mono tabular-nums">{set.duration_seconds ? formatDuration(set.duration_seconds) : set.reps}</TableCell>
                                       <TableCell className="font-mono tabular-nums">{set.rpe?.toFixed(1) || '-'}</TableCell>
                                       <TableCell className="font-mono tabular-nums">{set.rir?.toFixed(1) || '-'}</TableCell>
                                       <TableCell className="font-mono font-medium tabular-nums">
-                                        {(set.weight_kg * set.reps).toLocaleString()}
+                                        {set.reps !== null ? (set.weight_kg * set.reps).toLocaleString() : '—'}
                                       </TableCell>
                                       <TableCell className="text-muted-foreground max-w-xs truncate">
                                         {set.notes || '-'}

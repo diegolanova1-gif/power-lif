@@ -9,14 +9,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
 import { createExercise } from '@/actions/exercises'
+import { formatDuration } from '@/lib/validations/routine'
 import { cn } from '@/lib/utils'
 
 export interface Prescription {
   exercise_id: string
   exercise_name: string
   sets: number
-  reps: number
+  /** Ejercicios de tiempo (plancha, cardio...) traen duration_seconds en vez de reps */
+  reps?: number
   reps_max?: number
+  duration_seconds?: number
   load_type?: 'kg' | 'percent'
   load_value?: number
   rpe_target?: number
@@ -26,7 +29,8 @@ export interface Prescription {
 
 export interface LoggedSet {
   set_number: number
-  reps: number
+  reps: number | null
+  duration_seconds?: number | null
   weight_kg: number
   rpe: number | null
   /** Si hizo otro ejercicio en vez del pautado (misma cantidad de series/reps pedida, solo cambia cuál) */
@@ -52,6 +56,7 @@ interface ExerciseLogCardProps {
 
 interface Row {
   reps: string
+  duration: string
   weight: string
   done: boolean
 }
@@ -79,7 +84,8 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
         ? roundTo((e1rm * p.load_value) / 100, 2.5)
         : null
   const suggestedKg = coachKg ?? lastWeight
-  const repsLabel = p.reps_max && p.reps_max > p.reps ? `${p.reps}-${p.reps_max}` : String(p.reps)
+  const isTimed = p.duration_seconds !== undefined
+  const repsLabel = p.reps !== undefined && p.reps_max && p.reps_max > p.reps ? `${p.reps}-${p.reps_max}` : String(p.reps ?? '')
 
   const isDone = logged.length > 0
   // Todas las series cargadas = hecho, aunque alguna haya quedado corta de
@@ -89,9 +95,10 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
 
   function openEditor() {
     const base = isDone
-      ? logged.map(s => ({ reps: String(s.reps), weight: String(s.weight_kg), done: true }))
+      ? logged.map(s => ({ reps: s.reps !== null ? String(s.reps) : '', duration: s.duration_seconds ? String(s.duration_seconds) : '', weight: String(s.weight_kg), done: true }))
       : Array.from({ length: p.sets }, () => ({
-          reps: String(p.reps),
+          reps: p.reps !== undefined ? String(p.reps) : '',
+          duration: p.duration_seconds !== undefined ? String(p.duration_seconds) : '',
           weight: suggestedKg !== null ? String(suggestedKg) : '',
           done: true,
         }))
@@ -117,11 +124,15 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
     return data?.id ?? null
   }
 
-  // Hizo todas las series pero se quedó corto de reps/peso: le avisa solo al
-  // coach (bandeja de Revisiones), sin pisar una observación que el alumno
-  // ya haya dejado a mano.
+  // Hizo todas las series pero se quedó corto de reps/duración/peso: le avisa
+  // solo al coach (bandeja de Revisiones), sin pisar una observación que el
+  // alumno ya haya dejado a mano.
   async function flagRepsShortfall(sets: LoggedSet[], key: { athlete_routine_id: string; exercise_id: string; week: number; day: number }) {
-    if (sets.length < p.sets || sets.every(s => s.reps >= p.reps && (coachKg === null || s.weight_kg >= coachKg))) return
+    if (sets.length < p.sets) return
+    const met = isTimed
+      ? sets.every(s => (s.duration_seconds ?? 0) >= (p.duration_seconds ?? 0) && (coachKg === null || s.weight_kg >= coachKg))
+      : sets.every(s => (s.reps ?? 0) >= (p.reps ?? 0) && (coachKg === null || s.weight_kg >= coachKg))
+    if (met) return
     const { data: existing } = await supabase.from('exercise_feedback').select('id').match(key).maybeSingle()
     if (existing) return
     await supabase.from('exercise_feedback').insert({
@@ -150,6 +161,7 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
             extra_type: extraType ?? null,
             set_number: s.set_number,
             reps: s.reps,
+            duration_seconds: s.duration_seconds ?? null,
             weight_kg: s.weight_kg,
             rpe: s.rpe,
             substituted_exercise_id: s.substitutedExerciseId ?? null,
@@ -188,7 +200,8 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
     const ok = await persist(
       Array.from({ length: p.sets }, (_, i) => ({
         set_number: i + 1,
-        reps: p.reps, // lower bound of a range: honest default, athlete can edit up
+        reps: isTimed ? null : (p.reps ?? null), // lower bound of a range: honest default, athlete can edit up
+        duration_seconds: isTimed ? p.duration_seconds : null,
         weight_kg: weight,
         rpe: p.rpe_target ?? null,
       }))
@@ -198,9 +211,11 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
 
   async function saveEdited() {
     const done = rows.filter(r => r.done)
-    const invalid = done.find(r => !/^\d+$/.test(r.reps.trim()) || Number(r.reps) < 1 || Number.isNaN(parseKg(r.weight)))
+    const invalid = isTimed
+      ? done.find(r => !/^\d+$/.test(r.duration.trim()) || Number(r.duration) < 1 || Number.isNaN(parseKg(r.weight)))
+      : done.find(r => !/^\d+$/.test(r.reps.trim()) || Number(r.reps) < 1 || Number.isNaN(parseKg(r.weight)))
     if (invalid) {
-      toast.error('Revisa las reps y el peso de cada serie')
+      toast.error(isTimed ? 'Revisa la duración y el peso de cada serie' : 'Revisa las reps y el peso de cada serie')
       return
     }
     const effort = rpe.trim() === '' ? null : Number(rpe.trim().replace(',', '.'))
@@ -229,7 +244,8 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
     const ok = await persist(
       done.map((r, i) => ({
         set_number: i + 1,
-        reps: Number(r.reps),
+        reps: isTimed ? null : Number(r.reps),
+        duration_seconds: isTimed ? Number(r.duration) : null,
         weight_kg: parseKg(r.weight),
         rpe: effort,
         substitutedExerciseId,
@@ -271,7 +287,11 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
         {/* What the coach asked for */}
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
           <span><span className="font-mono font-semibold tabular-nums text-foreground">{p.sets}</span> series</span>
-          <span><span className="font-mono font-semibold tabular-nums text-foreground">{repsLabel}</span> reps</span>
+          {isTimed ? (
+            <span><span className="font-mono font-semibold tabular-nums text-foreground">{formatDuration(p.duration_seconds!)}</span></span>
+          ) : (
+            <span><span className="font-mono font-semibold tabular-nums text-foreground">{repsLabel}</span> reps</span>
+          )}
           {p.load_type === 'kg' && p.load_value !== undefined && <span><span className="font-mono font-semibold tabular-nums text-foreground">{p.load_value} kg</span></span>}
           {p.load_type === 'percent' && p.load_value !== undefined && (
             <span>
@@ -330,8 +350,12 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
                 </button>
                 <div className="w-14 shrink-0 pb-2 text-sm font-medium text-muted-foreground">Serie {i + 1}</div>
                 <div className="flex-1 space-y-1">
-                  <Label className="text-xs text-muted-foreground">Reps</Label>
-                  <Input inputMode="numeric" value={row.reps} onChange={e => updateRow(i, { reps: e.target.value })} disabled={!row.done} />
+                  <Label className="text-xs text-muted-foreground">{isTimed ? 'Duración (seg)' : 'Reps'}</Label>
+                  {isTimed ? (
+                    <Input inputMode="numeric" value={row.duration} onChange={e => updateRow(i, { duration: e.target.value })} disabled={!row.done} />
+                  ) : (
+                    <Input inputMode="numeric" value={row.reps} onChange={e => updateRow(i, { reps: e.target.value })} disabled={!row.done} />
+                  )}
                 </div>
                 <div className="flex-1 space-y-1">
                   <Label className="text-xs text-muted-foreground">Peso (kg)</Label>
@@ -347,7 +371,7 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => setRows(prev => [...prev, { ...(prev.at(-1) ?? { reps: String(p.reps), weight: '' }), done: true }])}
+                onClick={() => setRows(prev => [...prev, { ...(prev.at(-1) ?? { reps: String(p.reps ?? ''), duration: String(p.duration_seconds ?? ''), weight: '' }), done: true }])}
               >
                 <Plus className="mr-1 h-4 w-4" />
                 Agregar serie
@@ -372,7 +396,7 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
             <div className="flex flex-wrap gap-2">
               {logged.map(s => (
                 <span key={s.set_number} className="rounded-md border bg-background px-2 py-1 text-sm font-mono tabular-nums">
-                  <span className="text-muted-foreground">S{s.set_number}:</span> {s.reps} × {s.weight_kg > 0 ? `${s.weight_kg} kg` : 'peso corporal'}
+                  <span className="text-muted-foreground">S{s.set_number}:</span> {s.duration_seconds ? formatDuration(s.duration_seconds) : s.reps} × {s.weight_kg > 0 ? `${s.weight_kg} kg` : 'peso corporal'}
                 </span>
               ))}
             </div>
