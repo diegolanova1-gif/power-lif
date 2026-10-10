@@ -267,6 +267,12 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
     toggleWeekday(schedule[index].day)
   }
 
+  // Intercambia qué ejercicios caen en qué día, en todas las semanas (ej:
+  // lo de lunes pasa a ser de viernes y viceversa)
+  function swapDays(dayA: number, dayB: number) {
+    setAllWeeks(w => w.map(d => (d.day === dayA ? { ...d, day: dayB } : d.day === dayB ? { ...d, day: dayA } : d)))
+  }
+
   function duplicateDay(index: number) {
     const sourceDay = schedule[index].day
     const used = new Set(schedule.map(d => d.day))
@@ -597,23 +603,31 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
                   value={String(day.day)}
                   onValueChange={v => {
                     if (!v || Number(v) === day.day) return
-                    if (schedule.some(d => d.day === Number(v))) {
-                      toast.error(`El ${weekdayName(Number(v))} ya tiene entrenamiento`)
+                    const targetDay = Number(v)
+                    const occupied = schedule.find(d => d.day === targetDay)
+                    if (occupied) {
+                      if (!confirm(`¿Intercambiar ${weekdayName(day.day)} con ${weekdayName(targetDay)}? Se cambia en todas las semanas.`)) return
+                      swapDays(day.day, targetDay)
+                      toast.success(`${weekdayName(day.day)} y ${weekdayName(targetDay)} intercambiados`)
                       return
                     }
-                    updateDay(dayIndex, { day: Number(v) })
+                    updateDay(dayIndex, { day: targetDay })
                   }}
-                  items={Object.fromEntries(WEEKDAYS.map(w => [String(w.day), 'Mover a otro día']))}
+                  items={Object.fromEntries(WEEKDAYS.map(w => [String(w.day), 'Mover o intercambiar']))}
                 >
-                  <SelectTrigger className="w-auto text-muted-foreground" aria-label="Mover a otro día">
+                  <SelectTrigger className="w-auto text-muted-foreground" aria-label="Mover o intercambiar día">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {WEEKDAYS.map(w => (
-                      <SelectItem key={w.day} value={String(w.day)} disabled={w.day !== day.day && schedule.some(d => d.day === w.day)}>
-                        {w.name}
-                      </SelectItem>
-                    ))}
+                    {WEEKDAYS.map(w => {
+                      const occupiedByOther = w.day !== day.day && schedule.some(d => d.day === w.day)
+                      return (
+                        <SelectItem key={w.day} value={String(w.day)}>
+                          {w.name}
+                          {occupiedByOther ? ' (intercambiar)' : ''}
+                        </SelectItem>
+                      )
+                    })}
                   </SelectContent>
                 </Select>
                 <Button type="button" variant="ghost" size="sm" className="text-muted-foreground" onClick={() => duplicateDay(dayIndex)} disabled={schedule.length >= 7}>
