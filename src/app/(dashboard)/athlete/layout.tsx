@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Dumbbell, BarChart, History, LayoutDashboard, User, Trophy } from 'lucide-react'
+import { Dumbbell, BarChart, History, LayoutDashboard, User, UserRound, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SignOutItem } from '@/components/layout/sign-out-item'
 import { FabMenu } from '@/components/layout/fab-menu'
@@ -74,6 +74,7 @@ export default async function AthleteLayout({
     { name: 'Progreso', href: '/athlete/progress', icon: BarChart },
     { name: 'Historial', href: '/athlete/history', icon: History },
     { name: 'Logros', href: '/athlete/team', icon: Trophy },
+    { name: 'Perfil', href: '/athlete/profile', icon: UserRound },
   ]
 
   return (
@@ -137,6 +138,12 @@ export default async function AthleteLayout({
                     <Link href="/athlete/history" className="flex items-center gap-2">
                       <History className="h-4 w-4" />
                       Historial
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link href="/athlete/profile" className="flex items-center gap-2">
+                      <UserRound className="h-4 w-4" />
+                      Mi perfil
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>

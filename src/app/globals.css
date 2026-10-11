@@ -110,7 +110,7 @@
   --success: oklch(0.68 0.16 155);
   --success-foreground: oklch(0.145 0.02 155);
   --warning: oklch(0.78 0.14 78);
-  --warning-foreground: oklch(0.2 0.05 70);
+  --warning-foreground: oklch(0.88 0.1 78);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.585 0.233 277.117);
@@ -127,6 +127,36 @@
   --sidebar-accent-foreground: oklch(0.9 0.05 277);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.585 0.233 277.117);
+}
+
+/* Modo rosa: mismos tokens semánticos, paleta cálida. Se activa con la clase en <html>. */
+.theme-rosa {
+  --background: oklch(0.985 0.012 350);
+  --foreground: oklch(0.22 0.04 350);
+  --card: oklch(1 0.004 350);
+  --card-foreground: oklch(0.22 0.04 350);
+  --popover: oklch(1 0.004 350);
+  --popover-foreground: oklch(0.22 0.04 350);
+  --primary: oklch(0.55 0.21 355);
+  --primary-foreground: oklch(0.99 0.005 350);
+  --secondary: oklch(0.955 0.025 350);
+  --secondary-foreground: oklch(0.3 0.06 350);
+  --muted: oklch(0.955 0.025 350);
+  --muted-foreground: oklch(0.5 0.05 350);
+  --accent: oklch(0.945 0.045 352);
+  --accent-foreground: oklch(0.4 0.16 355);
+  --border: oklch(0.9 0.035 350);
+  --input: oklch(0.9 0.035 350);
+  --ring: oklch(0.55 0.21 355);
+  --chart-1: oklch(0.55 0.21 355);
+  --sidebar: oklch(0.985 0.012 350);
+  --sidebar-foreground: oklch(0.22 0.04 350);
+  --sidebar-primary: oklch(0.55 0.21 355);
+  --sidebar-primary-foreground: oklch(0.99 0.005 350);
+  --sidebar-accent: oklch(0.945 0.045 352);
+  --sidebar-accent-foreground: oklch(0.4 0.16 355);
+  --sidebar-border: oklch(0.9 0.035 350);
+  --sidebar-ring: oklch(0.55 0.21 355);
 }
 
 @layer base {

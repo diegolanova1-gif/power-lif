@@ -22,7 +22,7 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 const STATUS_STYLE: Record<ComplianceStatus, { label: string; className: string }> = {
   done: { label: 'Hecho', className: 'bg-success text-success-foreground border-success' },
-  partial: { label: 'Parcial', className: 'bg-warning text-warning-foreground border-warning' },
+  partial: { label: 'Parcial', className: 'bg-warning text-[oklch(0.2_0.05_70)] border-warning' },
   none: { label: 'Sin registrar', className: 'bg-card text-muted-foreground border-border' },
 }
 
@@ -175,6 +175,24 @@ export default async function AthleteFollowUpPage({
   // achievement (RLS), so a coach just sees whatever is already earned.
   const { streak, currentWeekDays, currentWeekRequired, unlockedCards, unlockedDates } = await getStreakAndAchievements(supabase, id, structure, false)
 
+  // Perfil que cargó el alumno (datos propios y lo que el coach debe saber)
+  const { data: details } = await supabase.from('athlete_profile').select('*').eq('athlete_id', id).maybeSingle()
+  const ageYears = details?.birth_date
+    ? Math.floor((Date.now() - new Date(details.birth_date).getTime()) / 31557600000)
+    : null
+  const EXPERIENCE_LABEL: Record<string, string> = { principiante: 'Principiante', intermedio: 'Intermedio', avanzado: 'Avanzado' }
+  const quickFacts = [
+    ageYears !== null ? `${ageYears} años` : null,
+    details?.sex === 'M' ? 'Masculino' : details?.sex === 'F' ? 'Femenino' : null,
+    details?.height_cm ? `${Number(details.height_cm)} cm` : null,
+    details?.bodyweight_kg ? `${Number(details.bodyweight_kg)} kg` : null,
+    details?.experience ? EXPERIENCE_LABEL[details.experience] : null,
+    details?.days_per_week ? `${details.days_per_week} ${details.days_per_week === 1 ? 'día' : 'días'}/sem` : null,
+  ].filter(Boolean) as string[]
+  const hasProfile =
+    quickFacts.length > 0 ||
+    !!(details && (details.goal || details.injuries || details.medical_notes || details.notes || details.phone || details.emergency_contact_name))
+
   // Historial completo: todas las sesiones registradas de esta rutina, más reciente primero
   const loggedIds = [...new Set((sets ?? []).map(s => s.exercise_id as string))].filter(id => !nameById.has(id))
   if (loggedIds.length) {
@@ -226,6 +244,69 @@ export default async function AthleteFollowUpPage({
             <span className="ml-1 text-base font-normal text-muted-foreground">{streak === 1 ? 'día' : 'días'}</span>
           </p>
         </div>
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="px-1 text-sm font-medium text-muted-foreground">Perfil</h2>
+        {!hasProfile ? (
+          <div className="rounded-2xl bg-card px-6 py-8 text-center text-sm text-muted-foreground ring-1 ring-foreground/10">
+            Todavía no completó su perfil.
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4 rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+            {quickFacts.length > 0 && (
+              <p className="font-mono text-sm tabular-nums text-foreground">{quickFacts.join(' · ')}</p>
+            )}
+            {details?.injuries && (
+              <div className="rounded-xl bg-warning/15 p-3">
+                <p className="mb-1 text-xs font-medium uppercase tracking-wide text-warning-foreground">Lesiones o molestias</p>
+                <p className="whitespace-pre-wrap text-sm text-foreground">{details.injuries}</p>
+              </div>
+            )}
+            {details?.medical_notes && (
+              <div className="rounded-xl bg-warning/15 p-3">
+                <p className="mb-1 text-xs font-medium uppercase tracking-wide text-warning-foreground">Condiciones médicas o medicación</p>
+                <p className="whitespace-pre-wrap text-sm text-foreground">{details.medical_notes}</p>
+              </div>
+            )}
+            {details?.goal && (
+              <div>
+                <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Objetivo</p>
+                <p className="whitespace-pre-wrap text-sm text-foreground">{details.goal}</p>
+              </div>
+            )}
+            {details?.notes && (
+              <div>
+                <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Quiere contarte</p>
+                <p className="whitespace-pre-wrap text-sm text-foreground">{details.notes}</p>
+              </div>
+            )}
+            {(details?.phone || details?.emergency_contact_name || details?.emergency_contact_phone) && (
+              <div className="grid gap-3 border-t border-border pt-4 text-sm sm:grid-cols-2">
+                {details?.phone && (
+                  <div>
+                    <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">Teléfono</p>
+                    <a href={`tel:${details.phone}`} className="font-mono tabular-nums text-primary hover:underline">{details.phone}</a>
+                  </div>
+                )}
+                {(details?.emergency_contact_name || details?.emergency_contact_phone) && (
+                  <div>
+                    <p className="mb-0.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">Contacto de emergencia</p>
+                    <p className="text-foreground">
+                      {details.emergency_contact_name}
+                      {details.emergency_contact_phone && (
+                        <>
+                          {details.emergency_contact_name ? ' · ' : ''}
+                          <a href={`tel:${details.emergency_contact_phone}`} className="font-mono tabular-nums text-primary hover:underline">{details.emergency_contact_phone}</a>
+                        </>
+                      )}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </section>
 
       {/* Week x day grid */}
