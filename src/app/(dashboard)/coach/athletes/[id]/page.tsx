@@ -232,12 +232,12 @@ export default async function AthleteFollowUpPage({
       <section className="flex flex-col gap-3">
         <h2 className="px-1 text-sm font-medium text-muted-foreground">Calendario</h2>
         <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
-          <div className="flex flex-col gap-2 overflow-x-auto">
+          <div className="flex max-w-xl flex-col gap-2.5">
             {Array.from({ length: totalWeeks }, (_, i) => i + 1).map(w => (
-              <div key={w} className="flex items-center gap-2">
-                <span className="w-28 shrink-0 text-sm text-muted-foreground">
-                  Semana {w}
-                  <span className="ml-1 font-mono text-xs tabular-nums text-muted-foreground/80">
+              <div key={w} className="grid items-center gap-2" style={{ gridTemplateColumns: `4rem repeat(${trainingDays.length}, minmax(0, 1fr))` }}>
+                <span className="text-sm leading-tight text-muted-foreground">
+                  Sem {w}
+                  <span className="block font-mono text-[11px] tabular-nums text-muted-foreground/80">
                     {format(dateFor(w, trainingDays[0]), 'd MMM', { locale: es })}
                   </span>
                 </span>
@@ -253,7 +253,7 @@ export default async function AthleteFollowUpPage({
                       scroll={false}
                       title={`${realDateByDay.has(`${w}-${d}`) ? capitalize(format(dateFor(w, d), 'EEEE', { locale: es })) : weekdayName(d)} ${format(dateFor(w, d), 'd MMM', { locale: es })} · ${STATUS_STYLE[status].label}${todayCell ? ' · Hoy' : ''}`}
                       className={cn(
-                        'relative flex h-12 w-12 shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl border text-xs font-medium leading-none',
+                        'relative flex h-12 w-full flex-col items-center justify-center gap-0.5 rounded-xl border text-xs font-medium leading-none',
                         STATUS_STYLE[status].className,
                         selected && 'ring-2 ring-primary ring-offset-2',
                         todayCell && !selected && 'ring-2 ring-primary/40 ring-offset-1'
