@@ -1,8 +1,5 @@
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Trophy } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
 
 const MEDALS = ['🥇', '🥈', '🥉']
@@ -22,49 +19,64 @@ interface Ranking {
 }
 
 export function TeamRankingOfficial({ ranking, currentUserId }: { ranking: Ranking | null; currentUserId?: string }) {
+  if (!ranking) {
+    return (
+      <div className="rounded-2xl bg-card px-6 py-10 text-center text-sm text-muted-foreground ring-1 ring-foreground/10">
+        Tu coach todavía no aprobó un ranking para este team.
+      </div>
+    )
+  }
+
+  const me = ranking.entries.find(e => e.athlete_id === currentUserId)
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Trophy className="h-5 w-5 text-orange-500" />
-          Ranking oficial
-        </CardTitle>
-        {ranking && (
-          <p className="text-sm text-muted-foreground">
-            Aprobado por tu coach el {format(parseISO(ranking.approved_at), "dd MMM yyyy", { locale: es })}
-          </p>
-        )}
-      </CardHeader>
-      <CardContent>
-        {!ranking ? (
-          <p className="py-8 text-center text-muted-foreground">Tu coach todavía no aprobó un ranking para este team.</p>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">#</TableHead>
-                <TableHead>Alumno</TableHead>
-                <TableHead className="text-right">Actual</TableHead>
-                <TableHead className="text-right">Progreso</TableHead>
-                <TableHead className="text-right">Score</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {ranking.entries.map(e => (
-                <TableRow key={e.athlete_id} className={cn(e.athlete_id === currentUserId && 'bg-primary/5 font-medium')}>
-                  <TableCell className="font-mono tabular-nums">{MEDALS[e.rank - 1] ?? e.rank}</TableCell>
-                  <TableCell>{e.full_name}{e.athlete_id === currentUserId && ' (vos)'}</TableCell>
-                  <TableCell className="text-right font-mono font-semibold tabular-nums">{e.current_e1rm} kg</TableCell>
-                  <TableCell className={cn('text-right font-mono tabular-nums', e.progress_pct > 0 ? 'text-success' : e.progress_pct < 0 ? 'text-destructive' : 'text-muted-foreground')}>
+    <div className="flex flex-col gap-4">
+      {me && (
+        <div className="flex items-center justify-between rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">Tu posición</p>
+            <p className="mt-1 font-mono text-4xl font-semibold tabular-nums tracking-tight text-foreground">
+              {MEDALS[me.rank - 1] ?? `#${me.rank}`}
+              <span className="ml-2 text-lg font-normal text-muted-foreground">de {ranking.entries.length}</span>
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-sm font-medium text-muted-foreground">Score</p>
+            <p className="mt-1 font-mono text-3xl font-semibold tabular-nums text-foreground">{me.score}</p>
+          </div>
+        </div>
+      )}
+
+      <div className="flex flex-col gap-2">
+        <h3 className="px-1 text-sm font-medium text-muted-foreground">
+          Ranking oficial · aprobado el {format(parseISO(ranking.approved_at), "d 'de' MMMM", { locale: es })}
+        </h3>
+        <div className="divide-y divide-border overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10">
+          {ranking.entries.map(e => (
+            <div
+              key={e.athlete_id}
+              className={cn('flex items-center gap-3 px-4 py-3', e.athlete_id === currentUserId && 'bg-muted/60')}
+            >
+              <span className="w-8 shrink-0 text-center font-mono text-sm tabular-nums text-muted-foreground">
+                {MEDALS[e.rank - 1] ?? e.rank}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium text-foreground">
+                  {e.full_name}
+                  {e.athlete_id === currentUserId && <span className="font-normal text-muted-foreground"> · vos</span>}
+                </p>
+                <p className="font-mono text-sm tabular-nums text-muted-foreground">
+                  {e.current_e1rm} kg
+                  <span className={cn('ml-2', e.progress_pct > 0 && 'text-success')}>
                     {e.progress_pct > 0 ? '+' : ''}{e.progress_pct}%
-                  </TableCell>
-                  <TableCell className="text-right font-mono font-semibold tabular-nums">{e.score}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
+                  </span>
+                </p>
+              </div>
+              <span className="font-mono text-lg font-semibold tabular-nums text-foreground">{e.score}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }

@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { Trophy } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { TeamRankingOfficial } from '@/components/team-ranking-official'
 import { StreakAchievements } from '@/components/athlete/streak-achievements'
@@ -48,29 +47,42 @@ export default async function AthleteTeamPage({ searchParams }: { searchParams: 
   const achievements = user && structure ? await getStreakAndAchievements(supabase, user.id, structure, true) : null
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Mi Team</h1>
-        <p className="text-muted-foreground mt-1">Ranking y progreso de tus compañeros</p>
-      </div>
+    <div className="flex flex-col gap-6">
+      <h1 className="text-3xl font-semibold tracking-tight text-foreground">Logros</h1>
 
-      <Tabs defaultValue="ranking">
+      <Tabs defaultValue="logros">
         <TabsList>
-          <TabsTrigger value="ranking">Team</TabsTrigger>
-          <TabsTrigger value="cartas">Logros</TabsTrigger>
+          <TabsTrigger value="logros">Mis logros</TabsTrigger>
+          <TabsTrigger value="ranking">Ranking del team</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="ranking" className="space-y-4 pt-4">
+        <TabsContent value="logros" className="pt-4">
+          {achievements ? (
+            <StreakAchievements
+              unlockedCards={achievements.unlockedCards}
+              unlockedDates={achievements.unlockedDates}
+              streakDays={achievements.streak}
+              currentWeekDays={achievements.currentWeekDays}
+              currentWeekRequired={achievements.currentWeekRequired}
+              athleteName={profile?.full_name ?? ''}
+            />
+          ) : (
+            <div className="rounded-2xl bg-card px-6 py-12 text-center ring-1 ring-foreground/10">
+              <Trophy className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
+              <p className="text-sm text-muted-foreground">Todavía no tenés una rutina activa. Tu coach te la va a asignar.</p>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="ranking" className="flex flex-col gap-4 pt-4">
           {!team ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <Trophy className="mx-auto mb-3 h-12 w-12 text-muted-foreground/40" />
-                <p className="text-muted-foreground">Todavía no estás en ningún team. Tu coach puede agregarte.</p>
-              </CardContent>
-            </Card>
+            <div className="rounded-2xl bg-card px-6 py-12 text-center ring-1 ring-foreground/10">
+              <Trophy className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
+              <p className="text-sm text-muted-foreground">Todavía no estás en ningún team. Tu coach puede agregarte.</p>
+            </div>
           ) : (
             <>
-              {teams!.length > 1 && (
+              {teams!.length > 1 ? (
                 <div className="flex gap-1 border-b">
                   {teams!.map(t => (
                     <Link
@@ -85,30 +97,11 @@ export default async function AthleteTeamPage({ searchParams }: { searchParams: 
                     </Link>
                   ))}
                 </div>
+              ) : (
+                <p className="px-1 text-sm font-medium text-muted-foreground">{team.name}</p>
               )}
-              {teams!.length === 1 && <h2 className="text-xl font-semibold text-foreground">{team.name}</h2>}
               <TeamRankingOfficial ranking={ranking} currentUserId={user?.id} />
             </>
-          )}
-        </TabsContent>
-
-        <TabsContent value="cartas" className="pt-4">
-          {achievements ? (
-            <StreakAchievements
-              unlockedCards={achievements.unlockedCards}
-              unlockedDates={achievements.unlockedDates}
-              streakDays={achievements.streak}
-              currentWeekDays={achievements.currentWeekDays}
-              currentWeekRequired={achievements.currentWeekRequired}
-              athleteName={profile?.full_name ?? ''}
-            />
-          ) : (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <Trophy className="mx-auto mb-3 h-12 w-12 text-muted-foreground/40" />
-                <p className="text-muted-foreground">Todavía no tenés una rutina activa. Tu coach te la va a asignar.</p>
-              </CardContent>
-            </Card>
           )}
         </TabsContent>
       </Tabs>

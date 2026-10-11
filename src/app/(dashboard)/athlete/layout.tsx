@@ -73,7 +73,7 @@ export default async function AthleteLayout({
     { name: 'Registrar', href: '/athlete/log', icon: Dumbbell },
     { name: 'Progreso', href: '/athlete/progress', icon: BarChart },
     { name: 'Historial', href: '/athlete/history', icon: History },
-    { name: 'Team', href: '/athlete/team', icon: Trophy },
+    { name: 'Logros', href: '/athlete/team', icon: Trophy },
   ]
 
   return (
@@ -142,7 +142,7 @@ export default async function AthleteLayout({
                   <DropdownMenuItem>
                     <Link href="/athlete/team" className="flex items-center gap-2">
                       <Trophy className="h-4 w-4" />
-                      Mi Team
+                      Mis logros
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />

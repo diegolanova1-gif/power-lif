@@ -4,7 +4,6 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { Crown, Download, Footprints, Landmark, Lock, Shield, Sparkle, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { CATEGORIES, STREAK_CARDS, cardDescription, type CardCategory, type IconName, type StreakCard } from '@/lib/achievements'
 
@@ -149,76 +148,92 @@ export function StreakAchievements({ unlockedCards, unlockedDates, streakDays, c
   const nextCard = STREAK_CARDS.find(c => !unlockedSet.has(c.id)) ?? null
   const daysRemaining = nextCard ? Math.max(0, nextCard.requiredDays - streakDays) : 0
 
+  const nextProgress = nextCard ? Math.min(100, Math.round((streakDays / nextCard.requiredDays) * 100)) : 100
+
   return (
-    <Card className="overflow-hidden border-zinc-800 bg-zinc-950 text-zinc-50">
-      <CardContent className="py-6">
-        <div className="mb-6 flex flex-wrap items-start justify-between gap-6">
-          <div>
-            <p className="text-xs font-semibold tracking-[0.2em] text-zinc-500">COLECCIÓN</p>
-            <p className="font-mono text-3xl font-extrabold tabular-nums">{unlockedCards.length} <span className="text-lg font-normal text-zinc-500">/ 50 cartas</span></p>
-          </div>
-          <div>
-            <p className="text-xs font-semibold tracking-[0.2em] text-zinc-500">RACHA ACTUAL</p>
-            <p className="font-mono text-3xl font-extrabold tabular-nums">{streakDays} <span className="text-lg font-normal text-zinc-500">{streakDays === 1 ? 'día' : 'días'}</span></p>
-            <p className="text-xs text-zinc-500">esta semana {currentWeekDays}/{currentWeekRequired}</p>
-          </div>
+    <div className="flex flex-col gap-8">
+      <section className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+          <p className="text-sm font-medium text-muted-foreground">Cartas</p>
+          <p className="mt-1 font-mono text-3xl font-semibold tabular-nums tracking-tight text-foreground">
+            {unlockedCards.length}
+            <span className="ml-1 text-lg font-normal text-muted-foreground">/ 50</span>
+          </p>
+        </div>
+        <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+          <p className="text-sm font-medium text-muted-foreground">Racha actual</p>
+          <p className="mt-1 font-mono text-3xl font-semibold tabular-nums tracking-tight text-foreground">
+            {streakDays}
+            <span className="ml-1 text-lg font-normal text-muted-foreground">{streakDays === 1 ? 'día' : 'días'}</span>
+          </p>
+          <p className="text-sm text-muted-foreground">esta semana {currentWeekDays}/{currentWeekRequired}</p>
+        </div>
+        <div className="col-span-2 rounded-2xl bg-card p-4 ring-1 ring-foreground/10 sm:col-span-1">
           {nextCard ? (
-            <div>
-              <p className="text-xs font-semibold tracking-[0.2em] text-zinc-500">PRÓXIMO LOGRO</p>
-              <p className="text-lg font-bold uppercase tracking-wide" style={{ color: CATEGORIES[nextCard.category].accent }}>{nextCard.name}</p>
-              <p className="text-xs text-zinc-500">{nextCard.requiredDays} días · faltan {daysRemaining} {daysRemaining === 1 ? 'día' : 'días'}</p>
-            </div>
+            <>
+              <p className="text-sm font-medium text-muted-foreground">Próximo logro</p>
+              <p className="mt-1 text-lg font-semibold uppercase tracking-wide text-foreground">{nextCard.name}</p>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+                <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${nextProgress}%` }} />
+              </div>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                faltan {daysRemaining} {daysRemaining === 1 ? 'día' : 'días'}
+              </p>
+            </>
           ) : (
-            <div>
-              <p className="text-xs font-semibold tracking-[0.2em] text-zinc-500">COLECCIÓN COMPLETA</p>
-              <p className="text-lg font-bold uppercase tracking-wide text-amber-300">Las 50 cartas</p>
-            </div>
+            <>
+              <p className="text-sm font-medium text-muted-foreground">Colección completa</p>
+              <p className="mt-1 text-lg font-semibold uppercase tracking-wide text-foreground">Las 50 cartas</p>
+            </>
           )}
         </div>
+      </section>
 
-        <div className="space-y-6">
-          {CATEGORY_ORDER.map(categoryKey => {
-            const meta = CATEGORIES[categoryKey]
-            const cards = STREAK_CARDS.filter(c => c.category === categoryKey)
-            const CategoryIcon = ICON_COMPONENT[meta.icon]
-            return (
-              <div key={categoryKey}>
-                <div className="mb-2 flex items-center gap-2">
-                  <CategoryIcon className="h-4 w-4" style={{ color: meta.accent }} strokeWidth={1.75} />
-                  <h4 className="text-xs font-bold uppercase tracking-[0.2em]" style={{ color: meta.accent }}>{meta.label}</h4>
-                </div>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-                  {cards.map(card => {
-                    const unlocked = unlockedSet.has(card.id)
-                    if (unlocked) {
-                      return (
-                        <button
-                          key={card.id}
-                          type="button"
-                          onClick={() => setOpenCard(card)}
-                          className="group aspect-[5/7] overflow-hidden rounded-lg border transition-transform hover:scale-[1.03]"
-                          style={{ borderColor: meta.accent, backgroundImage: `url("${svgDataUrl(buildCardSvg(card, '', unlockedDates[card.id] ?? null))}")`, backgroundSize: 'cover' }}
-                        >
-                          <span className="sr-only">Ver carta {card.name}</span>
-                        </button>
-                      )
-                    }
-                    const progress = Math.min(streakDays, card.requiredDays)
-                    return (
-                      <div key={card.id} className="flex aspect-[5/7] flex-col items-center justify-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900/60 px-1.5 py-2 text-center">
-                        <Lock className="h-4 w-4 text-zinc-600" />
-                        <span className="font-mono text-[10px] text-zinc-600">{String(card.number).padStart(3, '0')}</span>
-                        <span className="text-[11px] font-semibold uppercase leading-tight text-zinc-400">{card.name}</span>
-                        <span className="font-mono text-[10px] tabular-nums text-zinc-600">{progress}/{card.requiredDays}</span>
-                      </div>
-                    )
-                  })}
-                </div>
+      {CATEGORY_ORDER.map(categoryKey => {
+        const meta = CATEGORIES[categoryKey]
+        const cards = STREAK_CARDS.filter(c => c.category === categoryKey)
+        const CategoryIcon = ICON_COMPONENT[meta.icon]
+        const unlockedInCategory = cards.filter(c => unlockedSet.has(c.id)).length
+        return (
+          <section key={categoryKey} className="flex flex-col gap-3">
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-2">
+                <CategoryIcon className="h-4 w-4" style={{ color: meta.accent }} strokeWidth={1.75} />
+                <h4 className="text-sm font-medium text-foreground">{meta.label}</h4>
               </div>
-            )
-          })}
-        </div>
-      </CardContent>
+              <span className="font-mono text-sm tabular-nums text-muted-foreground">
+                {unlockedInCategory}/{cards.length}
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+              {cards.map(card => {
+                const unlocked = unlockedSet.has(card.id)
+                if (unlocked) {
+                  return (
+                    <button
+                      key={card.id}
+                      type="button"
+                      onClick={() => setOpenCard(card)}
+                      className="group aspect-[5/7] overflow-hidden rounded-xl border transition-transform hover:scale-[1.03]"
+                      style={{ borderColor: meta.accent, backgroundImage: `url("${svgDataUrl(buildCardSvg(card, '', unlockedDates[card.id] ?? null))}")`, backgroundSize: 'cover' }}
+                    >
+                      <span className="sr-only">Ver carta {card.name}</span>
+                    </button>
+                  )
+                }
+                const progress = Math.min(streakDays, card.requiredDays)
+                return (
+                  <div key={card.id} className="flex aspect-[5/7] flex-col items-center justify-center gap-1 rounded-xl bg-muted px-1.5 py-2 text-center">
+                    <Lock className="h-4 w-4 text-muted-foreground/60" />
+                    <span className="text-[11px] font-semibold uppercase leading-tight text-muted-foreground">{card.name}</span>
+                    <span className="font-mono text-[10px] tabular-nums text-muted-foreground/70">{progress}/{card.requiredDays}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )
+      })}
 
       <Dialog open={openCard !== null} onOpenChange={open => !open && setOpenCard(null)}>
         <DialogContent className="max-w-sm border-none bg-transparent p-0 shadow-none">
@@ -247,6 +262,6 @@ export function StreakAchievements({ unlockedCards, unlockedDates, streakDays, c
           )}
         </DialogContent>
       </Dialog>
-    </Card>
+    </div>
   )
 }
