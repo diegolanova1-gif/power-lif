@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { Check, CheckCircle2, AlertTriangle, Loader2, Pencil, Plus, Repeat, RotateCcw, Video, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
@@ -52,6 +51,9 @@ interface ExerciseLogCardProps {
    * treat them differently. Undefined = normal session (the common case). */
   extraType?: 'advance_credit' | 'advance_no_credit'
   onSaved: (sets: LoggedSet[]) => void
+  /** Collapsible mode (Registrar list). Omitted = always open (día extra dialog). */
+  expanded?: boolean
+  onToggle?: () => void
   children?: React.ReactNode
 }
 
@@ -67,12 +69,11 @@ const roundTo = (value: number, step: number) => Math.round(value / step) * step
 // Accepts "62,5" and "62.5"; empty = bodyweight (0)
 const parseKg = (text: string) => (text.trim() === '' ? 0 : Number(text.trim().replace(',', '.')))
 
-export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, session, extraType, onSaved, children }: ExerciseLogCardProps) {
+export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, session, extraType, onSaved, expanded = true, onToggle, children }: ExerciseLogCardProps) {
   const [supabase] = useState(() => createClient())
   const [editing, setEditing] = useState(false)
   const [rows, setRows] = useState<Row[]>([])
   const [rpe, setRpe] = useState('')
-  const [quickWeight, setQuickWeight] = useState('')
   const [saving, setSaving] = useState(false)
   const [substituting, setSubstituting] = useState(false)
   const [substituteName, setSubstituteName] = useState('')
@@ -192,24 +193,6 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
     }
   }
 
-  async function markDoneAsPrescribed() {
-    const weight = coachKg ?? (quickWeight.trim() === '' ? suggestedKg ?? 0 : parseKg(quickWeight))
-    if (Number.isNaN(weight) || weight < 0) {
-      toast.error('Peso no válido')
-      return
-    }
-    const ok = await persist(
-      Array.from({ length: p.sets }, (_, i) => ({
-        set_number: i + 1,
-        reps: isTimed ? null : (p.reps ?? null), // lower bound of a range: honest default, athlete can edit up
-        duration_seconds: isTimed ? p.duration_seconds : null,
-        weight_kg: weight,
-        rpe: p.rpe_target ?? null,
-      }))
-    )
-    if (ok) toast.success(`${p.exercise_name}: hecho 💪`)
-  }
-
   async function saveEdited() {
     const done = rows.filter(r => r.done)
     const invalid = isTimed
@@ -266,24 +249,49 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
   const updateRow = (i: number, patch: Partial<Row>) => setRows(prev => prev.map((r, j) => (j === i ? { ...r, ...patch } : r)))
 
   return (
-    <Card className={cn('transition-colors', fullyLogged && 'border-success/30 bg-success/5', isDone && !fullyLogged && 'border-warning/40 bg-warning/10')}>
-      <CardHeader className="pb-3">
+    <div
+      className={cn(
+        'rounded-2xl bg-card p-4 ring-1 ring-foreground/10 transition-all',
+        expanded && onToggle && 'shadow-md ring-primary/30',
+        fullyLogged && 'ring-success/40',
+        isDone && !fullyLogged && 'ring-warning/50'
+      )}
+    >
+      <div
+        className={cn(expanded && 'pb-3', onToggle && 'cursor-pointer')}
+        role={onToggle ? 'button' : undefined}
+        tabIndex={onToggle ? 0 : undefined}
+        aria-expanded={onToggle ? expanded : undefined}
+        onClick={onToggle}
+        onKeyDown={onToggle ? e => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onToggle()) : undefined}
+      >
         <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <CardTitle className="text-lg">{p.exercise_name}</CardTitle>
+          <div className="flex min-w-0 items-center gap-3">
+            {onToggle && (
+              <span
+                className={cn(
+                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2',
+                  fullyLogged ? 'border-success bg-success text-success-foreground' : isDone ? 'border-warning bg-warning/20 text-warning-foreground' : 'border-border text-transparent'
+                )}
+              >
+                <Check className="h-4 w-4" />
+              </span>
+            )}
+            <h3 className="truncate text-base font-semibold text-foreground">{p.exercise_name}</h3>
             {p.video_url && (
               <a
                 href={p.video_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                onClick={e => e.stopPropagation()}
+                className="flex shrink-0 items-center gap-1 text-xs font-medium text-primary hover:underline"
               >
                 <Video className="h-3.5 w-3.5" />
                 Ver video
               </a>
             )}
           </div>
-          {fullyLogged ? (
+          {onToggle ? null : fullyLogged ? (
             <span className="flex shrink-0 items-center gap-1 text-sm font-medium text-success">
               <CheckCircle2 className="h-5 w-5" /> Hecho
             </span>
@@ -299,27 +307,26 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
           </p>
         )}
         {/* What the coach asked for */}
-        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-          <span><span className="font-mono font-semibold tabular-nums text-foreground">{p.sets}</span> series</span>
-          {isTimed ? (
-            <span><span className="font-mono font-semibold tabular-nums text-foreground">{formatDuration(p.duration_seconds!)}</span></span>
-          ) : (
-            <span><span className="font-mono font-semibold tabular-nums text-foreground">{repsLabel}</span> reps</span>
-          )}
-          {p.load_type === 'kg' && p.load_value !== undefined && <span><span className="font-mono font-semibold tabular-nums text-foreground">{p.load_value} kg</span></span>}
-          {p.load_type === 'percent' && p.load_value !== undefined && (
-            <span>
-              <span className="font-mono font-semibold tabular-nums text-foreground">{p.load_value}% RM</span>
-              {coachKg !== null && <span className="font-mono tabular-nums text-muted-foreground"> ≈ {coachKg} kg</span>}
-            </span>
-          )}
-          {p.rpe_target !== undefined && <span>Esfuerzo <span className="font-mono font-semibold tabular-nums text-foreground">{p.rpe_target}/10</span></span>}
-          {p.rest_seconds !== undefined && <span>Descanso <span className="font-mono font-semibold tabular-nums text-foreground">{p.rest_seconds >= 60 ? `${Math.floor(p.rest_seconds / 60)}:${String(p.rest_seconds % 60).padStart(2, '0')} min` : `${p.rest_seconds} s`}</span></span>}
-        </div>
-        {p.note && <p className="mt-2 rounded-md bg-accent px-2 py-1.5 text-sm text-accent-foreground">{p.note}</p>}
-      </CardHeader>
+        <p className="mt-1 font-mono text-sm tabular-nums text-muted-foreground">
+          {[
+            `${p.sets} × ${isTimed ? formatDuration(p.duration_seconds!) : repsLabel}`,
+            p.load_type === 'kg' && p.load_value !== undefined ? `${p.load_value} kg` : null,
+            p.load_type === 'percent' && p.load_value !== undefined
+              ? `${p.load_value}% RM${coachKg !== null ? ` ≈ ${coachKg} kg` : ''}`
+              : null,
+            p.rpe_target !== undefined ? `Esfuerzo ${p.rpe_target}/10` : null,
+            p.rest_seconds !== undefined
+              ? `desc. ${p.rest_seconds >= 60 ? `${Math.floor(p.rest_seconds / 60)}:${String(p.rest_seconds % 60).padStart(2, '0')}` : `${p.rest_seconds} s`}`
+              : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        </p>
+        {expanded && p.note && <p className="mt-2 rounded-md bg-accent px-2 py-1.5 text-sm text-accent-foreground">{p.note}</p>}
+      </div>
 
-      <CardContent className="space-y-3">
+      {expanded && (
+      <div className="space-y-3">
         {editing ? (
           <div className="space-y-3">
             <button
@@ -426,33 +433,15 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
             </div>
           </div>
         ) : (
-          <div className="space-y-3">
-            {coachKg === null && (
-              <div className="max-w-xs space-y-1">
-                <Label className="text-xs text-muted-foreground">¿Con cuánto peso? (kg)</Label>
-                <Input
-                  inputMode="decimal"
-                  placeholder={lastWeight !== null ? `Última vez: ${lastWeight}` : 'Vacío = peso corporal'}
-                  value={quickWeight}
-                  onChange={e => setQuickWeight(e.target.value)}
-                />
-              </div>
-            )}
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Button type="button" variant="success" size="lg" className="h-12 text-base" onClick={markDoneAsPrescribed} disabled={saving}>
-                {saving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Check className="mr-2 h-5 w-5" />}
-                Hecho tal cual
-              </Button>
-              <Button type="button" size="lg" variant="outline" className="h-12" onClick={openEditor} disabled={saving}>
-                <Pencil className="mr-2 h-4 w-4" />
-                No pude completarlo / cambié algo
-              </Button>
-            </div>
-          </div>
+          <Button type="button" size="lg" className="h-12 w-full text-base sm:w-auto" onClick={openEditor} disabled={saving}>
+            <Pencil className="mr-2 h-4 w-4" />
+            Registrar series / cambié algo
+          </Button>
         )}
 
         {children}
-      </CardContent>
-    </Card>
+      </div>
+      )}
+    </div>
   )
 }

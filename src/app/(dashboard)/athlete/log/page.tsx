@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight, Flame, Loader2, PartyPopper } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { ExerciseFeedback } from '@/components/athlete/exercise-feedback'
@@ -230,6 +229,15 @@ export default function AthleteLogPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allDone, currentLoggedFlag, currentDay?.week, currentDay?.day])
 
+  // One active exercise at a time: the first pending one opens by itself.
+  const [openId, setOpenId] = useState<string | null>(null)
+  useEffect(() => {
+    if (!currentDay) return
+    const firstPending = currentDay.exercises.find(e => !setsByKey[setsKey(currentDay.week, currentDay.day, e.exercise_id)]?.length)
+    setOpenId(firstPending?.exercise_id ?? null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentDay?.week, currentDay?.day, loading])
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -240,11 +248,9 @@ export default function AthleteLogPage() {
 
   if (noRoutine || !currentDay || !session) {
     return (
-      <Card>
-        <CardContent className="py-12 text-center text-muted-foreground">
-          Todavía no tienes una rutina activa. Tu coach te la va a asignar.
-        </CardContent>
-      </Card>
+      <div className="rounded-xl bg-card px-6 py-12 text-center text-sm text-muted-foreground ring-1 ring-foreground/10">
+        Todavía no tenés una rutina activa. Tu coach te la va a asignar.
+      </div>
     )
   }
 
@@ -254,6 +260,10 @@ export default function AthleteLogPage() {
       const last = sets.at(-1)!.weight_kg
       setLastWeightByExercise(prev => new Map(prev).set(exerciseId, last))
     }
+    const next = currentDay.exercises.find(
+      e => e.exercise_id !== exerciseId && !setsByKey[setsKey(currentDay.week, currentDay.day, e.exercise_id)]?.length
+    )
+    setOpenId(sets.length ? (next?.exercise_id ?? null) : exerciseId)
   }
 
   const goTo = (index: number) => {
@@ -276,26 +286,22 @@ export default function AthleteLogPage() {
     <div className="space-y-6 pb-8">
       {/* Session navigation */}
       <div className="flex items-center justify-between gap-2">
-        <Button variant="outline" size="icon" onClick={() => goTo(currentDayIndex - 1)} disabled={currentDayIndex === 0} aria-label="Sesión anterior">
-          <ChevronLeft className="h-4 w-4" />
+        <Button variant="ghost" size="icon" onClick={() => goTo(currentDayIndex - 1)} disabled={currentDayIndex === 0} aria-label="Sesión anterior">
+          <ChevronLeft className="h-5 w-5" />
         </Button>
         <div className="text-center">
-          <p className="text-sm font-medium text-muted-foreground">Semana {currentDay.week}</p>
-          <p className="text-2xl font-extrabold tracking-tight text-foreground">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Semana {currentDay.week}</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             {currentDate && currentLogged ? capitalize(format(currentDate, 'EEEE', { locale: es })) : weekdayName(currentDay.day)}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {currentDate && format(currentDate, "d 'de' MMMM", { locale: es })}
+            {currentDate && !currentLogged && ' · pautado'}
+            {currentDay.name && currentDay.name !== weekdayName(currentDay.day) && `${currentDate ? ' · ' : ''}${currentDay.name}`}
           </p>
-          {currentDate && (
-            <p className="text-sm text-muted-foreground">
-              {format(currentDate, "d 'de' MMMM", { locale: es })}
-              {!currentLogged && ' · pautado'}
-            </p>
-          )}
-          {currentDay.name && currentDay.name !== weekdayName(currentDay.day) && (
-            <p className="text-sm text-muted-foreground">{currentDay.name}</p>
-          )}
         </div>
-        <Button variant="outline" size="icon" onClick={() => goTo(currentDayIndex + 1)} disabled={currentDayIndex === days.length - 1} aria-label="Sesión siguiente">
-          <ChevronRight className="h-4 w-4" />
+        <Button variant="ghost" size="icon" onClick={() => goTo(currentDayIndex + 1)} disabled={currentDayIndex === days.length - 1} aria-label="Sesión siguiente">
+          <ChevronRight className="h-5 w-5" />
         </Button>
       </div>
 
@@ -327,49 +333,45 @@ export default function AthleteLogPage() {
       </div>
 
       {/* Progress */}
-      <div className="space-y-1">
-        <div className="flex justify-between text-sm">
-          <span className="font-medium text-foreground">{doneCount} de {total} ejercicios hechos</span>
-          <span className="font-mono tabular-nums text-muted-foreground">{total ? Math.round((doneCount / total) * 100) : 0}%</span>
+      <div className="space-y-2">
+        <div className="flex items-baseline justify-between text-sm">
+          <span className="font-medium text-foreground">{doneCount} de {total} ejercicios</span>
+          {allDone && <span className="font-medium text-success">Completo</span>}
         </div>
-        <div className="h-2 overflow-hidden rounded-full bg-muted">
+        <div className="h-1.5 overflow-hidden rounded-full bg-muted">
           <div className={`h-full rounded-full transition-all duration-500 ease-out ${allDone ? 'bg-success' : 'bg-primary'}`} style={{ width: `${total ? (doneCount / total) * 100 : 0}%` }} />
         </div>
       </div>
 
       {allDone && (
-        <Card className="animate-in fade-in slide-in-from-bottom-2 border-success/20 bg-success/5 duration-500">
-          <CardContent className="flex flex-col items-center gap-3 py-6 text-center sm:flex-row sm:text-left">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-success/15">
-              <PartyPopper className="h-6 w-6 text-success" />
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-success">¡Entrenamiento completo!</p>
-              <p className="text-sm text-muted-foreground">Tu coach ya puede ver lo que hiciste. Así se construye el progreso.</p>
-            </div>
-            {currentDayIndex < days.length - 1 && (
-              <Button variant="outline" onClick={() => goTo(currentDayIndex + 1)}>
-                Ver el próximo
-                <ChevronRight className="ml-1 h-4 w-4" />
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+        <div className="animate-in fade-in slide-in-from-bottom-2 flex flex-col items-center gap-3 rounded-xl bg-card px-5 py-5 text-center ring-1 ring-success/30 duration-500 sm:flex-row sm:text-left">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-success/15">
+            <PartyPopper className="h-5 w-5 text-success" />
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-foreground">¡Entrenamiento completo!</p>
+            <p className="text-sm text-muted-foreground">Tu coach ya puede ver lo que hiciste.</p>
+          </div>
+          {currentDayIndex < days.length - 1 && (
+            <Button variant="outline" onClick={() => goTo(currentDayIndex + 1)}>
+              Ver el próximo
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
+          )}
+        </div>
       )}
 
       {showExtraDayPrompt && (
-        <Card className="border-primary/30 bg-primary/5">
-          <CardContent className="flex flex-col items-center gap-3 py-5 text-center sm:flex-row sm:text-left">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/15">
-              <Flame className="h-6 w-6 text-primary" />
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-foreground">¡Ya cumpliste tus días de esta semana!</p>
-              <p className="text-sm text-muted-foreground">¿Querés entrenar de nuevo? Elegí cómo contarlo.</p>
-            </div>
-            <Button onClick={() => setExtraDayOpen(true)}>Elegir</Button>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col items-center gap-3 rounded-xl bg-card px-5 py-5 text-center ring-1 ring-primary/30 sm:flex-row sm:text-left">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-muted">
+            <Flame className="h-5 w-5 text-foreground" />
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-foreground">¡Ya cumpliste tus días de esta semana!</p>
+            <p className="text-sm text-muted-foreground">¿Querés entrenar de nuevo? Elegí cómo contarlo.</p>
+          </div>
+          <Button onClick={() => setExtraDayOpen(true)}>Elegir</Button>
+        </div>
       )}
 
       {session && (
@@ -389,7 +391,7 @@ export default function AthleteLogPage() {
         />
       )}
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         {currentDay.exercises.map(exercise => (
           <ExerciseLogCard
             key={`${currentDay.week}-${currentDay.day}-${exercise.exercise_id}`}
@@ -399,6 +401,8 @@ export default function AthleteLogPage() {
             lastWeight={lastWeightByExercise.get(exercise.exercise_id) ?? null}
             session={{ athleteId: session.userId, athleteRoutineId: session.athleteRoutineId, week: currentDay.week, day: currentDay.day }}
             onSaved={sets => saveSets(exercise.exercise_id, sets)}
+            expanded={openId === exercise.exercise_id}
+            onToggle={() => setOpenId(id => (id === exercise.exercise_id ? null : exercise.exercise_id))}
           >
             <ExerciseFeedback
               athleteId={session.userId}
