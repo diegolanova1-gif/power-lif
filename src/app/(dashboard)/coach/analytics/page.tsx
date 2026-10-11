@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { BarChart, UserPlus } from 'lucide-react'
 import { AthleteAnalytics } from '@/components/coach/athlete-analytics'
@@ -21,23 +20,21 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
     .sort((a, b) => (a.full_name ?? '').localeCompare(b.full_name ?? ''))
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Analytics</h1>
-        <p className="text-muted-foreground mt-1">1RM estimado, volumen y adherencia de tus alumnos</p>
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">Analytics</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Cómo viene cada alumno</p>
       </div>
 
       {athletes.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-12">
-            <BarChart className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
-            <p className="text-muted-foreground">Agrega alumnos para ver sus estadísticas</p>
-            <Button className="mt-4" nativeButton={false} render={<Link href="/coach/athletes" />}>
-              <UserPlus className="mr-2 h-4 w-4" />
-              Ir a alumnos
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl bg-card px-6 py-12 text-center ring-1 ring-foreground/10">
+          <BarChart className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
+          <p className="text-sm text-muted-foreground">Agregá alumnos para ver sus estadísticas</p>
+          <Button className="mt-4" nativeButton={false} render={<Link href="/coach/athletes" />}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Ir a alumnos
+          </Button>
+        </div>
       ) : (
         <AthleteAnalytics
           athletes={athletes}

@@ -4,21 +4,20 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Loader2, Trophy, Dumbbell, CalendarCheck, Flame, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { Loader2, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import type { Trend } from '@/lib/calculations/progression'
 import {
   LineChart,
   Line,
   BarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
 } from 'recharts'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface OneRMSeries {
@@ -146,22 +145,24 @@ export function AthleteAnalytics({
     )
   const oneRMChart = [...byDate.values()].sort((a, b) => String(a.date).localeCompare(String(b.date)))
 
-  const kpis = [
-    { name: 'Total estimado', value: total !== null ? `${total.toFixed(1)} kg` : '—', icon: Trophy, color: 'text-orange-600 bg-orange-100' },
-    { name: 'Volumen (12 sem)', value: stats ? `${Math.round(stats.volume.totalVolume).toLocaleString('es-ES')} kg` : '—', icon: Dumbbell, color: 'text-blue-600 bg-blue-100' },
-    { name: 'Adherencia', value: stats ? `${stats.adherence.overall}%` : '—', icon: CalendarCheck, color: 'text-green-600 bg-green-100' },
-    { name: 'Racha', value: stats ? `${stats.adherence.streak} ${stats.adherence.streak === 1 ? 'día' : 'días'}` : '—', icon: Flame, color: 'text-purple-600 bg-purple-100' },
+  const volumeSorted = stats ? [...stats.volume.weekly].sort((a, b) => a.week - b.week) : []
+  const RANGE_ORDER: { id: Range; label: string }[] = [
+    { id: '3m', label: '3 meses' },
+    { id: '6m', label: '6 meses' },
+    { id: '1y', label: '1 año' },
+    { id: 'all', label: 'Todo' },
   ]
+  const axisTick = { fontSize: 11, fill: 'var(--muted-foreground)' }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap gap-4">
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-4">
         <Select
           value={athleteId}
           onValueChange={selectAthlete}
           items={Object.fromEntries(athletes.map(a => [a.id, a.full_name || 'Sin nombre']))}
         >
-          <SelectTrigger className="w-60">
+          <SelectTrigger className="w-full sm:w-72">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -170,205 +171,219 @@ export function AthleteAnalytics({
             ))}
           </SelectContent>
         </Select>
-        <Select value={range} onValueChange={selectRange} items={RANGES}>
-          <SelectTrigger className="w-48">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.entries(RANGES).map(([value, label]) => (
-              <SelectItem key={value} value={value}>{label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="inline-flex w-fit rounded-lg bg-muted p-1">
+          {RANGE_ORDER.map(r => (
+            <button
+              key={r.id}
+              type="button"
+              onClick={() => selectRange(r.id)}
+              className={cn(
+                'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                range === r.id ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {error ? (
-        <Card>
-          <CardContent className="text-center py-12 text-destructive">{error}</CardContent>
-        </Card>
+        <div className="rounded-2xl bg-card px-6 py-12 text-center text-destructive ring-1 ring-foreground/10">{error}</div>
       ) : !stats ? (
         <div className="flex justify-center py-16">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
         <>
-          <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-            {kpis.map(kpi => (
-              <Card key={kpi.name}>
-                <CardContent className="flex items-center gap-4 pt-6">
-                  <div className={`rounded-lg p-3 ${kpi.color}`}>
-                    <kpi.icon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">{kpi.name}</p>
-                    <p className="font-mono text-2xl font-extrabold tabular-nums text-foreground">{kpi.value}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          <Card>
-            <CardHeader>
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <CardTitle>1RM Estimado</CardTitle>
-                <div className="flex gap-4 text-sm">
-                  {LIFTS.map(l => (
-                    <span key={l.category} className="text-muted-foreground">
-                      {l.label}: <span className="font-mono font-semibold tabular-nums text-foreground">{best[l.category] !== null ? `${best[l.category]!.toFixed(1)} kg` : '—'}</span>
-                    </span>
-                  ))}
+          <section className="rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+            <p className="text-sm font-medium text-muted-foreground">Total estimado</p>
+            <p className="mt-1 font-mono text-5xl font-semibold tabular-nums tracking-tight text-foreground">
+              {total !== null ? total.toFixed(1) : '—'}
+              {total !== null && <span className="ml-1 text-xl font-normal text-muted-foreground">kg</span>}
+            </p>
+            <div className="mt-4 grid grid-cols-3 gap-3">
+              {LIFTS.map(l => (
+                <div key={l.category}>
+                  <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: l.color }} />
+                    {l.label}
+                  </p>
+                  <p className="mt-0.5 font-mono text-lg font-semibold tabular-nums text-foreground">
+                    {best[l.category] !== null ? `${best[l.category]!.toFixed(1)} kg` : '—'}
+                  </p>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent>
+              ))}
+            </div>
+          </section>
+
+          <section className="grid grid-cols-3 gap-3">
+            <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+              <p className="text-sm font-medium text-muted-foreground">Volumen</p>
+              <p className="mt-1 font-mono text-2xl font-semibold tabular-nums tracking-tight text-foreground">
+                {Math.round(stats.volume.totalVolume).toLocaleString('es-AR')}
+              </p>
+              <p className="text-xs text-muted-foreground">kg · 12 semanas</p>
+            </div>
+            <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+              <p className="text-sm font-medium text-muted-foreground">Adherencia</p>
+              <p className="mt-1 font-mono text-2xl font-semibold tabular-nums tracking-tight text-foreground">{stats.adherence.overall}%</p>
+              <p className="text-xs text-muted-foreground">esta semana {stats.adherence.currentWeekDays}/{stats.adherence.currentWeekRequired}</p>
+            </div>
+            <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+              <p className="text-sm font-medium text-muted-foreground">Racha</p>
+              <p className="mt-1 font-mono text-2xl font-semibold tabular-nums tracking-tight text-foreground">{stats.adherence.streak}</p>
+              <p className="text-xs text-muted-foreground">{stats.adherence.streak === 1 ? 'día' : 'días'} seguidos</p>
+            </div>
+          </section>
+
+          <section className="flex flex-col gap-3">
+            <h2 className="px-1 text-sm font-medium text-muted-foreground">1RM por levantamiento</h2>
+            <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
               {oneRMChart.length > 0 ? (
-                <div className="h-80">
+                <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={oneRMChart}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                      <XAxis dataKey="date" tick={{ fontSize: 12 }} tickFormatter={d => format(parseISO(d), 'dd/MM', { locale: es })} />
-                      <YAxis tick={{ fontSize: 12 }} tickFormatter={val => `${val} kg`} domain={['auto', 'auto']} />
+                    <LineChart data={oneRMChart} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+                      <XAxis dataKey="date" tick={axisTick} axisLine={false} tickLine={false} minTickGap={24} tickFormatter={d => format(parseISO(d), 'dd/MM', { locale: es })} />
+                      <YAxis tick={axisTick} axisLine={false} tickLine={false} width={44} tickFormatter={val => `${val}`} domain={['auto', 'auto']} />
                       <Tooltip
                         formatter={(value, name) => [`${Number(value).toFixed(1)} kg`, LIFTS.find(l => l.category === name)?.label ?? name]}
                         labelFormatter={label => format(parseISO(String(label)), 'dd MMM yyyy', { locale: es })}
                       />
-                      <Legend formatter={value => LIFTS.find(l => l.category === value)?.label ?? value} />
                       {LIFTS.map(l => (
-                        <Line
-                          key={l.category}
-                          type="monotone"
-                          dataKey={l.category}
-                          stroke={l.color}
-                          strokeWidth={2}
-                          dot={{ r: 3, fill: l.color }}
-                          connectNulls
-                        />
+                        <Line key={l.category} type="monotone" dataKey={l.category} stroke={l.color} strokeWidth={2.5} dot={false} activeDot={{ r: 5 }} connectNulls />
                       ))}
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <div className="text-center py-12 text-muted-foreground">
+                <p className="py-10 text-center text-sm text-muted-foreground">
                   Sin datos de 1RM. Se calcula cuando registra sentadilla, banca o peso muerto.
-                </div>
+                </p>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </section>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Progresión por ejercicio</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {stats.exercises.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">Todavía no hay series con peso registradas</div>
-              ) : (
-                <div className="grid gap-4 md:grid-cols-[minmax(0,260px)_1fr]">
-                  <div className="space-y-1">
-                    {stats.exercises.map(ex => {
-                      const meta = TREND_META[ex.trend]
-                      const Icon = meta.icon
-                      const selected = ex.exercise_id === selectedProgressExercise
-                      const latest = ex.dataPoints.at(-1)?.weight_kg
-                      return (
-                        <button
-                          key={ex.exercise_id}
-                          type="button"
-                          onClick={() => setSelectedProgressExercise(ex.exercise_id)}
-                          className={`flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm transition-colors ${selected ? 'bg-muted' : 'hover:bg-muted/50'}`}
-                        >
-                          <span className="min-w-0">
-                            <span className="block truncate font-medium text-foreground">{ex.exercise_name}</span>
-                            <span className="font-mono text-xs tabular-nums text-muted-foreground">{latest !== undefined ? `${latest} kg` : '—'}</span>
-                          </span>
-                          <span className={`flex shrink-0 items-center gap-1 font-mono text-xs tabular-nums ${meta.color}`}>
-                            <Icon className="h-3.5 w-3.5" />
-                            {meta.label(ex.deltaPct)}
-                          </span>
-                        </button>
-                      )
-                    })}
-                  </div>
-
-                  {(() => {
-                    const selected = stats.exercises.find(ex => ex.exercise_id === selectedProgressExercise)
-                    if (!selected) return null
+          <section className="flex flex-col gap-3">
+            <h2 className="px-1 text-sm font-medium text-muted-foreground">Progresión por ejercicio</h2>
+            {stats.exercises.length === 0 ? (
+              <div className="rounded-2xl bg-card px-6 py-10 text-center text-sm text-muted-foreground ring-1 ring-foreground/10">
+                Todavía no hay series con peso registradas
+              </div>
+            ) : (
+              <div className="grid gap-3 md:grid-cols-[minmax(0,280px)_1fr]">
+                <div className="max-h-80 divide-y divide-border overflow-y-auto rounded-2xl bg-card ring-1 ring-foreground/10">
+                  {stats.exercises.map(ex => {
+                    const meta = TREND_META[ex.trend]
+                    const Icon = meta.icon
+                    const selected = ex.exercise_id === selectedProgressExercise
+                    const latest = ex.dataPoints.at(-1)?.weight_kg
                     return (
-                      <div className="h-80">
+                      <button
+                        key={ex.exercise_id}
+                        type="button"
+                        onClick={() => setSelectedProgressExercise(ex.exercise_id)}
+                        className={cn(
+                          'flex w-full items-center justify-between gap-2 px-4 py-3 text-left text-sm transition-colors',
+                          selected ? 'bg-muted' : 'hover:bg-muted/50'
+                        )}
+                      >
+                        <span className="min-w-0">
+                          <span className="block truncate font-medium text-foreground">{ex.exercise_name}</span>
+                          <span className="font-mono text-xs tabular-nums text-muted-foreground">{latest !== undefined ? `${latest} kg` : '—'}</span>
+                        </span>
+                        <span className={cn('flex shrink-0 items-center gap-1 font-mono text-xs tabular-nums', meta.color)}>
+                          <Icon className="h-3.5 w-3.5" />
+                          {meta.label(ex.deltaPct)}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {(() => {
+                  const selected = stats.exercises.find(ex => ex.exercise_id === selectedProgressExercise)
+                  if (!selected) return null
+                  return (
+                    <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+                      <p className="mb-2 font-medium text-foreground">{selected.exercise_name}</p>
+                      <div className="h-60">
                         <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={selected.dataPoints.map(d => ({ ...d, date: format(parseISO(d.date), 'dd/MM', { locale: es }) }))}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                            <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                            <YAxis tick={{ fontSize: 12 }} tickFormatter={val => `${val} kg`} domain={['auto', 'auto']} />
+                          <LineChart data={selected.dataPoints.map(d => ({ ...d, date: format(parseISO(d.date), 'dd/MM', { locale: es }) }))} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+                            <XAxis dataKey="date" tick={axisTick} axisLine={false} tickLine={false} minTickGap={24} />
+                            <YAxis tick={axisTick} axisLine={false} tickLine={false} width={44} domain={['auto', 'auto']} />
                             <Tooltip formatter={(value: number) => [`${value} kg`, selected.exercise_name]} labelFormatter={label => `Fecha: ${label}`} />
                             <Line
                               type="monotone"
                               dataKey="weight_kg"
                               stroke={selected.trend === 'down' ? 'var(--destructive)' : 'var(--primary)'}
-                              strokeWidth={2}
-                              dot={{ r: 3 }}
+                              strokeWidth={2.5}
+                              dot={false}
+                              activeDot={{ r: 5 }}
                             />
                           </LineChart>
                         </ResponsiveContainer>
                       </div>
-                    )
-                  })()}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    </div>
+                  )
+                })()}
+              </div>
+            )}
+          </section>
 
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Volumen Semanal (kg)</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {stats.volume.weekly.length > 0 ? (
-                  <div className="h-72">
+          <section className="grid gap-6 md:grid-cols-2">
+            <div className="flex flex-col gap-3">
+              <h2 className="px-1 text-sm font-medium text-muted-foreground">Volumen por semana</h2>
+              <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+                {volumeSorted.length > 0 ? (
+                  <div className="h-52">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={[...stats.volume.weekly].sort((a, b) => a.week - b.week)}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                        <XAxis dataKey="week" tick={{ fontSize: 12 }} tickFormatter={w => `S${w}`} />
-                        <YAxis tick={{ fontSize: 12 }} tickFormatter={val => `${Math.round(val / 1000)}k`} />
+                      <BarChart data={volumeSorted} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
+                        <XAxis dataKey="week" tick={axisTick} axisLine={false} tickLine={false} tickFormatter={w => `S${w}`} />
+                        <YAxis hide />
                         <Tooltip
-                          formatter={value => [`${Math.round(Number(value)).toLocaleString('es-ES')} kg`, 'Volumen']}
+                          formatter={value => [`${Math.round(Number(value)).toLocaleString('es-AR')} kg`, 'Volumen']}
                           labelFormatter={w => `Semana ${w}`}
+                          cursor={{ fill: 'var(--muted)' }}
                         />
-                        <Bar dataKey="volume" fill="var(--success)" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="volume" radius={[6, 6, 0, 0]}>
+                          {volumeSorted.map((_, i) => (
+                            <Cell key={`vol-${i}`} fill={i === volumeSorted.length - 1 ? 'var(--primary)' : 'var(--border)'} />
+                          ))}
+                        </Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                 ) : (
-                  <div className="text-center py-12 text-muted-foreground">Sin series en las últimas 12 semanas</div>
+                  <p className="py-10 text-center text-sm text-muted-foreground">Sin series en las últimas 12 semanas</p>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Adherencia Semanal</CardTitle>
-              </CardHeader>
-              <CardContent>
+            <div className="flex flex-col gap-3">
+              <h2 className="px-1 text-sm font-medium text-muted-foreground">Adherencia por semana</h2>
+              <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
                 {stats.adherence.weekly.length > 0 ? (
-                  <div className="h-72">
+                  <div className="h-52">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={stats.adherence.weekly}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                        <XAxis dataKey="week" tick={{ fontSize: 12 }} tickFormatter={w => `S${w}`} />
-                        <YAxis tick={{ fontSize: 12 }} domain={[0, 100]} tickFormatter={val => `${val}%`} />
-                        <Tooltip formatter={value => [`${value}%`, 'Adherencia']} labelFormatter={w => `Semana ${w}`} />
-                        <Bar dataKey="adherence" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+                      <BarChart data={stats.adherence.weekly} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
+                        <XAxis dataKey="week" tick={axisTick} axisLine={false} tickLine={false} tickFormatter={w => `S${w}`} />
+                        <YAxis hide domain={[0, 100]} />
+                        <Tooltip formatter={value => [`${value}%`, 'Adherencia']} labelFormatter={w => `Semana ${w}`} cursor={{ fill: 'var(--muted)' }} />
+                        <Bar dataKey="adherence" radius={[6, 6, 0, 0]}>
+                          {stats.adherence.weekly.map((_, i) => (
+                            <Cell key={`adh-${i}`} fill={i === stats.adherence.weekly.length - 1 ? 'var(--primary)' : 'var(--border)'} />
+                          ))}
+                        </Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                 ) : (
-                  <div className="text-center py-12 text-muted-foreground">Sin programa activo asignado</div>
+                  <p className="py-10 text-center text-sm text-muted-foreground">Sin programa activo asignado</p>
                 )}
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </div>
+          </section>
         </>
       )}
     </div>
