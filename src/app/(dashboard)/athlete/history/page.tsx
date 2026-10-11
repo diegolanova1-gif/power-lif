@@ -2,11 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Table, TableHeader, TableBody, TableRow, TableCell, TableHead } from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Loader2, ChevronDown, ChevronUp, Calendar, Dumbbell } from 'lucide-react'
+import { Loader2, ChevronDown, Dumbbell } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { weekdayName } from '@/lib/weekdays'
@@ -169,133 +165,125 @@ export default function AthleteHistoryPage() {
     )
   }
 
+  const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+
+  const groups: { label: string; items: Session[] }[] = []
+  for (const s of filteredSessions) {
+    const label = capitalize(format(parseISO(s.date), 'MMMM yyyy', { locale: es }))
+    const last = groups.at(-1)
+    if (last && last.label === label) last.items.push(s)
+    else groups.push({ label, items: [s] })
+  }
+
+  const chip = (active: boolean) =>
+    cn(
+      'shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors',
+      active ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
+    )
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Historial de Entrenamientos</h1>
-          <p className="text-muted-foreground mt-1">{sessions.length} sesiones registradas</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-muted-foreground">Filtrar por semana:</label>
-          <select
-            value={filterWeek}
-            onChange={e => setFilterWeek(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
-            className="ml-2 px-3 py-2 border border-border rounded-lg text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            <option value="all">Todas las semanas</option>
-            {weeks.map(w => (
-              <option key={w} value={w}>Semana {w}</option>
-            ))}
-          </select>
-        </div>
+    <div className="flex flex-col gap-6">
+      <div>
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">Historial</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {sessions.length} {sessions.length === 1 ? 'sesión registrada' : 'sesiones registradas'}
+        </p>
       </div>
 
-      {filteredSessions.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Dumbbell className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
-            <p className="text-muted-foreground">No hay sesiones registradas</p>
-            <p className="text-sm text-muted-foreground/70 mt-1">Empieza a entrenar para ver tu historial aquí</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {filteredSessions.map((session) => {
-            const sessionKey = `${session.week}-${session.day}-${session.date}`
-            const isExpanded = expandedSession === sessionKey
+      {weeks.length > 1 && (
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+          <button type="button" onClick={() => setFilterWeek('all')} className={chip(filterWeek === 'all')}>
+            Todas
+          </button>
+          {weeks.map(w => (
+            <button key={w} type="button" onClick={() => setFilterWeek(w)} className={chip(filterWeek === w)}>
+              Semana {w}
+            </button>
+          ))}
+        </div>
+      )}
 
-            return (
-              <Card key={sessionKey}>
-                <CardHeader className="py-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setExpandedSession(isExpanded ? null : sessionKey)}
-                        className="h-8 w-8"
-                      >
-                        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                      </Button>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-foreground">
-                            Semana {session.week} · {weekdayName(session.day)}
-                          </span>
-                          <Badge variant="outline">{session.exercises.length} ejercicios</Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground flex items-center gap-1">
-                          <Calendar className="h-3.5 w-3.5" />
-                          {format(parseISO(session.date), 'EEEE, dd MMMM yyyy', { locale: es })}
+      {filteredSessions.length === 0 ? (
+        <div className="rounded-2xl bg-card px-6 py-12 text-center ring-1 ring-foreground/10">
+          <Dumbbell className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
+          <p className="font-medium text-foreground">Todavía no hay sesiones</p>
+          <p className="mt-1 text-sm text-muted-foreground">Cuando registres tu primer entrenamiento, lo vas a ver acá.</p>
+        </div>
+      ) : (
+        groups.map(group => (
+          <section key={group.label} className="flex flex-col gap-2">
+            <h2 className="px-1 text-sm font-medium text-muted-foreground">{group.label}</h2>
+            <div className="divide-y divide-border overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10">
+              {group.items.map(session => {
+                const sessionKey = `${session.week}-${session.day}-${session.date}`
+                const isExpanded = expandedSession === sessionKey
+                const date = parseISO(session.date)
+
+                return (
+                  <div key={sessionKey}>
+                    <button
+                      type="button"
+                      aria-expanded={isExpanded}
+                      onClick={() => setExpandedSession(isExpanded ? null : sessionKey)}
+                      className="flex w-full items-center gap-4 px-4 py-3.5 text-left transition-colors hover:bg-muted/50"
+                    >
+                      <div className="w-10 shrink-0 text-center">
+                        <p className="font-mono text-xl font-semibold leading-none tabular-nums text-foreground">{format(date, 'd')}</p>
+                        <p className="mt-1 text-xs uppercase text-muted-foreground">{format(date, 'EEE', { locale: es })}</p>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium text-foreground">
+                          Semana {session.week} · {weekdayName(session.day)}
+                        </p>
+                        <p className="truncate text-sm text-muted-foreground">
+                          {session.exercises.length} ejercicios · {session.total_sets} series · {session.total_volume.toLocaleString('es-AR')} kg
                         </p>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm font-mono tabular-nums text-muted-foreground">
-                      <span>{session.total_sets} series</span>
-                      <span>{session.total_volume.toLocaleString()} kg vol</span>
-                      {session.avg_rpe && (
-                        <span className="flex items-center gap-1">
-                          <Badge variant="secondary" className="font-mono">RPE {session.avg_rpe.toFixed(1)}</Badge>
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </CardHeader>
+                      <ChevronDown className={cn('h-4 w-4 shrink-0 text-muted-foreground/60 transition-transform', isExpanded && 'rotate-180')} />
+                    </button>
 
-                {isExpanded && (
-                  <CardContent className="pt-0">
-                    <div className="space-y-4">
-                      {session.exercises.map(exercise => (
-                        <div key={exercise.exercise_id} className="border-t pt-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="font-medium">{exercise.exercise_name}</span>
-                            <Badge variant="outline" className="capitalize">{exercise.category}</Badge>
-                            <Badge variant="secondary">{exercise.sets.length} series</Badge>
+                    {isExpanded && (
+                      <div className="flex flex-col gap-5 bg-muted/30 px-4 py-4">
+                        {session.avg_rpe !== null && (
+                          <p className="text-sm text-muted-foreground">
+                            Esfuerzo promedio <span className="font-mono font-medium tabular-nums text-foreground">{session.avg_rpe.toFixed(1)}</span>
+                          </p>
+                        )}
+                        {session.exercises.map(exercise => (
+                          <div key={exercise.exercise_id}>
+                            <p className="mb-1 font-medium text-foreground">{exercise.exercise_name}</p>
+                            <div className="divide-y divide-border">
+                              {[...exercise.sets]
+                                .sort((a, b) => a.set_number - b.set_number)
+                                .map(set => (
+                                  <div key={set.set_number} className="py-2">
+                                    <div className="flex items-baseline gap-3 text-sm">
+                                      <span className="w-14 shrink-0 text-muted-foreground">Serie {set.set_number}</span>
+                                      <span className="font-mono font-medium tabular-nums text-foreground">
+                                        {set.weight_kg > 0 ? `${set.weight_kg} kg` : 'Peso corporal'}
+                                        {' × '}
+                                        {set.duration_seconds ? formatDuration(set.duration_seconds) : set.reps}
+                                      </span>
+                                      <span className="ml-auto font-mono text-xs tabular-nums text-muted-foreground">
+                                        {[set.rpe ? `RPE ${set.rpe.toFixed(1)}` : null, set.rir ? `RIR ${set.rir.toFixed(1)}` : null]
+                                          .filter(Boolean)
+                                          .join(' · ')}
+                                      </span>
+                                    </div>
+                                    {set.notes && <p className="mt-1 pl-[68px] text-sm text-muted-foreground">{set.notes}</p>}
+                                  </div>
+                                ))}
+                            </div>
                           </div>
-                          <div className="overflow-x-auto">
-                            <Table>
-                              <TableHeader>
-                                <TableRow>
-                                  <TableHead>Serie</TableHead>
-                                  <TableHead>Peso (kg)</TableHead>
-                                  <TableHead>Reps</TableHead>
-                                  <TableHead>RPE</TableHead>
-                                  <TableHead>RIR</TableHead>
-                                  <TableHead>Volumen</TableHead>
-                                  <TableHead>Notas</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {exercise.sets
-                                  .sort((a, b) => a.set_number - b.set_number)
-                                  .map(set => (
-                                    <TableRow key={set.set_number}>
-                                      <TableCell className="font-mono tabular-nums">{set.set_number}</TableCell>
-                                      <TableCell className="font-mono font-medium tabular-nums">{set.weight_kg}</TableCell>
-                                      <TableCell className="font-mono tabular-nums">{set.duration_seconds ? formatDuration(set.duration_seconds) : set.reps}</TableCell>
-                                      <TableCell className="font-mono tabular-nums">{set.rpe?.toFixed(1) || '-'}</TableCell>
-                                      <TableCell className="font-mono tabular-nums">{set.rir?.toFixed(1) || '-'}</TableCell>
-                                      <TableCell className="font-mono font-medium tabular-nums">
-                                        {set.reps !== null ? (set.weight_kg * set.reps).toLocaleString() : '—'}
-                                      </TableCell>
-                                      <TableCell className="text-muted-foreground max-w-xs truncate">
-                                        {set.notes || '-'}
-                                      </TableCell>
-                                    </TableRow>
-                                  ))}
-                              </TableBody>
-                            </Table>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                )}
-              </Card>
-            )
-          })}
-        </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        ))
       )}
     </div>
   )
