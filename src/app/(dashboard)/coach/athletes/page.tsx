@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import Link from 'next/link'
-import { Plus, UserPlus, Search, Loader2, MoreHorizontal, Edit, Trash2, Dumbbell, LayoutTemplate, BarChart, KeyRound, ClipboardCheck, TriangleAlert } from 'lucide-react'
+import { History, Plus, UserPlus, Search, Loader2, MoreHorizontal, Edit, Trash2, Dumbbell, LayoutTemplate, BarChart, KeyRound, ClipboardCheck, TriangleAlert } from 'lucide-react'
 import { toast } from 'sonner'
 import { CreateAthleteDialog } from '@/components/coach/create-athlete-dialog'
 import { ResetPasswordDialog } from '@/components/coach/reset-password-dialog'
@@ -258,6 +258,10 @@ export default function AthletesPage() {
                   <DropdownMenuItem render={<Link href={`/coach/athletes/${athlete.id}`} />}>
                     <ClipboardCheck className="mr-2 h-4 w-4" />
                     Ver seguimiento
+                  </DropdownMenuItem>
+                  <DropdownMenuItem render={<Link href={`/coach/athletes/${athlete.id}#historial`} />}>
+                    <History className="mr-2 h-4 w-4" />
+                    Ver historial
                   </DropdownMenuItem>
                   <DropdownMenuItem render={<Link href={`/coach/routines/new?athlete=${athlete.id}`} />}>
                     <Plus className="mr-2 h-4 w-4" />

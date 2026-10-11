@@ -1,9 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, BarChart, CheckCircle2, AlertTriangle, Circle, MessageSquare, Pencil, Plus } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, AlertTriangle, ChevronDown, Circle, MessageSquare } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { MediaGrid } from '@/components/media-grid'
 import { FeedbackReply } from '@/components/coach/feedback-reply'
 import { exerciseCompliance, sessionCompliance, type ComplianceStatus } from '@/lib/calculations/compliance'
@@ -18,6 +16,7 @@ import { es } from 'date-fns/locale'
 import { dateForWeekDay, isToday as isTodayDate } from '@/lib/schedule-dates'
 import { getStreakAndAchievements } from '@/lib/server/achievements'
 import { StreakAchievements } from '@/components/athlete/streak-achievements'
+import { AthleteActions } from '@/components/coach/athlete-actions'
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
@@ -64,44 +63,34 @@ export default async function AthleteFollowUpPage({
     .limit(1)
     .maybeSingle()
 
+  const routine = assignment?.routine as unknown as { name: string; structure: RoutineStructure } | null
+
   const header = (
-    <div className="flex flex-wrap items-center justify-between gap-4">
-      <div className="flex items-center gap-3">
-        <Link href="/coach/athletes" className="text-muted-foreground hover:text-foreground">
+    <div className="flex flex-col gap-4">
+      <div className="flex items-start gap-3">
+        <Link href="/coach/athletes" className="mt-1.5 text-muted-foreground hover:text-foreground" aria-label="Volver a alumnos">
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">{athlete.full_name || 'Alumno'}</h1>
-          <p className="text-muted-foreground mt-1">Seguimiento: lo que indicaste y lo que hizo</p>
+        <div className="min-w-0">
+          <h1 className="truncate text-3xl font-semibold tracking-tight text-foreground">{athlete.full_name || 'Alumno'}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {assignment && routine
+              ? `${routine.name} · ${assignment.status === 'completed' ? 'terminada' : `va por la semana ${assignment.current_week}, ${weekdayName(assignment.current_day)}`}`
+              : 'Sin rutina asignada'}
+          </p>
         </div>
       </div>
-      <div className="flex flex-wrap gap-2">
-        <Button variant="outline" nativeButton={false} render={<Link href={`/coach/analytics?athlete=${id}`} />}>
-          <BarChart className="mr-2 h-4 w-4" />
-          Estadísticas
-        </Button>
-        {assignment && (
-          <Button variant="outline" nativeButton={false} render={<Link href={`/coach/routines/${assignment.routine_id}/edit`} />}>
-            <Pencil className="mr-2 h-4 w-4" />
-            Editar rutina
-          </Button>
-        )}
-        <Button nativeButton={false} render={<Link href={`/coach/routines/new?athlete=${id}`} />}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nueva rutina
-        </Button>
-      </div>
+      <AthleteActions athleteId={id} athleteName={athlete.full_name} routineId={assignment?.routine_id ?? null} />
     </div>
   )
 
-  const routine = assignment?.routine as unknown as { name: string; structure: RoutineStructure } | null
   if (!assignment || !routine) {
     return (
-      <div className="space-y-6">
+      <div className="flex flex-col gap-6">
         {header}
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">Todavía no tiene rutina asignada.</CardContent>
-        </Card>
+        <div className="rounded-2xl bg-card px-6 py-12 text-center text-sm text-muted-foreground ring-1 ring-foreground/10">
+          Todavía no tiene rutina asignada.
+        </div>
       </div>
     )
   }
@@ -186,98 +175,113 @@ export default async function AthleteFollowUpPage({
   // achievement (RLS), so a coach just sees whatever is already earned.
   const { streak, currentWeekDays, currentWeekRequired, unlockedCards, unlockedDates } = await getStreakAndAchievements(supabase, id, structure, false)
 
+  // Historial completo: todas las sesiones registradas de esta rutina, más reciente primero
+  const loggedIds = [...new Set((sets ?? []).map(s => s.exercise_id as string))].filter(id => !nameById.has(id))
+  if (loggedIds.length) {
+    const { data: more } = await supabase.from('exercises').select('id, name').in('id', loggedIds)
+    more?.forEach(e => nameById.set(e.id, e.name as string))
+  }
+  type HistSet = { set_number: number; reps: number | null; duration_seconds: number | null; weight_kg: number; rpe: number | null }
+  const historyMap = new Map<string, { week: number; day: number; date: Date; exercises: Map<string, HistSet[]> }>()
+  for (const s of sets ?? []) {
+    const key = `${s.week}-${s.day}`
+    let h = historyMap.get(key)
+    if (!h) {
+      h = { week: s.week, day: s.day, date: realDateByDay.get(key) ?? new Date(s.completed_at), exercises: new Map() }
+      historyMap.set(key, h)
+    }
+    const list = h.exercises.get(s.exercise_id) ?? []
+    list.push({ set_number: s.set_number, reps: s.reps, duration_seconds: s.duration_seconds, weight_kg: Number(s.weight_kg), rpe: s.rpe })
+    h.exercises.set(s.exercise_id, list)
+  }
+  const history = [...historyMap.values()].sort((a, b) => b.date.getTime() - a.date.getTime())
+  const historyGroups: { label: string; items: typeof history }[] = []
+  for (const h of history) {
+    const label = capitalize(format(h.date, 'MMMM yyyy', { locale: es }))
+    const last = historyGroups.at(-1)
+    if (last && last.label === label) last.items.push(h)
+    else historyGroups.push({ label, items: [h] })
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-8">
       {header}
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Rutina</p>
-            <p className="font-semibold text-foreground">{routine.name}</p>
-            <p className="text-sm font-mono tabular-nums text-muted-foreground">
-              {assignment.status === 'completed' ? 'Terminada' : `Va por semana ${assignment.current_week}, ${weekdayName(assignment.current_day)}`}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Sesiones cumplidas</p>
-            <p className="font-mono text-2xl font-extrabold tabular-nums text-success">{doneSessions} <span className="text-base font-normal text-muted-foreground">de {pastSessions.length}</span></p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-muted-foreground">Sesiones parciales</p>
-            <p className="font-mono text-2xl font-extrabold tabular-nums text-warning-foreground">{partialSessions}</p>
-          </CardContent>
-        </Card>
-      </div>
+      <section className="grid grid-cols-3 gap-3">
+        <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+          <p className="text-sm font-medium text-muted-foreground">Cumplidas</p>
+          <p className="mt-1 font-mono text-3xl font-semibold tabular-nums tracking-tight text-foreground">
+            {doneSessions}
+            <span className="ml-1 text-base font-normal text-muted-foreground">de {pastSessions.length}</span>
+          </p>
+        </div>
+        <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+          <p className="text-sm font-medium text-muted-foreground">Parciales</p>
+          <p className="mt-1 font-mono text-3xl font-semibold tabular-nums tracking-tight text-foreground">{partialSessions}</p>
+        </div>
+        <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+          <p className="text-sm font-medium text-muted-foreground">Racha</p>
+          <p className="mt-1 font-mono text-3xl font-semibold tabular-nums tracking-tight text-foreground">
+            {streak}
+            <span className="ml-1 text-base font-normal text-muted-foreground">{streak === 1 ? 'día' : 'días'}</span>
+          </p>
+        </div>
+      </section>
 
-      <StreakAchievements
-        unlockedCards={unlockedCards}
-        unlockedDates={unlockedDates}
-        streakDays={streak}
-        currentWeekDays={currentWeekDays}
-        currentWeekRequired={currentWeekRequired}
-        athleteName={athlete.full_name ?? ''}
-      />
-
-      {/* Week × day grid */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Calendario</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 overflow-x-auto">
-          {Array.from({ length: totalWeeks }, (_, i) => i + 1).map(w => (
-            <div key={w} className="flex items-center gap-2">
-              <span className="w-36 shrink-0 text-sm text-muted-foreground">
-                Semana {w}
-                <span className="ml-1 text-xs font-mono tabular-nums text-muted-foreground/80">
-                  ({format(dateFor(w, trainingDays[0]), 'd MMM', { locale: es })})
+      {/* Week x day grid */}
+      <section className="flex flex-col gap-3">
+        <h2 className="px-1 text-sm font-medium text-muted-foreground">Calendario</h2>
+        <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+          <div className="flex flex-col gap-2 overflow-x-auto">
+            {Array.from({ length: totalWeeks }, (_, i) => i + 1).map(w => (
+              <div key={w} className="flex items-center gap-2">
+                <span className="w-28 shrink-0 text-sm text-muted-foreground">
+                  Semana {w}
+                  <span className="ml-1 font-mono text-xs tabular-nums text-muted-foreground/80">
+                    {format(dateFor(w, trainingDays[0]), 'd MMM', { locale: es })}
+                  </span>
                 </span>
-              </span>
-              {trainingDays.map(d => {
-                const status = statusOf(w, d)
-                const selected = w === week && d === day
-                const todayCell = isToday(w, d)
-                const hasNote = (feedback ?? []).some(f => f.week === w && f.day === d)
-                return (
-                  <Link
-                    key={d}
-                    href={`/coach/athletes/${id}?week=${w}&day=${d}`}
-                    scroll={false}
-                    title={`${realDateByDay.has(`${w}-${d}`) ? capitalize(format(dateFor(w, d), 'EEEE', { locale: es })) : weekdayName(d)} ${format(dateFor(w, d), 'd MMM', { locale: es })} · ${STATUS_STYLE[status].label}${todayCell ? ' · Hoy' : ''}`}
-                    className={cn(
-                      'relative flex h-12 w-12 shrink-0 flex-col items-center justify-center gap-0.5 rounded-md border text-xs font-medium leading-none',
-                      STATUS_STYLE[status].className,
-                      selected && 'ring-2 ring-primary ring-offset-2',
-                      todayCell && !selected && 'ring-2 ring-primary/40 ring-offset-1'
-                    )}
-                  >
-                    <span>{realDateByDay.has(`${w}-${d}`) ? capitalize(format(dateFor(w, d), 'EEEEEE', { locale: es })) : weekdayShort(d)}</span>
-                    <span className="text-[10px] font-mono font-normal tabular-nums opacity-70">{format(dateFor(w, d), 'd')}</span>
-                    {hasNote && <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-accent-foreground" />}
-                    {todayCell && <span className="absolute -left-1 -top-1 h-2.5 w-2.5 rounded-full bg-primary ring-2 ring-background" />}
-                  </Link>
-                )
-              })}
-            </div>
-          ))}
-          <div className="flex flex-wrap gap-4 pt-2 text-xs text-muted-foreground">
+                {trainingDays.map(d => {
+                  const status = statusOf(w, d)
+                  const selected = w === week && d === day
+                  const todayCell = isToday(w, d)
+                  const hasNote = (feedback ?? []).some(f => f.week === w && f.day === d)
+                  return (
+                    <Link
+                      key={d}
+                      href={`/coach/athletes/${id}?week=${w}&day=${d}`}
+                      scroll={false}
+                      title={`${realDateByDay.has(`${w}-${d}`) ? capitalize(format(dateFor(w, d), 'EEEE', { locale: es })) : weekdayName(d)} ${format(dateFor(w, d), 'd MMM', { locale: es })} · ${STATUS_STYLE[status].label}${todayCell ? ' · Hoy' : ''}`}
+                      className={cn(
+                        'relative flex h-12 w-12 shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl border text-xs font-medium leading-none',
+                        STATUS_STYLE[status].className,
+                        selected && 'ring-2 ring-primary ring-offset-2',
+                        todayCell && !selected && 'ring-2 ring-primary/40 ring-offset-1'
+                      )}
+                    >
+                      <span>{realDateByDay.has(`${w}-${d}`) ? capitalize(format(dateFor(w, d), 'EEEEEE', { locale: es })) : weekdayShort(d)}</span>
+                      <span className="font-mono text-[10px] font-normal tabular-nums opacity-70">{format(dateFor(w, d), 'd')}</span>
+                      {hasNote && <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-accent-foreground" />}
+                      {todayCell && <span className="absolute -left-1 -top-1 h-2.5 w-2.5 rounded-full bg-primary ring-2 ring-background" />}
+                    </Link>
+                  )
+                })}
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
             <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-sm bg-success" /> Hecho</span>
             <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-sm bg-warning" /> Parcial</span>
             <span className="flex items-center gap-1"><span className="h-3 w-3 rounded-sm border border-border" /> Sin registrar</span>
             <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-accent-foreground" /> Dejó comentario</span>
-            <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-primary" /> Hoy</span>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
       {/* Selected session */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-foreground">
+      <section className="flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-3 px-1">
+          <h2 className="text-lg font-semibold text-foreground">
             Semana {week} · {realDateByDay.has(`${week}-${day}`)
               ? capitalize(format(dateFor(week, day), 'EEEE', { locale: es }))
               : weekdayName(day)}
@@ -294,67 +298,150 @@ export default async function AthleteFollowUpPage({
             .sort((a, b) => a.created_at.localeCompare(b.created_at))
             .map(m => ({ id: m.id, storage_path: m.storage_path, media_type: m.media_type, url: urlByPath.get(m.storage_path) ?? null }))
           return (
-            <Card key={`${ex.exercise_id}-${i}`} className={cn(status === 'done' && 'border-success/40', status === 'partial' && 'border-warning/50')}>
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between gap-2">
-                  <CardTitle className="text-lg">{nameById.get(ex.exercise_id) ?? 'Ejercicio'}</CardTitle>
-                  <StatusBadge status={status} />
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-lg bg-muted/60 p-3">
-                    <p className="mb-1 text-xs font-medium uppercase text-muted-foreground">Indicado</p>
-                    <p className="text-sm text-foreground">
-                      <span className="font-mono tabular-nums">{ex.sets}</span> series
-                      {ex.duration_seconds !== undefined ? (
-                        <> × <span className="font-mono tabular-nums">{formatDuration(ex.duration_seconds)}</span></>
-                      ) : (
-                        <> × <span className="font-mono tabular-nums">{formatReps(ex)}</span> reps</>
-                      )}
-                      {ex.intensity ? ` · ${ex.intensity}` : ''}
-                      {ex.rpe_target ? ` · esfuerzo ${ex.rpe_target}/10` : ''}
-                    </p>
-                    {ex.note && <p className="mt-1 text-sm text-accent-foreground">{ex.note}</p>}
-                  </div>
-                  <div className={cn('rounded-lg p-3', status === 'done' ? 'bg-success/10' : status === 'partial' ? 'bg-warning/20' : 'bg-muted/60')}>
-                    <p className="mb-1 text-xs font-medium uppercase text-muted-foreground">Hizo</p>
-                    {done.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">Todavía no registró</p>
-                    ) : (
-                      <div className="flex flex-wrap gap-1.5">
-                        {done[0]?.substituted_exercise_id && (
-                          <span className="w-full text-sm text-muted-foreground">
-                            Cambió por <span className="font-medium text-foreground">{nameById.get(done[0].substituted_exercise_id) ?? 'otro ejercicio'}</span>
-                          </span>
-                        )}
-                        {done.map(s => (
-                          <span key={s.set_number} className="rounded border border-border bg-card px-1.5 py-0.5 text-sm font-mono tabular-nums">
-                            {s.duration_seconds ? formatDuration(s.duration_seconds) : s.reps} × {Number(s.weight_kg) > 0 ? `${s.weight_kg} kg` : 'p. corporal'}
-                          </span>
-                        ))}
-                        {done[0]?.rpe && <span className="text-sm text-muted-foreground">· esfuerzo {done[0].rpe}/10</span>}
-                      </div>
-                    )}
-                  </div>
-                </div>
+            <div
+              key={`${ex.exercise_id}-${i}`}
+              className={cn(
+                'rounded-2xl bg-card p-4 ring-1',
+                status === 'done' ? 'ring-success/40' : status === 'partial' ? 'ring-warning/50' : 'ring-foreground/10'
+              )}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <p className="font-semibold text-foreground">{nameById.get(ex.exercise_id) ?? 'Ejercicio'}</p>
+                <StatusBadge status={status} />
+              </div>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Indicado:{' '}
+                <span className="font-mono tabular-nums text-foreground">
+                  {ex.sets} × {ex.duration_seconds !== undefined ? formatDuration(ex.duration_seconds) : formatReps(ex)}
+                  {ex.intensity ? ` · ${ex.intensity}` : ''}
+                  {ex.rpe_target ? ` · esfuerzo ${ex.rpe_target}/10` : ''}
+                </span>
+              </p>
+              {ex.note && <p className="mt-1 text-sm text-accent-foreground">{ex.note}</p>}
 
-                {fb && (
-                  <div className="space-y-2 rounded-lg border border-accent bg-accent/50 p-3">
-                    <p className="flex items-center gap-1 text-xs font-medium uppercase text-accent-foreground">
-                      <MessageSquare className="h-3.5 w-3.5" /> Comentario del alumno
-                    </p>
-                    {fb.reason && <Badge variant="warning">{FEEDBACK_REASONS[fb.reason as keyof typeof FEEDBACK_REASONS]}</Badge>}
-                    {fb.note && <p className="whitespace-pre-wrap text-sm text-foreground">{fb.note}</p>}
-                    <MediaGrid items={media} />
-                    <FeedbackReply feedbackId={fb.id} coachReply={fb.coach_reply} reviewedAt={fb.reviewed_at} />
+              <div className={cn('mt-3 rounded-xl p-3', status === 'done' ? 'bg-success/10' : status === 'partial' ? 'bg-warning/15' : 'bg-muted/60')}>
+                <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Hizo</p>
+                {done.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Todavía no registró</p>
+                ) : (
+                  <div>
+                    {done[0]?.substituted_exercise_id && (
+                      <p className="mb-1 text-sm text-muted-foreground">
+                        Cambió por <span className="font-medium text-foreground">{nameById.get(done[0].substituted_exercise_id) ?? 'otro ejercicio'}</span>
+                      </p>
+                    )}
+                    <div className="divide-y divide-border/60">
+                      {done.map(s => (
+                        <div key={s.set_number} className="flex items-baseline gap-3 py-1.5 text-sm">
+                          <span className="w-14 shrink-0 text-muted-foreground">Serie {s.set_number}</span>
+                          <span className="font-mono font-medium tabular-nums text-foreground">
+                            {Number(s.weight_kg) > 0 ? `${s.weight_kg} kg` : 'Peso corporal'}
+                            {' × '}
+                            {s.duration_seconds ? formatDuration(s.duration_seconds) : s.reps}
+                          </span>
+                          {s.rpe ? <span className="ml-auto font-mono text-xs tabular-nums text-muted-foreground">RPE {s.rpe}</span> : null}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
+
+              {fb && (
+                <div className="mt-3 space-y-2 rounded-xl border border-accent bg-accent/50 p-3">
+                  <p className="flex items-center gap-1 text-xs font-medium uppercase text-accent-foreground">
+                    <MessageSquare className="h-3.5 w-3.5" /> Comentario del alumno
+                  </p>
+                  {fb.reason && <Badge variant="warning">{FEEDBACK_REASONS[fb.reason as keyof typeof FEEDBACK_REASONS]}</Badge>}
+                  {fb.note && <p className="whitespace-pre-wrap text-sm text-foreground">{fb.note}</p>}
+                  <MediaGrid items={media} />
+                  <FeedbackReply feedbackId={fb.id} coachReply={fb.coach_reply} reviewedAt={fb.reviewed_at} />
+                </div>
+              )}
+            </div>
           )
         })}
-      </div>
+      </section>
+
+      {history.length > 0 ? (
+        <section id="historial" className="flex scroll-mt-20 flex-col gap-3">
+          <h2 className="px-1 text-sm font-medium text-muted-foreground">
+            Historial <span className="font-mono tabular-nums">· {history.length} {history.length === 1 ? 'sesión' : 'sesiones'}</span>
+          </h2>
+          {historyGroups.map(group => (
+            <div key={group.label} className="flex flex-col gap-2">
+              <p className="px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">{group.label}</p>
+              <div className="divide-y divide-border overflow-hidden rounded-2xl bg-card ring-1 ring-foreground/10">
+                {group.items.map(h => {
+                  const all = [...h.exercises.values()].flat()
+                  const volume = all.reduce((sum, st) => sum + (st.reps !== null ? st.weight_kg * st.reps : 0), 0)
+                  return (
+                    <details key={`${h.week}-${h.day}`} className="group">
+                      <summary className="flex cursor-pointer list-none items-center gap-4 px-4 py-3.5 transition-colors hover:bg-muted/50">
+                        <div className="w-10 shrink-0 text-center">
+                          <p className="font-mono text-xl font-semibold leading-none tabular-nums text-foreground">{format(h.date, 'd')}</p>
+                          <p className="mt-1 text-xs uppercase text-muted-foreground">{format(h.date, 'EEE', { locale: es })}</p>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-medium text-foreground">Semana {h.week} · {weekdayName(h.day)}</p>
+                          <p className="truncate text-sm text-muted-foreground">
+                            {h.exercises.size} ejercicios · {all.length} series · {volume.toLocaleString('es-AR')} kg
+                          </p>
+                        </div>
+                        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground/60 transition-transform group-open:rotate-180" />
+                      </summary>
+                      <div className="flex flex-col gap-4 bg-muted/30 px-4 py-4">
+                        {[...h.exercises.entries()].map(([exerciseId, exSets]) => (
+                          <div key={exerciseId}>
+                            <p className="mb-1 font-medium text-foreground">{nameById.get(exerciseId) ?? 'Ejercicio'}</p>
+                            <div className="divide-y divide-border">
+                              {[...exSets].sort((a, b) => a.set_number - b.set_number).map(st => (
+                                <div key={st.set_number} className="flex items-baseline gap-3 py-1.5 text-sm">
+                                  <span className="w-14 shrink-0 text-muted-foreground">Serie {st.set_number}</span>
+                                  <span className="font-mono font-medium tabular-nums text-foreground">
+                                    {st.weight_kg > 0 ? `${st.weight_kg} kg` : 'Peso corporal'}
+                                    {' × '}
+                                    {st.duration_seconds ? formatDuration(st.duration_seconds) : st.reps}
+                                  </span>
+                                  {st.rpe ? <span className="ml-auto font-mono text-xs tabular-nums text-muted-foreground">RPE {st.rpe}</span> : null}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </section>
+      ) : (
+        <section id="historial" className="flex scroll-mt-20 flex-col gap-3">
+          <h2 className="px-1 text-sm font-medium text-muted-foreground">Historial</h2>
+          <div className="rounded-2xl bg-card px-6 py-10 text-center text-sm text-muted-foreground ring-1 ring-foreground/10">
+            Todavía no registró ninguna sesión.
+          </div>
+        </section>
+      )}
+
+      <details className="group rounded-2xl bg-card ring-1 ring-foreground/10">
+        <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3.5 text-sm font-medium text-foreground">
+          Logros del alumno
+          <span className="font-mono text-sm tabular-nums text-muted-foreground">{unlockedCards.length} / 50</span>
+        </summary>
+        <div className="px-4 pb-4">
+          <StreakAchievements
+            unlockedCards={unlockedCards}
+            unlockedDates={unlockedDates}
+            streakDays={streak}
+            currentWeekDays={currentWeekDays}
+            currentWeekRequired={currentWeekRequired}
+            athleteName={athlete.full_name ?? ''}
+          />
+        </div>
+      </details>
     </div>
   )
 }
