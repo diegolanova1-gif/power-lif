@@ -428,11 +428,14 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
     if (athlete && !routine) {
       toast.success(`Rutina asignada a ${athleteName ?? 'tu alumno'}. Ya la ve en su app.`)
       router.push('/coach/athletes')
+    } else if (routine) {
+      // Editar se queda acá — el coach suele seguir ajustando después de guardar
+      toast.success('Rutina actualizada')
+      router.refresh()
     } else {
-      toast.success(routine ? 'Rutina actualizada' : 'Plantilla creada')
+      toast.success('Plantilla creada')
       router.push('/coach/routines')
     }
-    router.refresh()
   }
 
   if (!started) {
