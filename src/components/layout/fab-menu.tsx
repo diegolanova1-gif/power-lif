@@ -70,7 +70,7 @@ export function FabMenu({ items }: { items: FabMenuItem[] }) {
                 transitionDelay: open ? `${i * 30}ms` : '0ms',
               }}
               className={cn(
-                'absolute bottom-0 left-1/2 -ml-6 flex h-12 w-12 flex-col items-center justify-center rounded-full shadow-lg ring-1 ring-foreground/10 transition-all duration-300 ease-out',
+                'absolute bottom-0 left-1/2 -ml-6 flex h-12 w-12 flex-col items-center justify-center rounded-full shadow-md ring-1 ring-foreground/10 transition-all duration-300 ease-out',
                 open ? 'opacity-100' : 'pointer-events-none opacity-0',
                 active ? 'bg-primary text-primary-foreground' : 'bg-card text-foreground hover:bg-muted'
               )}
@@ -92,7 +92,7 @@ export function FabMenu({ items }: { items: FabMenuItem[] }) {
           onClick={() => setOpen(o => !o)}
           aria-expanded={open}
           aria-label={open ? 'Cerrar menú' : 'Abrir menú'}
-          className="relative flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-transform active:scale-95"
+          className="relative flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md shadow-foreground/20 transition-transform active:scale-95"
         >
           <Dumbbell className={cn('h-6 w-6 transition-transform duration-300', open && 'rotate-90')} />
         </button>

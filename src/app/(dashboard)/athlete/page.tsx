@@ -2,11 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
-import { Dumbbell, Calendar, Clock, ArrowRight, CheckCircle, Loader2 } from 'lucide-react'
+import { Dumbbell, ArrowRight, ChevronRight, CheckCircle, Loader2 } from 'lucide-react'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { weekdayName } from '@/lib/weekdays'
@@ -183,115 +181,97 @@ export default function AthleteTodayPage() {
   const { athlete_routine, dayExercises, completedToday, setsLogged, totalSets } = workout
   const pct = totalSets > 0 ? Math.min(100, Math.round((setsLogged / totalSets) * 100)) : 0
 
+  const logHref = (exerciseId: string) =>
+    `/athlete/log?exercise=${exerciseId}&week=${athlete_routine.current_week}&day=${athlete_routine.current_day}`
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex items-start gap-3">
-          <div className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-            <Dumbbell className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">Entrenamiento de Hoy</h1>
-            <p className="text-muted-foreground mt-0.5">
-              {athlete_routine.routine?.name} · Semana {athlete_routine.current_week} · {weekdayName(athlete_routine.current_day)}
-            </p>
-          </div>
+    <div className="flex flex-col gap-8">
+      <div>
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">Hoy</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {athlete_routine.routine?.name} · Semana {athlete_routine.current_week} · {weekdayName(athlete_routine.current_day)}
+        </p>
+      </div>
+
+      <section className="flex flex-col gap-3">
+        <div className="flex items-baseline justify-between">
+          <p className="font-mono text-3xl font-semibold tabular-nums tracking-tight text-foreground">
+            {setsLogged}
+            <span className="text-muted-foreground">/{totalSets}</span>
+          </p>
+          <p className={`text-sm font-medium ${completedToday ? 'text-success' : 'text-muted-foreground'}`}>
+            {completedToday ? 'Completo' : 'series'}
+          </p>
         </div>
-        <Badge
-          variant={completedToday ? 'success' : 'secondary'}
-          className="h-auto px-3 py-1.5 text-base font-mono tabular-nums"
-        >
-          {completedToday ? (
-            <> <CheckCircle className="mr-1 h-4 w-4" /> ¡Completo! </>
-          ) : (
-            <> {setsLogged}/{totalSets} series </>
-          )}
-        </Badge>
-      </div>
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+          <div
+            className={`h-full rounded-full transition-all duration-700 ease-out ${completedToday ? 'bg-success' : 'bg-primary'}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      </section>
 
-      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-        <div
-          className={`h-full rounded-full transition-all duration-700 ease-out ${completedToday ? 'bg-success' : 'bg-primary'}`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
+      <section className="flex flex-col gap-2">
+        <h2 className="px-1 text-sm font-medium text-muted-foreground">Ejercicios</h2>
+        <div className="divide-y divide-border overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">
+          {dayExercises.map((exercise) => {
+            const spec = [
+              `${exercise.sets} × ${exercise.reps}`,
+              exercise.intensity || null,
+              exercise.rpe_target ? `RPE ${exercise.rpe_target}` : null,
+              exercise.rest_seconds
+                ? `desc. ${Math.floor(exercise.rest_seconds / 60)}:${String(exercise.rest_seconds % 60).padStart(2, '0')}`
+                : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {dayExercises.map((exercise, index) => (
-          <Card key={exercise.exercise_id} className="transition-shadow hover:shadow-md">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">{exercise.exercise_name}</CardTitle>
-                <Badge variant="outline">{CATEGORY_LABELS[exercise.category] ?? 'Otro'}</Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className={`grid gap-2 text-sm ${exercise.intensity ? 'grid-cols-3' : 'grid-cols-2'}`}>
-                <div className="text-center p-2.5 bg-muted/60 rounded-lg">
-                  <p className="font-mono text-xl font-bold tabular-nums text-foreground">{exercise.sets}</p>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Series</p>
+            return (
+              <Link
+                key={exercise.exercise_id}
+                href={logHref(exercise.exercise_id)}
+                className="flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-muted/50"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-medium text-foreground">{exercise.exercise_name}</p>
+                  <p className="mt-0.5 truncate text-sm text-muted-foreground">
+                    {CATEGORY_LABELS[exercise.category] ?? 'Otro'} ·{' '}
+                    <span className="font-mono tabular-nums">{spec}</span>
+                  </p>
                 </div>
-                <div className="text-center p-2.5 bg-muted/60 rounded-lg">
-                  <p className="font-mono text-xl font-bold tabular-nums text-foreground">{exercise.reps}</p>
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Reps</p>
-                </div>
-                {exercise.intensity && (
-                  <div className="text-center p-2.5 bg-muted/60 rounded-lg">
-                    <p className="font-mono text-xl font-bold tabular-nums text-foreground">{exercise.intensity}</p>
-                    <p className="text-xs uppercase tracking-wide text-muted-foreground">Carga</p>
-                  </div>
+                {completedToday ? (
+                  <CheckCircle className="h-5 w-5 shrink-0 text-success" />
+                ) : (
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground/60" />
                 )}
-              </div>
-
-              {exercise.rpe_target && (
-                <div className="text-sm text-muted-foreground">
-                  RPE objetivo: <span className="font-mono font-medium text-foreground">{exercise.rpe_target}</span>
-                </div>
-              )}
-
-              {exercise.rest_seconds && (
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <Clock className="h-4 w-4" />
-                  Descanso: <span className="font-mono tabular-nums">{Math.floor(exercise.rest_seconds / 60)}:{String(exercise.rest_seconds % 60).padStart(2, '0')}</span>
-                </div>
-              )}
-
-              <Link href={`/athlete/log?exercise=${exercise.exercise_id}&week=${athlete_routine.current_week}&day=${athlete_routine.current_day}`}>
-                <Button
-                  className={`w-full ${completedToday ? 'border-success/30 bg-success/10 text-success hover:bg-success/15' : ''}`}
-                  variant={completedToday ? 'outline' : 'default'}
-                >
-                  {completedToday ? (
-                    <> <CheckCircle className="mr-1 h-4 w-4" /> Completado </>
-                  ) : (
-                    <> Registrar series <ArrowRight className="ml-2 h-4 w-4" /> </>
-                  )}
-                </Button>
               </Link>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            )
+          })}
+        </div>
+      </section>
 
-      {completedToday && (
-        <Card className="animate-in fade-in slide-in-from-bottom-2 border-success/20 bg-success/5 duration-500">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-center gap-2 text-success">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-success/15">
-                <CheckCircle className="h-5 w-5" />
-              </div>
-              <span className="font-semibold">¡Entrenamiento completado! Bien hecho.</span>
-            </div>
-            <p className="mt-1 text-center text-sm text-muted-foreground">
-              Un día más cerca de tu objetivo. Así se construye el progreso.
-            </p>
-            <div className="mt-4 text-center">
-              <Link href="/athlete/progress">
-                <Button variant="outline">Ver mi progreso</Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+      {completedToday ? (
+        <div className="animate-in fade-in slide-in-from-bottom-2 rounded-xl bg-card px-6 py-8 text-center ring-1 ring-foreground/10 duration-500">
+          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-success/15 text-success">
+            <CheckCircle className="h-5 w-5" />
+          </div>
+          <p className="font-semibold text-foreground">¡Entrenamiento completado! Bien hecho.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Un día más cerca de tu objetivo. Así se construye el progreso.
+          </p>
+          <Link href="/athlete/progress">
+            <Button variant="outline" className="mt-4">Ver mi progreso</Button>
+          </Link>
+        </div>
+      ) : (
+        dayExercises[0] && (
+          <Link href={logHref(dayExercises[0].exercise_id)}>
+            <Button size="lg" className="h-11 w-full text-base">
+              {setsLogged > 0 ? 'Continuar' : 'Empezar'}
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
+        )
       )}
     </div>
   )
