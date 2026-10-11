@@ -37,6 +37,11 @@ export function FabMenu({ items }: { items: FabMenuItem[] }) {
   }, [open])
 
   useEffect(() => {
+    if (!open) return
+    items.forEach((item) => router.prefetch(item.href))
+  }, [open, items, router])
+
+  useEffect(() => {
     setOpen(false)
     pendingRef.current?.()
     pendingRef.current = null
