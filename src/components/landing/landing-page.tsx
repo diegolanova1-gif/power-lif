@@ -271,7 +271,7 @@ export default function LandingPage() {
           className="pr-cta-coach hidden md:flex"
           style={{ alignItems: 'center', gap: 8, padding: '12px 24px', border: '1px solid rgba(241,245,249,0.3)', borderRadius: 0, fontSize: 12, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#F1F5F9', transition: 'border-color .2s,background .2s' }}
         >
-          Empezá gratis
+          Pedí tu sistema
         </a>
 
         <button
@@ -338,7 +338,7 @@ export default function LandingPage() {
             onClick={() => setMenuOpen(false)}
             style={{ marginTop: 20, alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 8, padding: '14px 24px', background: G, borderRadius: 8, fontSize: 13, fontWeight: 500, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#FFFFFF' }}
           >
-            Empezá gratis
+            Pedí tu sistema
           </a>
         </div>
       </div>
@@ -369,14 +369,17 @@ export default function LandingPage() {
           </p>
 
           <div style={{ marginTop: 'clamp(32px,4vh,40px)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'clamp(12px,1.6vw,16px)', opacity: 0, animation: 'fade-up .8s ease-out .6s forwards' }}>
-            <a href={coachLink} target="_blank" rel="noopener noreferrer" className="pr-cta-coach" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 'clamp(13px,1.4vw,16px) clamp(20px,2.4vw,28px)', background: G, borderRadius: 8, fontSize: 'clamp(11px,1vw,12px)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#FFFFFF' }}>
+            <Link href="/login" className="pr-cta-coach" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 'clamp(13px,1.4vw,16px) clamp(20px,2.4vw,28px)', background: G, borderRadius: 8, fontSize: 'clamp(11px,1vw,12px)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#FFFFFF' }}>
               Soy coach
               <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M7 7h10v10" /><path d="M7 17 17 7" /></svg>
-            </a>
+            </Link>
             <Link href="/login?as=alumno" className="pr-cta-outline" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 'clamp(13px,1.4vw,16px) clamp(20px,2.4vw,28px)', border: '1px solid rgba(241,245,249,0.3)', borderRadius: 8, fontSize: 'clamp(11px,1vw,12px)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#F1F5F9' }}>
               Soy alumno
               <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M7 7h10v10" /><path d="M7 17 17 7" /></svg>
             </Link>
+            <a href={coachLink} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 'clamp(13px,1.4vw,16px) 4px', fontSize: 'clamp(11px,1vw,12px)', fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: G, borderBottom: `1px solid ${G}` }}>
+              Pedí tu sistema
+            </a>
           </div>
 
           <div style={{ marginTop: 'clamp(32px,6vh,56px)', display: 'flex', flexWrap: 'wrap', gap: 'clamp(24px,4.5vw,64px)', opacity: 0, animation: 'fade-up .8s ease-out .8s forwards' }}>
@@ -542,16 +545,19 @@ export default function LandingPage() {
         <Reveal>
           <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
             <h2 style={{ margin: '0 0 20px', maxWidth: 900, fontFamily: "'Space Grotesk',sans-serif", fontWeight: 700, fontSize: 'clamp(36px,6vw,80px)', lineHeight: 0.95, letterSpacing: '-0.025em', textWrap: 'balance' }}>Empezá a gestionar como profesional.</h2>
-            <p style={{ margin: '0 0 32px', color: '#94A3B8', fontSize: 16, lineHeight: 1.5, textWrap: 'pretty' }}>Probá Power Routine gratis. Te respondemos por WhatsApp.</p>
+            <p style={{ margin: '0 0 32px', color: '#94A3B8', fontSize: 16, lineHeight: 1.5, textWrap: 'pretty' }}>Probá Power Routine gratis. Ingresá si ya tenés cuenta.</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'clamp(12px,1.6vw,16px)' }}>
-              <a href={coachLink} target="_blank" rel="noopener noreferrer" className="pr-cta-coach" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px 28px', background: G, borderRadius: 8, fontSize: 12, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#FFFFFF' }}>
+              <Link href="/login" className="pr-cta-coach" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px 28px', background: G, borderRadius: 8, fontSize: 12, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#FFFFFF' }}>
                 Soy coach
                 <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M7 7h10v10" /><path d="M7 17 17 7" /></svg>
-              </a>
+              </Link>
               <Link href="/login?as=alumno" className="pr-cta-outline" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '16px 28px', border: '1px solid rgba(241,245,249,0.3)', borderRadius: 8, fontSize: 12, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#F1F5F9' }}>
                 Soy alumno
                 <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"><path d="M7 7h10v10" /><path d="M7 17 17 7" /></svg>
               </Link>
+              <a href={coachLink} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '16px 4px', fontSize: 12, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: G, borderBottom: `1px solid ${G}` }}>
+                Pedí tu sistema
+              </a>
             </div>
           </div>
         </Reveal>
