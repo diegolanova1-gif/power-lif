@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils'
 import { SignOutItem } from '@/components/layout/sign-out-item'
 import { FabMenu } from '@/components/layout/fab-menu'
 import { OneTimeNotice } from '@/components/athlete/one-time-notice'
+import { ProfilePrompt } from '@/components/athlete/profile-prompt'
 
 // Nota puntual para una sola alumna — no es un sistema de anuncios general.
 // Se guarda en athlete_notices así no vuelve a aparecer, ni a ella ni (por
@@ -20,6 +21,10 @@ const PERSONAL_NOTICE = {
   title: 'Un mensaje para vos',
   message: 'Te amo un montón, gracias por ser tan hermosa persona conmigo.\n\nTe amo,\nDiego',
 }
+
+// Alumnos creados antes de esta fecha reciben el aviso "renovamos la app";
+// los nuevos completan su perfil como parte de su bienvenida.
+const PROFILE_RENEWAL_CUTOFF = new Date('2026-10-11T22:34:00Z')
 
 export default async function AthleteLayout({
   children,
@@ -47,7 +52,7 @@ export default async function AthleteLayout({
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, full_name, avatar_url')
+    .select('role, full_name, avatar_url, created_at')
     .eq('id', user.id)
     .single()
 
@@ -67,6 +72,15 @@ export default async function AthleteLayout({
       .maybeSingle()
     showPersonalNotice = !dismissed
   }
+
+  // Sin perfil cargado todavía: se le pide completarlo al ingresar
+  const { data: profileDetails } = await supabase
+    .from('athlete_profile')
+    .select('athlete_id')
+    .eq('athlete_id', user.id)
+    .maybeSingle()
+  const needsProfile = !profileDetails
+  const isExistingAthlete = !!profile.created_at && new Date(profile.created_at) < PROFILE_RENEWAL_CUTOFF
 
   const navigation = [
     { name: 'Hoy', href: '/athlete', icon: LayoutDashboard },
@@ -171,6 +185,7 @@ export default async function AthleteLayout({
           icon: <item.icon className="h-5 w-5" />,
         }))}
       />
+      {needsProfile && !showPersonalNotice && <ProfilePrompt variant={isExistingAthlete ? 'renewed' : 'welcome'} />}
       {showPersonalNotice && (
         <OneTimeNotice
           athleteId={PERSONAL_NOTICE.athleteId}
