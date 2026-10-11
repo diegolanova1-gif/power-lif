@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Power Routine: rutinas semanales, seguimiento real y ranking de equipo para coaches de gimnasio." />
+    <meta name="theme-color" content="#0a0a0b" />
+    <title>Power Routine</title>
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Power Routine" />
+    <meta property="og:title" content="Power Routine — Dejás de perseguir. Empezás a controlar." />
+    <meta property="og:description" content="Rutinas semana a semana, seguimiento real de cada serie y ranking de equipo. La plataforma para coaches de gimnasio que ya se cansaron del Excel." />
+    <meta property="og:image" content="/og.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Power Routine — Vos programás bien. El problema es no saber si te hicieron caso." />
+    <meta property="og:locale" content="es_AR" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Power Routine — Dejás de perseguir. Empezás a controlar." />
+    <meta name="twitter:description" content="Rutinas semana a semana, seguimiento real de cada serie y ranking de equipo." />
+    <meta name="twitter:image" content="/og.png" />
+    <meta name="twitter:image:alt" content="Power Routine — Vos programás bien. El problema es no saber si te hicieron caso." />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="topbar">
+      <span class="wordmark">Power&nbsp;Routine</span>
+      <a class="login-link" href="https://power-lif.vercel.app/login">Ingresar</a>
+    </header>
+
+    <button type="button" class="motion-toggle" aria-pressed="false" aria-label="Pausar animaciones">
+      <span class="motion-toggle-icon" aria-hidden="true">&#10022;</span>
+      <span class="motion-toggle-text">Animaciones</span>
+    </button>
+
+    <main id="main-content">
+      <!-- ============ HERO ============ -->
+      <section class="scene" data-scene="hero" aria-label="Power Routine — presentación" style="--scene-height: 220vh">
+        <div class="scene-inner">
+          <div class="layer depth-0" data-depth="0" aria-hidden="true">
+            <div class="bg-vignette"></div>
+          </div>
+
+          <div class="layer depth-1" data-depth="1" aria-hidden="true">
+            <div class="glow-blob glow-a"></div>
+            <div class="glow-blob glow-b"></div>
+          </div>
+
+          <div class="layer depth-4">
+            <h1 class="hero-title anim-text" aria-label="Vos programás bien. El problema es no saber si te hicieron caso.">
+              <span class="hero-line hero-line-left" aria-hidden="true">Vos programás bien.</span>
+              <span class="hero-line hero-line-right" aria-hidden="true">El problema es no saber si te hicieron caso.</span>
+            </h1>
+            <p class="hero-sub anim-text" data-reveal="curtain">
+              <span class="line-mask"><span class="line-inner">Power Routine registra cada serie, cada peso y cada sesión — sin preguntarle a tu alumno qué hizo.</span></span>
+            </p>
+            <div class="scroll-cue" aria-hidden="true">
+              <span></span>
+              Scrolleá
+            </div>
+          </div>
+
+          <div class="layer depth-5" data-depth="5" aria-hidden="true">
+            <span class="particle particle-1 float-loop"></span>
+            <span class="particle particle-2 float-loop"></span>
+            <span class="particle particle-3 float-loop"></span>
+            <span class="particle particle-4 float-loop"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ PROBLEMA ============ -->
+      <section class="scene reveal-top-drop" data-scene="problem" aria-label="El problema" id="problem">
+        <div class="scene-inner">
+          <div class="layer depth-0" data-depth="0" aria-hidden="true">
+            <div class="bg-vignette bg-vignette-alt"></div>
+          </div>
+          <div class="layer depth-1" data-depth="1" aria-hidden="true">
+            <div class="glow-blob glow-c"></div>
+          </div>
+
+          <div class="layer depth-4">
+            <p class="eyebrow">El problema</p>
+            <h2 class="anim-text" data-reveal="curtain">
+              <span class="line-mask"><span class="line-inner">El seguimiento manual es un caos.</span></span>
+            </h2>
+            <ul class="pain-list" data-reveal="stagger-grid">
+              <li>Le mandaste la rutina el lunes. El jueves no sabés si la agarró.</li>
+              <li>Cada alumno en un Excel distinto — y ninguno actualizado.</li>
+              <li>Te enterás que "le costó la sentadilla" recién en la próxima clase.</li>
+              <li>Cero dato real de progreso. Solo la palabra del alumno.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SOLUCIÓN ============ -->
+      <section class="scene" data-scene="solution" aria-label="La solución" id="solution">
+        <div class="scene-inner">
+          <div class="layer depth-0" data-depth="0" aria-hidden="true">
+            <div class="bg-vignette"></div>
+          </div>
+          <div class="layer depth-1" data-depth="1" aria-hidden="true">
+            <div class="glow-blob glow-a"></div>
+          </div>
+
+          <div class="layer depth-4">
+            <p class="eyebrow">La solución</p>
+            <h2 class="anim-text" data-reveal="curtain">
+              <span class="line-mask"><span class="line-inner">Dejás de perseguir. Empezás a controlar.</span></span>
+            </h2>
+            <div class="pillars" data-reveal="skew-bounce">
+              <article class="pillar">
+                <span class="pillar-index">01</span>
+                <h3>Rutinas semana a semana</h3>
+                <p>Armás la rutina una vez, tu alumno la ve en su teléfono. Clonás semanas, ajustás cargas, sin reescribir nada.</p>
+              </article>
+              <article class="pillar">
+                <span class="pillar-index">02</span>
+                <h3>Seguimiento real</h3>
+                <p>Cada serie, cada peso, cada "no pude completarlo" queda registrado — con fecha y hora, no con su palabra.</p>
+              </article>
+              <article class="pillar">
+                <span class="pillar-index">03</span>
+                <h3>Ranking de equipo</h3>
+                <p>Alumnos que se comparan entre ellos faltan menos. Menos bajas para tu negocio, no solo una función más.</p>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ PRUEBA ============ -->
+      <section class="scene" data-scene="proof" aria-label="Así se ve la plataforma" id="proof">
+        <div class="scene-inner">
+          <div class="layer depth-0" data-depth="0" aria-hidden="true">
+            <div class="bg-vignette bg-vignette-alt"></div>
+          </div>
+          <div class="layer depth-1" data-depth="1" aria-hidden="true">
+            <div class="glow-blob glow-b glow-behind-mockup"></div>
+          </div>
+
+          <div class="layer depth-4">
+            <p class="eyebrow">Así se ve</p>
+            <h2 class="anim-text" data-reveal="curtain">
+              <span class="line-mask"><span class="line-inner">El panel que ve el coach.</span></span>
+            </h2>
+            <div class="mockup" data-reveal="scale-settle" role="img" aria-label="Vista previa del panel del coach: lista de alumnos con estado hecho o parcial">
+              <div class="mockup-bar">
+                <span></span><span></span><span></span>
+              </div>
+              <div class="mockup-body">
+                <div class="mockup-row">
+                  <div class="mockup-avatar"></div>
+                  <div class="mockup-lines">
+                    <div class="mockup-line w-60"></div>
+                    <div class="mockup-line w-40"></div>
+                  </div>
+                  <div class="mockup-status status-done">Hecho</div>
+                </div>
+                <div class="mockup-row">
+                  <div class="mockup-avatar"></div>
+                  <div class="mockup-lines">
+                    <div class="mockup-line w-50"></div>
+                    <div class="mockup-line w-30"></div>
+                  </div>
+                  <div class="mockup-status status-partial">Parcial</div>
+                </div>
+                <div class="mockup-row">
+                  <div class="mockup-avatar"></div>
+                  <div class="mockup-lines">
+                    <div class="mockup-line w-70"></div>
+                    <div class="mockup-line w-45"></div>
+                  </div>
+                  <div class="mockup-status status-done">Hecho</div>
+                </div>
+              </div>
+            </div>
+            <p class="proof-caption">Tu alumno ve otra pantalla: solo su rutina, su progreso y el ranking que ya aprobaste.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ CTA ============ -->
+      <section class="scene reveal-iris" data-scene="cta" aria-label="Contacto por WhatsApp" id="cta">
+        <div class="scene-inner">
+          <div class="layer depth-0" data-depth="0" aria-hidden="true">
+            <div class="bg-vignette"></div>
+          </div>
+          <div class="layer depth-1" data-depth="1" aria-hidden="true">
+            <div class="glow-blob glow-c"></div>
+          </div>
+
+          <div class="layer depth-4">
+            <h2 class="anim-text" data-reveal="curtain">
+              <span class="line-mask"><span class="line-inner">¿Listo para dejar el Excel?</span></span>
+            </h2>
+            <p class="lead">Contanos cuántos alumnos tenés y te armamos la cuenta.</p>
+            <a
+              class="whatsapp-cta"
+              id="whatsapp-cta"
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-reveal="skew-bounce"
+            >
+              Hablar por WhatsApp
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Power Routine</span>
+      <span>© <span id="year"></span></span>
+    </footer>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
