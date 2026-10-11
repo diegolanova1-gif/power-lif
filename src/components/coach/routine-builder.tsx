@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { Plus, Trash2, Loader2, ArrowLeft, Copy, Video, ExternalLink } from 'lucide-react'
+import { Plus, Trash2, Loader2, ArrowLeft, Copy, Video, ExternalLink, Save } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -473,10 +473,12 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
             </p>
           </div>
         </div>
-        <Button type="submit" disabled={saving}>
-          {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          {saving ? 'Guardando...' : athlete && !routine ? 'Guardar y asignar' : 'Guardar rutina'}
-        </Button>
+        {schedule.length === 0 && (
+          <Button type="submit" disabled={saving}>
+            {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {saving ? 'Guardando...' : athlete && !routine ? 'Guardar y asignar' : 'Guardar rutina'}
+          </Button>
+        )}
       </div>
 
       <Card>
@@ -604,9 +606,16 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
                   Eliminar semana {currentWeek + 1}
                 </Button>
               )}
+            </div>
+            <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-muted-foreground">
                 Editando la <span className="font-mono font-semibold tabular-nums text-foreground">semana {currentWeek + 1}</span> de <span className="font-mono tabular-nums">{weeks}</span>
               </span>
+              <Button type="submit" size="sm" disabled={saving}>
+                {saving ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Save className="mr-1.5 h-4 w-4" />}
+                <span className="sm:hidden">{saving ? 'Guardando…' : 'Guardar'}</span>
+                <span className="hidden sm:inline">{saving ? 'Guardando...' : athlete && !routine ? 'Guardar y asignar' : 'Guardar rutina'}</span>
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -669,10 +678,15 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
           </CardHeader>
           <CardContent className="space-y-3">
             {day.exercises.map((ex, exIndex) => (
-              <div key={exIndex} className="rounded-lg border bg-muted/60 p-3">
+              <div key={exIndex} className="rounded-xl border border-l-4 border-l-primary bg-primary/5 p-3">
                 <div className="flex items-end gap-2">
                   <div className="flex-1 space-y-1">
-                    <Label className="text-xs text-muted-foreground">Ejercicio {exIndex + 1}</Label>
+                    <Label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary font-mono text-[11px] font-semibold text-primary-foreground">
+                        {exIndex + 1}
+                      </span>
+                      Ejercicio
+                    </Label>
                     <ExerciseCombobox
                       exercises={exercises}
                       value={ex.exercise_id}
