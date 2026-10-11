@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react'
+import { flushSync } from 'react-dom'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Dumbbell } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -21,7 +22,10 @@ export interface FabMenuItem {
 export function FabMenu({ items }: { items: FabMenuItem[] }) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const pendingRef = useRef<(() => void) | null>(null)
   const pathname = usePathname()
+  const router = useRouter()
 
   useEffect(() => {
     if (!open) return
@@ -34,7 +38,43 @@ export function FabMenu({ items }: { items: FabMenuItem[] }) {
 
   useEffect(() => {
     setOpen(false)
+    pendingRef.current?.()
+    pendingRef.current = null
   }, [pathname])
+
+  // New screen grows out of the button on top of the current one (View Transitions).
+  // Browsers without support, or reduced-motion, fall through to a normal Link navigation.
+  function handleNavigate(e: MouseEvent<HTMLAnchorElement>, href: string) {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
+    if (href === pathname) return
+    const doc = document as Document & {
+      startViewTransition?: (cb: () => Promise<void>) => { finished: Promise<void> }
+    }
+    if (!doc.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    e.preventDefault()
+    const rect = buttonRef.current?.getBoundingClientRect()
+    const root = document.documentElement
+    root.style.setProperty('--fab-x', `${rect ? rect.left + rect.width / 2 : window.innerWidth / 2}px`)
+    root.style.setProperty('--fab-y', `${rect ? rect.top + rect.height / 2 : window.innerHeight - 52}px`)
+    root.dataset.fabNav = ''
+    flushSync(() => setOpen(false))
+
+    const transition = doc.startViewTransition(
+      () =>
+        new Promise<void>((resolve) => {
+          const timer = window.setTimeout(resolve, 2500)
+          pendingRef.current = () => {
+            window.clearTimeout(timer)
+            resolve()
+          }
+          router.push(href)
+        })
+    )
+    transition.finished.finally(() => {
+      delete root.dataset.fabNav
+    })
+  }
 
   const n = items.length
   const spreadDeg = n > 1 ? Math.min(170, 24 * (n - 1)) : 0
@@ -42,7 +82,11 @@ export function FabMenu({ items }: { items: FabMenuItem[] }) {
   const radius = 104
 
   return (
-    <div ref={containerRef} className="fixed inset-x-0 bottom-6 z-50 flex justify-center">
+    <div
+      ref={containerRef}
+      style={{ viewTransitionName: 'fab' }}
+      className="fixed inset-x-0 bottom-6 z-50 flex justify-center"
+    >
       {open && (
         <button
           type="button"
@@ -65,6 +109,7 @@ export function FabMenu({ items }: { items: FabMenuItem[] }) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={(e) => handleNavigate(e, item.href)}
               style={{
                 transform: open ? `translate(${x}px, ${y}px) scale(1)` : 'translate(0px, 0px) scale(0.3)',
                 transitionDelay: open ? `${i * 30}ms` : '0ms',
@@ -88,6 +133,7 @@ export function FabMenu({ items }: { items: FabMenuItem[] }) {
         })}
 
         <button
+          ref={buttonRef}
           type="button"
           onClick={() => setOpen(o => !o)}
           aria-expanded={open}

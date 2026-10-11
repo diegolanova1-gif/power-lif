@@ -140,3 +140,27 @@
     @apply font-sans;
   }
 }
+/* FAB navigation: the new screen grows out of the button over the current one. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-group(fab),
+::view-transition-old(fab),
+::view-transition-new(fab) {
+  animation: none;
+}
+html[data-fab-nav]::view-transition-new(root) {
+  animation: fab-reveal 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes fab-reveal {
+  from {
+    clip-path: circle(28px at var(--fab-x, 50%) var(--fab-y, 100%));
+    opacity: 0.7;
+  }
+  to {
+    clip-path: circle(150vmax at var(--fab-x, 50%) var(--fab-y, 100%));
+    opacity: 1;
+  }
+}
