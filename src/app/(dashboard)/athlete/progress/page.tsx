@@ -2,17 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
   BarChart,
@@ -230,181 +229,186 @@ export default function AthleteProgressPage() {
     )
   }
 
+  const series = showingOneRM
+    ? filteredOneRM.map(d => ({ date: d.date, value: d.estimated_1rm }))
+    : filteredBestWeight.map(d => ({ date: d.date, value: d.weight_kg }))
+  const latest = series.length > 0 ? series[series.length - 1].value : null
+  const delta = series.length > 1 && latest !== null ? latest - series[0].value : null
+  const chartData = series.map(d => ({ ...d, label: formatDate(d.date) }))
+  const fmtKg = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1))
+
+  const volumeSorted = [...volumeData].sort((a, b) => a.week - b.week)
+  const lastVol = volumeSorted.at(-1)
+  const prevVol = volumeSorted.at(-2)
+  const volDelta = lastVol && prevVol && prevVol.volume > 0
+    ? Math.round(((lastVol.volume - prevVol.volume) / prevVol.volume) * 100)
+    : null
+  const trainedDays = adherenceData.filter(d => d.completed).length
+
+  const ranges: { id: 'all' | '3m' | '6m' | '1y'; label: string }[] = [
+    { id: '3m', label: '3 meses' },
+    { id: '6m', label: '6 meses' },
+    { id: '1y', label: '1 año' },
+    { id: 'all', label: 'Todo' },
+  ]
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-foreground sm:text-3xl">Mi Progreso</h1>
-          <p className="text-muted-foreground mt-1">Estadísticas y evolución de tus entrenamientos</p>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <Select
-            value={timeRange}
-            onValueChange={(v) => v && setTimeRange(v as 'all' | '3m' | '6m' | '1y')}
-            items={{ all: 'Todo el historial', '3m': 'Últimos 3 meses', '6m': 'Últimos 6 meses', '1y': 'Último año' }}
-          >
-            <SelectTrigger className="w-full sm:w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todo el historial</SelectItem>
-              <SelectItem value="3m">Últimos 3 meses</SelectItem>
-              <SelectItem value="6m">Últimos 6 meses</SelectItem>
-              <SelectItem value="1y">Último año</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select
-            value={selectedExercise || null}
-            onValueChange={(v) => v && setSelectedExercise(v)}
-            disabled={exercises.length === 0}
-            items={Object.fromEntries(exercises.map(ex => [ex.id, ex.name]))}
-          >
-            <SelectTrigger className="w-full sm:w-60">
-              <SelectValue placeholder="Selecciona ejercicio" />
-            </SelectTrigger>
-            <SelectContent>
-              {exercises.map(ex => (
-                <SelectItem key={ex.id} value={ex.id}>
-                  {ex.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-4">
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">Progreso</h1>
+        <Select
+          value={selectedExercise || null}
+          onValueChange={(v) => v && setSelectedExercise(v)}
+          disabled={exercises.length === 0}
+          items={Object.fromEntries(exercises.map(ex => [ex.id, ex.name]))}
+        >
+          <SelectTrigger className="w-full sm:w-72">
+            <SelectValue placeholder="Elegí un ejercicio" />
+          </SelectTrigger>
+          <SelectContent>
+            {exercises.map(ex => (
+              <SelectItem key={ex.id} value={ex.id}>
+                {ex.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <div className="inline-flex w-fit rounded-lg bg-muted p-1">
+          {ranges.map(r => (
+            <button
+              key={r.id}
+              type="button"
+              onClick={() => setTimeRange(r.id)}
+              className={cn(
+                'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                timeRange === r.id ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {r.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* 1RM (sentadilla/banca/peso muerto) o mejor peso por sesión (accesorios) */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{showingOneRM ? '1RM Estimado' : 'Mejor peso por sesión'}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {showingOneRM ? (
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={filteredOneRM.map(d => ({ ...d, date: formatDate(d.date) }))}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                  <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} tickFormatter={val => `${val} kg`} />
-                  <Tooltip
-                    formatter={(value: number) => [`${value.toFixed(1)} kg`, '1RM Estimado']}
-                    labelFormatter={(label) => `Fecha: ${label}`}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="estimated_1rm"
-                    stroke="var(--primary)"
-                    strokeWidth={2}
-                    dot={{ r: 4, fill: 'var(--primary)' }}
-                    activeDot={{ r: 6, fill: 'var(--primary)' }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+      <section className="rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
+        <p className="text-sm font-medium text-muted-foreground">
+          {showingOneRM ? '1RM estimado' : 'Mejor peso por sesión'}
+        </p>
+        {latest !== null ? (
+          <>
+            <div className="mt-1 flex flex-wrap items-baseline gap-x-3">
+              <p className="font-mono text-5xl font-semibold tabular-nums tracking-tight text-foreground">
+                {fmtKg(latest)}
+                <span className="ml-1 text-xl text-muted-foreground">kg</span>
+              </p>
+              {delta !== null && (
+                <span className={cn('font-mono text-lg font-medium tabular-nums', delta > 0 ? 'text-success' : 'text-muted-foreground')}>
+                  {delta > 0 ? '+' : ''}{fmtKg(Number(delta.toFixed(1)))} kg
+                </span>
+              )}
             </div>
-          ) : filteredBestWeight.length > 0 ? (
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={filteredBestWeight.map(d => ({ ...d, date: formatDate(d.date) }))}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                  <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} tickFormatter={val => `${val} kg`} />
-                  <Tooltip
-                    formatter={(value: number) => [`${value.toFixed(1)} kg`, 'Mejor peso']}
-                    labelFormatter={(label) => `Fecha: ${label}`}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="weight_kg"
-                    stroke="var(--primary)"
-                    strokeWidth={2}
-                    dot={{ r: 4, fill: 'var(--primary)' }}
-                    activeDot={{ r: 6, fill: 'var(--primary)' }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              Todavía no hay registros con peso para este ejercicio.
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Volume & Adherence */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Weekly Volume */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Volumen Semanal (kg)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {volumeData.length > 0 ? (
-              <div className="h-80">
+            <p className="text-sm text-muted-foreground">
+              {delta !== null ? `desde el ${chartData[0].label}` : 'Primer registro'}
+            </p>
+            {series.length > 1 && (
+              <div className="mt-4 h-52">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={volumeData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                    <XAxis type="number" tickFormatter={val => `${val} kg`} />
-                    <YAxis dataKey="week" type="category" tick={{ fontSize: 12 }} label={{ value: 'Semana', position: 'insideLeft', offset: -10 }} />
-                    <Tooltip formatter={(value: number) => [`${value.toLocaleString()} kg`, 'Volumen']} />
-                    <Bar dataKey="volume" fill="var(--success)" radius={[0, 4, 4, 0]}>
-                      {volumeData.map((_, i) => <Cell key={`cell-${i}`} fill={i === volumeData.length - 1 ? 'color-mix(in oklch, var(--success), black 20%)' : 'var(--success)'} />)}
-                    </Bar>
-                  </BarChart>
+                  <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="progressFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.18} />
+                        <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} minTickGap={24} />
+                    <YAxis hide domain={['dataMin - 5', 'dataMax + 5']} />
+                    <Tooltip
+                      formatter={(value) => [`${Number(value).toFixed(1)} kg`, showingOneRM ? '1RM estimado' : 'Mejor peso']}
+                      labelFormatter={(label) => `Fecha: ${label}`}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="value"
+                      stroke="var(--primary)"
+                      strokeWidth={2.5}
+                      fill="url(#progressFill)"
+                      dot={false}
+                      activeDot={{ r: 5, fill: 'var(--primary)' }}
+                    />
+                  </AreaChart>
                 </ResponsiveContainer>
               </div>
-            ) : (
-              <div className="text-center py-12 text-muted-foreground">No hay datos de volumen aún</div>
             )}
-          </CardContent>
-        </Card>
+          </>
+        ) : (
+          <p className="py-10 text-center text-sm text-muted-foreground">
+            Todavía no hay registros con peso para este ejercicio.
+          </p>
+        )}
+      </section>
 
-        {/* Adherence Heatmap */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Adherencia (90 días)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {adherenceData.length > 0 ? (
-              <div>
-                {/* GitHub-style contribution grid: 7 rows deep, wraps into as
-                    many columns as needed, so it always fits the card width
-                    instead of forcing a 90-cell horizontal scroll. */}
-                <div className="flex justify-center">
-                  <div className="grid grid-flow-col grid-rows-7 gap-1">
-                    {adherenceData.map(day => (
-                      <div
-                        key={day.date}
-                        className={`h-3 w-3 rounded-sm transition-colors sm:h-3.5 sm:w-3.5 ${day.completed ? 'bg-success' : 'bg-muted'}`}
-                        title={`${format(parseISO(day.date), 'dd MMM', { locale: es })}: ${day.completed ? 'Entrenó' : 'Descanso'}`}
-                      />
+      <section className="grid grid-cols-2 gap-3">
+        <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+          <p className="text-sm font-medium text-muted-foreground">Días entrenados</p>
+          <p className="mt-1 font-mono text-3xl font-semibold tabular-nums tracking-tight text-foreground">{trainedDays}</p>
+          <p className="text-sm text-muted-foreground">de los últimos 90 días</p>
+        </div>
+        <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+          <p className="text-sm font-medium text-muted-foreground">Volumen semanal</p>
+          <p className="mt-1 font-mono text-3xl font-semibold tabular-nums tracking-tight text-foreground">
+            {lastVol ? lastVol.volume.toLocaleString('es-AR') : '—'}
+            {lastVol && <span className="ml-1 text-base text-muted-foreground">kg</span>}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {volDelta !== null ? `${volDelta > 0 ? '+' : ''}${volDelta}% vs semana anterior` : 'última semana registrada'}
+          </p>
+        </div>
+      </section>
+
+      {volumeSorted.length > 1 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="px-1 text-sm font-medium text-muted-foreground">Volumen por semana</h2>
+          <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+            <div className="h-44">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={volumeSorted.map(v => ({ ...v, label: `S${v.week}` }))} margin={{ top: 4, right: 4, left: 4, bottom: 0 }}>
+                  <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
+                  <YAxis hide />
+                  <Tooltip formatter={(value) => [`${Number(value).toLocaleString('es-AR')} kg`, 'Volumen']} cursor={{ fill: 'var(--muted)' }} />
+                  <Bar dataKey="volume" radius={[6, 6, 0, 0]}>
+                    {volumeSorted.map((_, i) => (
+                      <Cell key={`cell-${i}`} fill={i === volumeSorted.length - 1 ? 'var(--primary)' : 'var(--border)'} />
                     ))}
-                  </div>
-                </div>
-                <div className="flex justify-between text-xs font-mono tabular-nums text-muted-foreground mt-3">
-                  <span>{format(parseISO(adherenceData[0].date), 'dd MMM', { locale: es })}</span>
-                  <span>{format(parseISO(adherenceData[adherenceData.length - 1].date), 'dd MMM', { locale: es })}</span>
-                </div>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3.5 h-3.5 rounded-sm bg-success" />
-                    <span>Entrenó</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3.5 h-3.5 rounded-sm bg-muted" />
-                    <span>Descanso</span>
-                  </div>
-                  <div className="flex items-center gap-2 font-mono tabular-nums">
-                    <span>Total: {adherenceData.filter(d => d.completed).length} / 90 días</span>
-                  </div>
-                </div>
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {adherenceData.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="px-1 text-sm font-medium text-muted-foreground">Constancia</h2>
+          <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
+            <div className="flex justify-center">
+              <div className="grid grid-flow-col grid-rows-7 gap-1">
+                {adherenceData.map(day => (
+                  <div
+                    key={day.date}
+                    className={cn('h-3 w-3 rounded-sm sm:h-3.5 sm:w-3.5', day.completed ? 'bg-primary' : 'bg-muted')}
+                    title={`${format(parseISO(day.date), 'dd MMM', { locale: es })}: ${day.completed ? 'Entrenó' : 'Descanso'}`}
+                  />
+                ))}
               </div>
-            ) : (
-              <div className="text-center py-12 text-muted-foreground">No hay datos de adherencia</div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+            </div>
+            <div className="mt-3 flex justify-between font-mono text-xs tabular-nums text-muted-foreground">
+              <span>{format(parseISO(adherenceData[0].date), 'dd MMM', { locale: es })}</span>
+              <span>{format(parseISO(adherenceData[adherenceData.length - 1].date), 'dd MMM', { locale: es })}</span>
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   )
 }
