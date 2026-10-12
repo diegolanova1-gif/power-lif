@@ -11,7 +11,7 @@ const STORAGE_KEY = 'pr-theme'
 const MODES: { value: Mode; label: string; bg: string; card: string; accent: string; line: string }[] = [
   { value: 'original', label: 'Original', bg: '#fafafa', card: '#ffffff', accent: '#3a3f4b', line: '#e4e4e7' },
   { value: 'oscuro', label: 'Oscuro', bg: '#18181b', card: '#27272a', accent: '#a5b4fc', line: '#3f3f46' },
-  { value: 'rosa', label: 'Rosa', bg: '#fff1f5', card: '#ffffff', accent: '#d6246e', line: '#f9c9da' },
+  { value: 'rosa', label: 'Cande', bg: '#fff1f5', card: '#ffffff', accent: '#d6246e', line: '#f9c9da' },
 ]
 
 function readMode(): Mode {

@@ -249,8 +249,10 @@ function initHero() {
 function initRail() {
   const stops = [
     { label: 'Inicio', el: document.querySelector('.hero'), hold: 0 },
-    { label: 'Caos', el: document.querySelector('.chapter-chaos'), hold: 0.45 },
+    { label: 'Desorden', el: document.querySelector('.chapter-chaos'), hold: 0.45 },
     ...chapters.map(ch => ({ label: LABELS[ch.dataset.chapter], el: ch, hold: 0.45 })),
+    { label: 'Testimonios', el: document.querySelector('.chapter-proof'), hold: 0.45 },
+    { label: 'Power Routine', el: document.querySelector('.chapter-origin'), hold: 0.45 },
     { label: 'Final', el: document.querySelector('.final'), hold: 0 },
   ]
   const rail = Object.assign(document.createElement('nav'), { className: 'rail' })
