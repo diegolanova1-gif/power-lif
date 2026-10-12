@@ -1,18 +1,16 @@
 # Power Routine — Landing
 
-Landing page scrollytelling para **Power Routine**, plataforma de seguimiento de rutinas de gimnasio orientada a coaches. Narra el problema del seguimiento manual, la solución y empuja a contacto por WhatsApp.
+Landing scrollytelling para **Power Routine**: todo el sistema entra en el botón de la app y, al final, el visitante lo toca para recorrer cada sección. Un solo destino: WhatsApp.
 
 **App principal:** [power-lif.vercel.app](https://power-lif.vercel.app)
 
 ## Stack
 
-- **Build:** [Vite 8](https://vitejs.dev/)
-- **Animación:** [GSAP 3.12 + ScrollTrigger](https://gsap.com/) (vía CDN jsdelivr)
-- **Fonts:** Inter (Google Fonts)
-- **UI:** HTML + CSS + JS vanilla — sin framework
+- **Build:** Vite 8
+- **Animación:** GSAP 3.12 + ScrollTrigger (secciones fijadas con scroll)
+- **Fonts:** Inter + Geist Mono (Google Fonts)
+- **UI:** HTML + CSS + JS vanilla, sin WebGL
 - **Idioma:** Español (es-AR)
-
-Zero dependencias en runtime; solo `vite` como devDependency.
 
 ## Scripts
 
@@ -23,59 +21,38 @@ npm run build      # build de producción → dist/
 npm run preview    # preview del build
 ```
 
+## Concepto
+
+El botón de la app (FAB violeta con la mancuerna, `components/layout/fab-menu.tsx`) es el protagonista, fijo en el centro:
+
+| Sección | Qué pasa |
+|---------|----------|
+| **Hero** + CTA WhatsApp | El botón aparece como plano técnico y se materializa al scrollear |
+| **Caos** | Frases de WhatsApp/Excel flotan alrededor y se meten en el botón |
+| **Programás · Registra · Revisás · Medís · Compiten** | Cada sección entra (texto + captura en iPhone), se sostiene y se mete en el botón; se llena un segmento del anillo |
+| **Final** + CTA WhatsApp | "Tocá el botón": abre el abanico como en la app; cada ícono reabre su sección, que nace en círculo desde el botón |
+
 ## Estructura
 
 ```
-power-routine-landing/
-├── index.html          # 5 secciones semánticas (hero, problema, solución, prueba, CTA)
+landing/
+├── index.html          # hero, caos, 5 secciones, final + hoja de sección
 ├── src/
-│   ├── main.js         # bootstrap: year, link WhatsApp, initMotion()
-│   ├── motion.js       # engine GSAP + ScrollTrigger (timelines por sección)
-│   └── style.css       # tokens, depth layers, reveals, responsive
-├── public/             # assets estáticos
-└── dist/               # output de build
+│   ├── main.js         # timelines de scroll, anillo, abanico y hoja
+│   ├── style.css       # tokens (modo oscuro de la app), mobile-first
+│   └── whatsapp.js     # número y mensaje de WhatsApp (data-cta)
+└── public/screens/     # capturas reales (iPhone 15 Pro, 1179×2556 + 786w), datos demo
 ```
 
-## Secciones
+## Capturas
 
-| Sección | Técnica |
-|---------|---------|
-| **Hero** | Pinned 220vh — título split (izq/der converge), subtítulo cortina, exit scrubbed |
-| **Problema** | `clip-path` top-drop + stagger-grid desde 4 direcciones |
-| **Solución** | 3 pillars con skew-bounce (`back.out`) |
-| **Prueba** | Mockup panel coach, scale-settle scrubbed |
-| **CTA** | Iris circular (`circle(0% → 75%)`), botón WhatsApp |
-
-## Configuración
-
-Valores inline en `src/main.js`:
-
-```js
-const WHATSAPP_NUMBER = '5491138753141'
-const WHATSAPP_MESSAGE = 'Hola! Quiero información sobre Power Routine para mi gimnasio.'
-```
-
-Link de login externo en `index.html`:
-
-```html
-<a class="login-link" href="https://power-lif.vercel.app/login">Ingresar</a>
-```
+Generadas con datos demo (`../scripts/demo/seed.mjs`, cuentas `pr-demo-*@example.com`). Para borrarlos: `node scripts/demo/seed.mjs --cleanup` desde la raíz del repo.
 
 ## Accesibilidad
 
-- `skip-link` al contenido principal
-- Soporte `prefers-reduced-motion` nativo (fallback estático)
-- Toggle manual de animaciones (persistencia en `localStorage`)
-- `aria-pressed`, `aria-label`, roles e `id="main-content"`
-- Focus ring visible (`:focus-visible`)
-- Si GSAP no carga desde CDN, `revealImmediately()` muestra todo el contenido
-
-## Performance
-
-- `content-visibility: auto` en scenes no-hero
-- Lite mode automático en touch o `hardwareConcurrency <= 2` (skip parallax)
-- `preconnect` a Google Fonts
-- `ScrollTrigger.refresh()` al recuperar foco de pestaña
+- `prefers-reduced-motion`: sin secciones fijadas ni animaciones; todo visible, anillo completo
+- Abanico y hoja accesibles por teclado (Esc cierra, el foco vuelve al ícono)
+- Un solo destino de conversión: WhatsApp (`data-cta="hero|final"`)
 
 ## Deploy
 
