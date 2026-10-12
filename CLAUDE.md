@@ -106,7 +106,7 @@ Hoy: portada simple con tarjetas "Soy Coach / Soy Alumno".
 Objetivo:
 - **Tono:** profesional, minimalista, serio; paleta neutra/oscura, tipografía sobria, mucho aire.
 - **Embudo:** hero de una frase → problema (seguimiento manual es un caos) → solución (rutinas + seguimiento + ranking) → prueba/demo → **un único CTA final a WhatsApp** con mensaje prearmado. Sin CTAs compitiendo.
-- **Técnico:** JavaScript + Three.js, scroll-driven, **proyecto y deploy separados** de la app. Degradar en mobile/equipos lentos.
+- **Técnico:** Vite + GSAP en `landing/`, sin WebGL. Se sirve **dentro de la app** (mismo proyecto Vercel): el build va a `public/home/` y `src/proxy.ts` reescribe `/` → `/home/index.html` si no hay sesión. Ver `landing/README.md`.
 
 ---
 
@@ -132,7 +132,7 @@ Objetivo:
 
 - **App:** Next.js 16 (App Router) sobre Node.js, desplegada en **Vercel** (`power-lif.vercel.app`, auto-deploy desde `main` en GitHub).
 - **Base / Auth / Storage:** Supabase, RLS por `coach_id`.
-- **Landing:** JavaScript + Three.js, proyecto separado.
+- **Landing:** Vite + GSAP en `landing/`, servida por la app en `/` (prebuild en `package.json`).
 - **Pagos:** a definir (no asumir Mercado Pago).
 - Reglas de Next.js 16: ver `@AGENTS.md` (ej. `proxy.ts` en vez de `middleware.ts`).
 
@@ -163,9 +163,10 @@ Cada paso: alcance → criterio de terminado → modelo recomendado. Un paso a l
 - Subir foto/video de nuevo para la misma observación reemplaza lo anterior (no acumula).
 - **Pendiente de Diego:** cargar `CRON_SECRET` en las env vars de Vercel (Project Settings → Environment Variables) para que el cron pueda autenticarse.
 
-### Paso 4 — Landing inmersiva (proyecto aparte) · `/model sonnet` para construir, `opus` para el diseño del embudo
-- Nuevo proyecto (Three.js), deploy propio, CTA único a WhatsApp.
-- **Pendiente de Diego:** textos, número de WhatsApp, dominio.
+### Paso 4 — Landing · ✅ hecho
+- El botón de la app (FAB) como protagonista: las secciones se meten en él al scrollear y al final abre el abanico. CTA único a WhatsApp (5491138753141).
+- Capturas con datos demo (`scripts/demo/seed.mjs`, cuentas `pr-demo-*@example.com`; `--cleanup` las borra).
+- **Pendiente de Diego:** dominio propio (si se quiere).
 
 ### Paso 5 — Detalles de seguimiento · ✅ hecho
 - Nota del coach por ejercicio (`structure.schedule[].exercises[].note`, editable en el builder, visible para el alumno y en la vista del coach).

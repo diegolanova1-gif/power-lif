@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# landing (build generado por landing/, se sirve en /)
+/public/home/

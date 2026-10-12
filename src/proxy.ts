@@ -35,10 +35,21 @@ export async function proxy(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
 
+  // Landing (build estático de landing/ en public/home): la ve quien no inició sesión.
+  // Con sesión, "/" sigue a app/page.tsx, que redirige al panel según el rol.
+  if (pathname === '/' && !user) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/home/index.html'
+    const response = NextResponse.rewrite(url)
+    supabaseResponse.cookies.getAll().forEach(c => response.cookies.set(c))
+    return response
+  }
+
   // Public routes
   if (
     pathname.startsWith('/login') ||
     pathname.startsWith('/auth/') ||
+    pathname.startsWith('/home/') ||
     pathname === '/'
   ) {
     return supabaseResponse

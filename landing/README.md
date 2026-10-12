@@ -56,20 +56,9 @@ Generadas con datos demo (`../scripts/demo/seed.mjs`, cuentas `pr-demo-*@example
 
 ## Deploy
 
-Build estático — compatible con cualquier host (Vercel, Netlify, GitHub Pages, S3+CloudFront).
+Vive dentro de la app (mismo proyecto de Vercel, `power-lif`):
 
-```bash
-npm run build
-# subir dist/
-```
-
-## Paleta
-
-Escala de grises monocromática con un único acento blanco en el CTA de WhatsApp. Tokens en `src/style.css`:
-
-```css
---bg: #0a0a0b;
---text: #ededec;
---text-dim: #9a9a9d;
---cta-bg: #ededec;
-```
+- `npm run build` en `landing/` genera `../public/home/` (`base: '/home/'`, ver `vite.config.js`).
+- La app corre ese build solo antes de `next build` (`prebuild` en el `package.json` de la raíz), así que cada push a `main` publica app y landing juntas.
+- `src/proxy.ts` reescribe `/` a `/home/index.html` si no hay sesión; con sesión, `/` sigue redirigiendo al panel de coach o alumno.
+- `public/home/` es generado: está en `.gitignore`.
