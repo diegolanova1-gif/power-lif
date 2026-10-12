@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "npm --prefix landing install --no-audit --no-fund && npm --prefix landing run build",
+    "prebuild": "npm --prefix landing install --include=dev --no-audit --no-fund && npm --prefix landing run build",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
