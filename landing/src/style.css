@@ -384,9 +384,10 @@ h2 {
 /* ===== Modos de la app (hero) ===== */
 .themes {
   position: absolute;
-  left: 50%;
+  left: 0;
+  right: 0; /* ancho completo: con left 50% el texto sin corte se desbordaba a la derecha */
   top: calc(50% + var(--core) * 0.95);
-  translate: -50% 0;
+  padding: 0 var(--gutter);
   text-align: center;
   opacity: 0;
   pointer-events: none;
@@ -398,7 +399,6 @@ h2 {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-faint);
-  white-space: nowrap;
 }
 .themes ul {
   list-style: none;
@@ -849,10 +849,55 @@ main {
 }
 
 @media (max-width: 899px) {
+  :root {
+    --rail-space: 26px; /* lugar reservado para la barra lateral */
+  }
   .rail {
-    right: 12px;
+    right: 10px;
   }
   .rail-label {
     display: none;
   }
+  /* El texto no pasa por debajo de la barra */
+  .hero-top,
+  .hero-bottom,
+  .final-top,
+  .final-bottom,
+  .ch-text,
+  .themes {
+    padding-right: var(--rail-space);
+    padding-left: var(--rail-space);
+  }
+  .ch-text {
+    padding-left: 0;
+  }
+  /* Hero: la cota del plano chocaba con el título */
+  .bp-dim {
+    display: none;
+  }
+  .hero-top {
+    padding-bottom: calc(var(--core) * 1.8);
+  }
+  /* Caos: frases arriba y abajo del botón, nunca a su altura */
+  .chips li {
+    max-width: calc(50vw - var(--gutter) - var(--rail-space) / 2 - 6px);
+    padding: 8px 11px;
+    font-size: 0.74rem;
+    line-height: 1.35;
+    rotate: 0deg;
+  }
+  .chips li:nth-child(1) { left: var(--gutter); right: auto; top: 25%; rotate: -2deg; }
+  .chips li:nth-child(2) { right: calc(var(--gutter) + var(--rail-space)); left: auto; top: 34%; rotate: 2deg; }
+  .chips li:nth-child(3) { left: var(--gutter); right: auto; top: 60%; rotate: 1deg; }
+  .chips li:nth-child(4) { right: calc(var(--gutter) + var(--rail-space)); left: auto; top: 69%; rotate: -2deg; }
+  .chips li:nth-child(5) { left: 50%; right: auto; top: 79%; translate: -50% 0; max-width: 70vw; }
+}
+
+/* Celulares muy angostos (320px): las frases ocupan 3 líneas */
+@media (max-width: 340px) {
+  .chips li:nth-child(1) { top: 25%; }
+  .chips li:nth-child(2) { top: 29%; }
+  .chips li:nth-child(3) { top: 61%; }
+  .chips li:nth-child(4) { top: 66%; }
+  .chips li:nth-child(5) { top: 81%; }
 }
