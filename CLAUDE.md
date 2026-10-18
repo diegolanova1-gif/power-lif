@@ -7,7 +7,7 @@
 >
 > **Proyecto independiente:** no comparte stack, convenciones ni infraestructura con otros proyectos de Diego (Mooven/WOKI).
 >
-> Actualizado el 2026-09-27 comparando este documento con el código real. **Antes de asumir que algo no existe, confirmarlo en el proyecto.**
+> Actualizado el 2026-10-17 comparando este documento con el código real. **Antes de asumir que algo no existe, confirmarlo en el proyecto.**
 
 ---
 
@@ -82,6 +82,8 @@ Coaches de gimnasio gestionan a sus alumnos: rutinas semana a semana, seguimient
 - Coach: página de Seguimiento (calendario por colores, indicado vs. hecho), Analytics, Revisiones.
 - Motivo rápido opcional (chips) además del comentario libre ✅.
 - Evolución de cargas: 1RM para sentadilla/banca/peso muerto; accesorios muestran "Mejor peso por sesión" ✅.
+- Orden de sesiones: los días deben completarse en orden dentro de la semana (trigger `enforce_session_order`); días extra y freeform quedan exentos ✅.
+- Motivo `reps_incomplete`: series completas pero sin llegar al peso/reps pedidos → se marca "Hecho" y el motivo se registra automáticamente ✅.
 
 ### 3.3 Comentarios — ✅
 - Alumno comenta por ejercicio; coach responde; contador de pendientes en Revisiones y punto azul en Seguimiento.
@@ -93,9 +95,31 @@ Coaches de gimnasio gestionan a sus alumnos: rutinas semana a semana, seguimient
 ### 3.5 Fotos y videos — ✅
 - Subida (máx. 50 MB), vista del coach, borrado manual. Bucket privado `exercise-media`.
 - Retención automática: se borra el archivo al revisar o a los 14 días (Paso 3); repetir reemplaza el archivo anterior.
+- Video de referencia por ejercicio: URL en `exercises.video_url`; se carga una vez, visible en todas las rutinas; el coach puede editar ✅.
 
-### 3.6 Planes y capacidad — ⚠️ no existe → Paso 1
-- Límite de alumnos por plan; bloquear alta al llegar al límite y ofrecer upgrade por WhatsApp.
+### 3.6 Planes y capacidad — ✅
+- Límite de alumnos por plan en `profiles.student_limit`; alta bloqueada al llegar al límite con mensaje de upgrade por WhatsApp.
+
+### 3.7 Día extra — ✅
+- El alumno puede agregar sesiones fuera de la rutina: `advance_credit` (avanza semana/día), `advance_no_credit` (entrena sin avanzar), `freeform` (ejercicios libres sin rutina).
+- Soporta ejercicios de tiempo: columna `duration_seconds` en `sets_log` (reps opcionales).
+- El alumno puede crear sus propios ejercicios (visibles para él y su coach).
+
+### 3.8 Logros de racha — ✅
+- Hitos: 10 / 30 / 60 / 100 días + "primera semana completa" / "primer mes de constancia".
+- Se desbloquean server-side; el alumno los ve y puede descargar un sticker.
+
+### 3.9 Sustitución de ejercicio — ✅
+- El alumno reemplaza un ejercicio pautado por otro en el momento (ej. sentadilla → prensa por molestia).
+- Cuenta igual para orden de sesiones, racha y estado "Hecho". Columna `substituted_exercise_id` en `sets_log`.
+
+### 3.10 Perfil del alumno — ✅
+- Datos físicos: fecha nacimiento, sexo, altura, peso corporal, objetivo, experiencia, días disponibles.
+- Datos médicos: lesiones, notas médicas, contacto de emergencia.
+- El alumno edita solo el suyo; el coach lee los de sus alumnos.
+
+### 3.11 Avisos únicos — ✅
+- Mensajes que se muestran al alumno una sola vez al ingresar; quedan guardados como vistos para siempre (`athlete_notices`).
 
 ---
 
@@ -118,13 +142,16 @@ Objetivo:
 | `coach_athletes` | Vínculo `coach_id` ↔ `athlete_id` (sin nombre ni email; esos viven en `profiles`) |
 | `routines` | Rutina: `coach_id`, `is_template`, `structure` JSONB (semana 1 en `schedule`, semanas distintas en `week_plans`) |
 | `athlete_routines` | Asignación: `athlete_id`, `routine_id`, `status`, `current_week`, `current_day` |
-| `exercises` | Catálogo global + ejercicios propios (`created_by`) |
-| `sets_log` | Una fila por serie registrada (reps, peso, RPE). "Hecho/Parcial" se **calcula** contra lo indicado |
+| `exercises` | Catálogo global + ejercicios propios (`created_by`). Col extra: `video_url` (link de referencia) |
+| `sets_log` | Una fila por serie registrada (reps, peso, RPE). "Hecho/Parcial" se **calcula** contra lo indicado. Cols extra: `extra_type`, `duration_seconds`, `substituted_exercise_id` |
 | `estimated_1rm` | 1RM por serie de levantamientos de competencia (trigger) |
 | `exercise_feedback` | Comentario del alumno por ejercicio/sesión, respuesta del coach, `reviewed_at` |
 | `exercise_media` | Archivos, vinculados a `exercise_feedback` (`feedback_id`); "revisado" = `exercise_feedback.reviewed_at` |
 | `teams`, `team_members` | Teams del coach |
-| `team_exercise_bests()` y otras | Ranking calculado al vuelo. ⚠️ No existe tabla de rankings ni aprobación (Paso 2) |
+| `team_exercise_bests()` y otras | Ranking en vivo para el coach. `team_rankings`: snapshot aprobado, inmutable, visible al alumno |
+| `streak_achievements` | Logros de racha: `milestone` TEXT ("10", "30", "primera_semana", etc.) + `unlocked_at` |
+| `athlete_profile` | Perfil físico: nacimiento, sexo, altura, peso, objetivo, experiencia, lesiones, notas médicas, contacto de emergencia |
+| `athlete_notices` | Avisos únicos al alumno: `(athlete_id, notice_key)` + `dismissed_at` |
 
 ---
 
@@ -172,6 +199,21 @@ Cada paso: alcance → criterio de terminado → modelo recomendado. Un paso a l
 - Nota del coach por ejercicio (`structure.schedule[].exercises[].note`, editable en el builder, visible para el alumno y en la vista del coach).
 - Motivo rápido y opcional (Dolor/molestia, Cansancio, Otro) cuando guarda menos de lo indicado — no reemplaza el comentario libre, no bloquea el guardado. Columna `exercise_feedback.reason`.
 - Gráfico de progreso (`/athlete/progress`) ahora incluye accesorios: si el ejercicio no tiene 1RM (no es sentadilla/banca/peso muerto), muestra "Mejor peso por sesión" calculado directo de `sets_log`.
+
+### Post-lanzamiento — implementado sin paso formal
+
+| Fecha | Feature | Detalle |
+|-------|---------|---------|
+| 2026-10-03 | Orden de sesiones | Trigger `enforce_session_order`: completar días en orden dentro de la semana |
+| 2026-10-04 | Día extra | `advance_credit/advance_no_credit/freeform`; ejercicios de tiempo; alumno crea propios |
+| 2026-10-05–06 | Logros de racha | Hitos numéricos y textuales; sticker descargable |
+| 2026-10-07 | Motivo `reps_incomplete` | Series completas sin llegar al objetivo → "Hecho" + motivo automático |
+| 2026-10-08 | Sustitución de ejercicio | Reemplazar ejercicio pautado; cuenta igual para orden y racha |
+| 2026-10-09 | Avisos únicos | Mensaje al alumno una sola vez al ingresar |
+| 2026-10-10 | Video en ejercicio | `exercises.video_url`; cargado una vez, visible en todas las rutinas |
+| 2026-10-11 | Perfil del alumno | `athlete_profile`: datos físicos, objetivo, lesiones, notas médicas, emergencia |
+
+---
 
 ### Paso 6 — Renombrar a Power Routine · ✅ hecho
 - Textos de UI (portada, login, headers de dashboard), `<title>`/metadata, copiado de contraseña al portapapeles, comentario de `schema.sql`. `README.md` sin tocar (doc interno, no visible a usuarios).
