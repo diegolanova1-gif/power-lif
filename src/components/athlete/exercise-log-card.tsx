@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Check, CheckCircle2, AlertTriangle, Loader2, Pencil, Plus, Repeat, RotateCcw, Video, X } from 'lucide-react'
+import { Check, CheckCircle2, Loader2, Pencil, Plus, Repeat, RotateCcw, Video, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -95,7 +95,7 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, las
   // Todas las series cargadas = hecho, aunque alguna haya quedado corta de
   // reps/peso — eso se marca aparte al coach (ver flagRepsShortfall), no se
   // le muestra al alumno como "no lo hiciste".
-  const fullyLogged = isDone && logged.length >= p.sets
+
 
   function openEditor() {
     const base = isDone
@@ -255,8 +255,7 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, las
       className={cn(
         'rounded-2xl bg-card p-4 ring-1 ring-foreground/10 transition-all',
         expanded && onToggle && 'shadow-md ring-primary/30',
-        fullyLogged && 'ring-success/40',
-        isDone && !fullyLogged && 'ring-warning/50'
+        isDone && 'ring-success/40'
       )}
     >
       <div
@@ -273,7 +272,7 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, las
               <span
                 className={cn(
                   'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2',
-                  fullyLogged ? 'border-success bg-success text-success-foreground' : isDone ? 'border-warning bg-warning/20 text-warning-foreground' : 'border-border text-transparent'
+                  isDone ? 'border-success bg-success text-success-foreground' : 'border-border text-transparent'
                 )}
               >
                 <Check className="h-4 w-4" />
@@ -293,13 +292,9 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, las
               </a>
             )}
           </div>
-          {onToggle ? null : fullyLogged ? (
+          {onToggle ? null : isDone ? (
             <span className="flex shrink-0 items-center gap-1 text-sm font-medium text-success">
               <CheckCircle2 className="h-5 w-5" /> Hecho
-            </span>
-          ) : isDone ? (
-            <span className="flex shrink-0 items-center gap-1 text-sm font-medium text-warning-foreground">
-              <AlertTriangle className="h-4 w-4" /> Parcial
             </span>
           ) : null}
         </div>
