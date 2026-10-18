@@ -28,31 +28,30 @@ export default async function CoachDashboard() {
 
   const { data: { user } } = await supabase.auth.getUser()
 
+  const coachId = user?.id || ''
+
   const [
     { data: athletes },
     athleteAlerts,
     { data: routines },
     { count: pendingReviews },
+    { data: activeRoutines },
   ] = await Promise.all([
     supabase
       .from('coach_athletes')
       .select('athlete_id, profiles:athlete_id(full_name, avatar_url)')
-      .eq('coach_id', user?.id || ''),
+      .eq('coach_id', coachId),
     user ? getAthleteAlerts(supabase, user.id) : Promise.resolve([]),
-    supabase.from('routines').select('id').eq('coach_id', user?.id || ''),
-    // RLS scopes this to the coach's athletes
+    supabase.from('routines').select('id').eq('coach_id', coachId),
     supabase
       .from('exercise_feedback')
       .select('id', { count: 'exact', head: true })
       .is('reviewed_at', null),
+    supabase
+      .from('athlete_routines')
+      .select('id, athlete_id, status')
+      .eq('status', 'active'),
   ])
-
-  // Active athlete routines (athletes currently on a program)
-  const { data: activeRoutines } = await supabase
-    .from('athlete_routines')
-    .select('id, athlete_id, status')
-    .in('athlete_id', athletes?.map(a => a.athlete_id) || [])
-    .eq('status', 'active')
 
   const pending = pendingReviews ?? 0
   const hasAthletes = !!athletes && athletes.length > 0

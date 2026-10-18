@@ -54,14 +54,13 @@ async function loadWorkout(supabase: Supabase) {
       .from('sets_log')
       .select('week, day, exercise_id, set_number, reps, duration_seconds, weight_kg, rpe, completed_at, extra_type, substituted_exercise_id')
       .eq('athlete_routine_id', routine.id),
-    // Last weight used per exercise (any routine) to prefill
     supabase
       .from('sets_log')
       .select('exercise_id, weight_kg')
       .eq('athlete_id', user.id)
       .in('exercise_id', exerciseIds)
       .order('completed_at', { ascending: false })
-      .limit(500),
+      .limit(exerciseIds.length),
     supabase.from('estimated_1rm').select('exercise_id, estimated_1rm').eq('athlete_id', user.id).in('exercise_id', exerciseIds),
   ])
 
