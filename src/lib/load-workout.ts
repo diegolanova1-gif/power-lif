@@ -16,6 +16,7 @@ export interface WorkoutData {
   setsByKey: Record<string, LoggedSet[]>
   realDateByDay: Record<string, string>
   lastWeight: Record<string, number>
+  lastReps: Record<string, number>
   best: Record<string, number>
 }
 
@@ -47,7 +48,7 @@ export async function loadWorkout(supabase: { auth: any; from: any }): Promise<W
       .eq('athlete_routine_id', routine.id),
     supabase
       .from('sets_log')
-      .select('exercise_id, weight_kg')
+      .select('exercise_id, weight_kg, reps')
       .eq('athlete_id', user.id)
       .in('exercise_id', exerciseIds)
       .order('completed_at', { ascending: false })
@@ -113,7 +114,13 @@ export async function loadWorkout(supabase: { auth: any; from: any }): Promise<W
   }
 
   const lastWeight: Record<string, number> = {}
-  for (const h of history ?? []) if (!(h.exercise_id in lastWeight)) lastWeight[h.exercise_id] = Number(h.weight_kg)
+  const lastReps: Record<string, number> = {}
+  for (const h of history ?? []) {
+    if (!(h.exercise_id in lastWeight)) {
+      lastWeight[h.exercise_id] = Number(h.weight_kg)
+      if (h.reps != null) lastReps[h.exercise_id] = Number(h.reps)
+    }
+  }
 
   const best: Record<string, number> = {}
   for (const e of estimates ?? []) best[e.exercise_id] = Math.max(best[e.exercise_id] ?? 0, Number(e.estimated_1rm))
@@ -126,6 +133,7 @@ export async function loadWorkout(supabase: { auth: any; from: any }): Promise<W
     setsByKey,
     realDateByDay,
     lastWeight,
+    lastReps,
     best,
   }
 }

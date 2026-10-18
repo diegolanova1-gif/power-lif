@@ -45,6 +45,8 @@ interface ExerciseLogCardProps {
   e1rm: number | null
   /** Last weight this athlete used on this exercise */
   lastWeight: number | null
+  /** Last reps this athlete did on this exercise */
+  lastReps?: number | null
   session: { athleteId: string; athleteRoutineId: string; week: number; day: number }
   /** Set when this card is logging a "día extra" session rather than the
    * athlete's actual current day — tags the rows so the streak/order rules
@@ -69,7 +71,7 @@ const roundTo = (value: number, step: number) => Math.round(value / step) * step
 // Accepts "62,5" and "62.5"; empty = bodyweight (0)
 const parseKg = (text: string) => (text.trim() === '' ? 0 : Number(text.trim().replace(',', '.')))
 
-export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, session, extraType, onSaved, expanded = true, onToggle, children }: ExerciseLogCardProps) {
+export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, lastReps = null, session, extraType, onSaved, expanded = true, onToggle, children }: ExerciseLogCardProps) {
   const [supabase] = useState(() => createClient())
   const [editing, setEditing] = useState(false)
   const [rows, setRows] = useState<Row[]>([])
@@ -322,6 +324,11 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, ses
             .filter(Boolean)
             .join(' · ')}
         </p>
+        {!expanded && !isDone && lastWeight !== null && (
+          <p className="mt-1 font-mono text-xs tabular-nums text-muted-foreground/70">
+            Último: {lastWeight > 0 ? `${lastWeight} kg` : 'peso corporal'}{lastReps !== null ? ` × ${lastReps} reps` : ''}
+          </p>
+        )}
         {expanded && p.note && <p className="mt-2 rounded-md bg-accent px-2 py-1.5 text-sm text-accent-foreground">{p.note}</p>}
       </div>
 

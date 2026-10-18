@@ -33,6 +33,7 @@ export function LogView({ initialData }: LogViewProps) {
   const [realDateByDay, setRealDateByDay] = useState<Record<string, string>>(initialData?.realDateByDay ?? {})
   const [e1rmByExercise, setE1rmByExercise] = useState<Record<string, number>>(initialData?.best ?? {})
   const [lastWeightByExercise, setLastWeightByExercise] = useState<Record<string, number>>(initialData?.lastWeight ?? {})
+  const [lastRepsByExercise, setLastRepsByExercise] = useState<Record<string, number>>(initialData?.lastReps ?? {})
   const [session, setSession] = useState<{ userId: string; athleteRoutineId: string } | null>(initialData?.session ?? null)
   const [startedAt, setStartedAt] = useState<string | null>(initialData?.startedAt ?? null)
   const [loading, setLoading] = useState(!initialData)
@@ -57,6 +58,7 @@ export function LogView({ initialData }: LogViewProps) {
       setSetsByKey(result.setsByKey)
       setRealDateByDay(result.realDateByDay)
       setLastWeightByExercise(result.lastWeight)
+      setLastRepsByExercise(result.lastReps)
       setE1rmByExercise(result.best)
       if (weekRes) {
         setWeekProgress({ currentWeekDays: weekRes.currentWeekDays, currentWeekRequired: weekRes.currentWeekRequired })
@@ -273,6 +275,7 @@ export function LogView({ initialData }: LogViewProps) {
             logged={setsByKey[setsKey(currentDay.week, currentDay.day, exercise.exercise_id)] ?? []}
             e1rm={e1rmByExercise[exercise.exercise_id] ?? null}
             lastWeight={lastWeightByExercise[exercise.exercise_id] ?? null}
+            lastReps={lastRepsByExercise[exercise.exercise_id] ?? null}
             session={{ athleteId: session.userId, athleteRoutineId: session.athleteRoutineId, week: currentDay.week, day: currentDay.day }}
             onSaved={sets => saveSets(exercise.exercise_id, sets)}
             expanded={openId === exercise.exercise_id}
