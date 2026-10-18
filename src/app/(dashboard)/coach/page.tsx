@@ -50,7 +50,7 @@ export default async function CoachDashboard() {
     supabase
       .from('athlete_routines')
       .select('id, athlete_id, status')
-      .eq('status', 'active'),
+      .in('status', ['active', 'completed']),
   ])
 
   const pending = pendingReviews ?? 0

@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     .from('athlete_routines')
     .select('*, routine:routines(structure)')
     .eq('athlete_id', athleteId)
-    .eq('status', 'active')
+    .in('status', ['active', 'completed'])
     .order('assigned_at', { ascending: false })
     .limit(1)
     .single()

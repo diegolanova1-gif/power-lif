@@ -10,7 +10,7 @@ export default async function AthleteHistoryPage() {
     .from('athlete_routines')
     .select('id')
     .eq('athlete_id', user.id)
-    .eq('status', 'active')
+    .in('status', ['active', 'completed'])
     .order('assigned_at', { ascending: false })
     .limit(1)
     .maybeSingle()

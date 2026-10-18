@@ -37,7 +37,7 @@ export async function getAthleteAlerts(supabase: Supabase, coachId: string): Pro
         .from('athlete_routines')
         .select('*, routine:routines(structure)')
         .eq('athlete_id', athlete.id)
-        .eq('status', 'active')
+        .in('status', ['active', 'completed'])
         .order('assigned_at', { ascending: false })
         .limit(1)
         .maybeSingle()

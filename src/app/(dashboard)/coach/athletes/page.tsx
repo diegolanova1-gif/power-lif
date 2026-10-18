@@ -39,7 +39,7 @@ export default async function AthletesPage() {
           .from('athlete_routines')
           .select('id, athlete_id, routine_id, status, routines(name)')
           .in('athlete_id', athleteIds)
-          .eq('status', 'active'),
+          .in('status', ['active', 'completed']),
         supabase
           .from('sets_log')
           .select('athlete_id, completed_at')

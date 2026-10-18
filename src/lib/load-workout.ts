@@ -29,7 +29,7 @@ export async function loadWorkout(supabase: { auth: any; from: any }): Promise<W
     .from('athlete_routines')
     .select('id, current_week, current_day, started_at, routine:routines(structure)')
     .eq('athlete_id', user.id)
-    .eq('status', 'active')
+    .in('status', ['active', 'completed'])
     .order('assigned_at', { ascending: false })
     .limit(1)
     .maybeSingle()
