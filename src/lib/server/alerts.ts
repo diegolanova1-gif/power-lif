@@ -35,14 +35,14 @@ export async function getAthleteAlerts(supabase: Supabase, coachId: string): Pro
     athletes.map(async (athlete): Promise<AthleteAlertSummary> => {
       const { data: assigned } = await supabase
         .from('athlete_routines')
-        .select('*, routine:routines(structure)')
+        .select('*')
         .eq('athlete_id', athlete.id)
         .in('status', ['active', 'completed'])
         .order('assigned_at', { ascending: false })
         .limit(1)
         .maybeSingle()
 
-      const structure = (assigned?.routine as unknown as { structure: RoutineStructure } | null)?.structure
+      const structure = assigned?.structure as RoutineStructure | null
       if (!assigned || !structure) return { athleteId: athlete.id, athleteName: athlete.name, alerts: [] }
 
       const routine = { ...assigned, sessions_per_week: structure.schedule?.length || 4 } as AthleteRoutine

@@ -48,14 +48,14 @@ export async function GET(request: NextRequest) {
   // Get athlete routine
   const { data: assigned } = await supabase
     .from('athlete_routines')
-    .select('*, routine:routines(structure)')
+    .select('*')
     .eq('athlete_id', athleteId)
     .in('status', ['active', 'completed'])
     .order('assigned_at', { ascending: false })
     .limit(1)
     .single()
 
-  const structure = (assigned?.routine as unknown as { structure: RoutineStructure } | null)?.structure
+  const structure = assigned?.structure as RoutineStructure | null
   const routine = assigned && { ...assigned, sessions_per_week: structure?.schedule?.length }
   const programWeeks = structure?.weeks ?? weeks
 

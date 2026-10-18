@@ -56,14 +56,15 @@ export default async function AthleteFollowUpPage({
   // Active program, or the most recent one
   const { data: assignment } = await supabase
     .from('athlete_routines')
-    .select('id, status, current_week, current_day, started_at, routine_id, routine:routines(name, structure)')
+    .select('id, status, current_week, current_day, started_at, routine_id, structure, routine:routines(name)')
     .eq('athlete_id', id)
     .order('status', { ascending: true }) // 'active' sorts first
     .order('assigned_at', { ascending: false })
     .limit(1)
     .maybeSingle()
 
-  const routine = assignment?.routine as unknown as { name: string; structure: RoutineStructure } | null
+  const routineName = (assignment?.routine as unknown as { name: string } | null)?.name ?? null
+  const structure = assignment?.structure as RoutineStructure | null
 
   const header = (
     <div className="flex flex-col gap-4">
@@ -74,8 +75,8 @@ export default async function AthleteFollowUpPage({
         <div className="min-w-0">
           <h1 className="truncate text-3xl font-semibold tracking-tight text-foreground">{athlete.full_name || 'Alumno'}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {assignment && routine
-              ? `${routine.name} · ${assignment.status === 'completed' ? 'terminada' : `va por la semana ${assignment.current_week}, ${weekdayName(assignment.current_day)}`}`
+            {assignment && structure
+              ? `${routineName ?? 'Rutina'} · ${assignment.status === 'completed' ? 'terminada' : `va por la semana ${assignment.current_week}, ${weekdayName(assignment.current_day)}`}`
               : 'Sin rutina asignada'}
           </p>
         </div>
@@ -84,7 +85,7 @@ export default async function AthleteFollowUpPage({
     </div>
   )
 
-  if (!assignment || !routine) {
+  if (!assignment || !structure) {
     return (
       <div className="flex flex-col gap-6">
         {header}
@@ -95,7 +96,6 @@ export default async function AthleteFollowUpPage({
     )
   }
 
-  const structure = routine.structure
   const totalWeeks = structure.weeks || 1
   const trainingDays = [...structure.schedule].map(d => d.day).sort((a, b) => a - b)
 

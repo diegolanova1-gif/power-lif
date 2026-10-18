@@ -28,14 +28,14 @@ export async function loadWorkout(supabase: { auth: any; from: any }): Promise<W
 
   const { data: routine } = await supabase
     .from('athlete_routines')
-    .select('id, current_week, current_day, started_at, routine:routines(structure)')
+    .select('id, current_week, current_day, started_at, structure')
     .eq('athlete_id', user.id)
     .in('status', ['active', 'completed'])
     .order('assigned_at', { ascending: false })
     .limit(1)
     .maybeSingle()
 
-  const structure = (routine?.routine as unknown as { structure: RoutineStructure } | null)?.structure
+  const structure = routine?.structure as RoutineStructure | null
   if (!routine || !structure?.schedule?.length) return null
 
   const allSchedules = [structure.schedule, ...(structure.week_plans ?? []).map((p: any) => p.schedule)]

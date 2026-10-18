@@ -51,7 +51,7 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
           .in('athlete_routine_id', routineIds)
           .in('exercise_id', exerciseIds)
           .order('set_number', { ascending: true }),
-        supabase.from('athlete_routines').select('id, routine:routines(structure)').in('id', routineIds),
+        supabase.from('athlete_routines').select('id, structure').in('id', routineIds),
       ])
     : [{ data: [] }, { data: [] }]
 
@@ -61,7 +61,7 @@ export default async function ReviewsPage({ searchParams }: { searchParams: Prom
     : { data: [] }
   const substituteName = new Map((substitutes ?? []).map(e => [e.id as string, e.name as string]))
   const structureByRoutine = new Map(
-    (routineRows ?? []).map(r => [r.id as string, (r.routine as unknown as { structure: RoutineStructure } | null)?.structure ?? null])
+    (routineRows ?? []).map(r => [r.id as string, (r.structure as RoutineStructure | null) ?? null])
   )
 
   function prescriptionFor(routineId: string, exerciseId: string, week: number, day: number): string | null {

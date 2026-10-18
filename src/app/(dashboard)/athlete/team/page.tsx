@@ -36,14 +36,14 @@ export default async function AthleteTeamPage({ searchParams }: { searchParams: 
     supabase.from('profiles').select('full_name').eq('id', user?.id).single(),
     supabase
       .from('athlete_routines')
-      .select('id, routine:routines(structure)')
+      .select('id, structure')
       .eq('athlete_id', user?.id)
       .in('status', ['active', 'completed'])
       .order('assigned_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
   ])
-  const structure = (assigned?.routine as unknown as { structure: RoutineStructure } | null)?.structure
+  const structure = assigned?.structure as RoutineStructure | null
   const achievements = user && structure ? await getStreakAndAchievements(supabase, user.id, structure, true) : null
 
   return (

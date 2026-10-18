@@ -33,6 +33,7 @@ async function activateRoutine(
     .insert({
       athlete_id: athleteId,
       routine_id: routineId,
+      structure,
       started_at: startedAt || new Date().toISOString().split('T')[0],
       current_week: 1,
       current_day: Math.min(...structure.schedule.map(d => d.day)),
@@ -213,6 +214,13 @@ export async function updateRoutine(routineId: string, formData: FormData) {
           await supabase.from('athlete_routines').update({ status: 'completed' }).eq('id', row.id)
         }
       }
+
+      // Sync structure snapshot for active assignments (including just-resumed ones)
+      await supabase
+        .from('athlete_routines')
+        .update({ structure })
+        .eq('routine_id', routineId)
+        .eq('status', 'active')
     }
 
     revalidatePath('/coach/routines')
