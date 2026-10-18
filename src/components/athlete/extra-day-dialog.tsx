@@ -37,8 +37,8 @@ export function ExtraDayDialog({
   week: number
   day: number
   setsByKey: Record<string, LoggedSet[]>
-  e1rmByExercise: Map<string, number>
-  lastWeightByExercise: Map<string, number>
+  e1rmByExercise: Record<string, number>
+  lastWeightByExercise: Record<string, number>
   onExerciseSaved: (exerciseId: string, sets: LoggedSet[]) => void
   onDone: () => void
 }) {
@@ -91,8 +91,8 @@ export function ExtraDayDialog({
                 key={ex.exercise_id}
                 prescription={ex}
                 logged={setsByKey[`${week}-${day}-${ex.exercise_id}`] ?? []}
-                e1rm={e1rmByExercise.get(ex.exercise_id) ?? null}
-                lastWeight={lastWeightByExercise.get(ex.exercise_id) ?? null}
+                e1rm={e1rmByExercise[ex.exercise_id] ?? null}
+                lastWeight={lastWeightByExercise[ex.exercise_id] ?? null}
                 session={{ athleteId, athleteRoutineId, week, day }}
                 extraType={choice}
                 onSaved={sets => onExerciseSaved(ex.exercise_id, sets)}
