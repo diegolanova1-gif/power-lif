@@ -4,7 +4,7 @@ import { ArrowLeft, CheckCircle2, AlertTriangle, ChevronDown, Circle, MessageSqu
 import { createClient } from '@/lib/supabase/server'
 import { MediaGrid } from '@/components/media-grid'
 import { FeedbackReply } from '@/components/coach/feedback-reply'
-import { exerciseCompliance, sessionCompliance, type ComplianceStatus } from '@/lib/calculations/compliance'
+import { exerciseCompliance, type ComplianceStatus } from '@/lib/calculations/compliance'
 import { formatReps, formatDuration, scheduleForWeek, type RoutineStructure } from '@/lib/validations/routine'
 import { MEDIA_BUCKET, SIGNED_URL_TTL_SECONDS, signedUrlMap, type MediaType } from '@/lib/media'
 import { FEEDBACK_REASONS } from '@/lib/feedback-reason'
@@ -130,11 +130,8 @@ export default async function AthleteFollowUpPage({
       .filter(s => s.week === week && s.day === day && s.exercise_id === exerciseId)
       .sort((a, b) => a.set_number - b.set_number)
 
-  const statusOf = (week: number, day: number): ComplianceStatus => {
-    const plan = scheduleForWeek(structure, week).find(d => d.day === day)
-    if (!plan) return 'none'
-    return sessionCompliance(plan.exercises.map(e => exerciseCompliance(e, setsFor(week, day, e.exercise_id))))
-  }
+  const statusOf = (week: number, day: number): ComplianceStatus =>
+    (sets ?? []).some(s => s.week === week && s.day === day) ? 'done' : 'none'
 
   // Selected session: from the URL, else where the athlete is now
   const week = Math.min(Math.max(Number(query.week) || assignment.current_week || 1, 1), totalWeeks)
@@ -220,6 +217,13 @@ export default async function AthleteFollowUpPage({
     if (last && last.label === label) last.items.push(h)
     else historyGroups.push({ label, items: [h] })
   }
+
+  const planExerciseIds = new Set(plan?.exercises.map(e => e.exercise_id) ?? [])
+  const extraLoggedIds = [...new Set(
+    (sets ?? [])
+      .filter(s => s.week === week && s.day === day && !planExerciseIds.has(s.exercise_id))
+      .map(s => s.exercise_id as string)
+  )]
 
   return (
     <div className="flex flex-col gap-8">
@@ -428,6 +432,54 @@ export default async function AthleteFollowUpPage({
                 )}
               </div>
 
+              {fb && (
+                <div className="mt-3 space-y-2 rounded-xl border border-accent bg-accent/50 p-3">
+                  <p className="flex items-center gap-1 text-xs font-medium uppercase text-accent-foreground">
+                    <MessageSquare className="h-3.5 w-3.5" /> Comentario del alumno
+                  </p>
+                  {fb.reason && <Badge variant="warning">{FEEDBACK_REASONS[fb.reason as keyof typeof FEEDBACK_REASONS]}</Badge>}
+                  {fb.note && <p className="whitespace-pre-wrap text-sm text-foreground">{fb.note}</p>}
+                  <MediaGrid items={media} />
+                  <FeedbackReply feedbackId={fb.id} coachReply={fb.coach_reply} reviewedAt={fb.reviewed_at} />
+                </div>
+              )}
+            </div>
+          )
+        })}
+
+        {extraLoggedIds.map(exerciseId => {
+          const done = setsFor(week, day, exerciseId)
+          const fb = sessionFeedback.find(f => f.exercise_id === exerciseId)
+          const media = ((fb?.media as unknown as { id: string; storage_path: string; media_type: MediaType; created_at: string }[]) ?? [])
+            .sort((a, b) => a.created_at.localeCompare(b.created_at))
+            .map(m => ({ id: m.id, storage_path: m.storage_path, media_type: m.media_type, url: urlByPath.get(m.storage_path) ?? null }))
+          return (
+            <div key={exerciseId} className="rounded-2xl bg-card p-4 ring-1 ring-success/40">
+              <div className="flex items-start justify-between gap-3">
+                <p className="font-semibold text-foreground">{nameById.get(exerciseId) ?? 'Ejercicio'}</p>
+                <StatusBadge status="done" />
+              </div>
+              <div className="mt-3 rounded-xl p-3 bg-success/10">
+                <p className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Hizo</p>
+                {done[0]?.substituted_exercise_id && (
+                  <p className="mb-1 text-sm text-muted-foreground">
+                    Cambió por <span className="font-medium text-foreground">{nameById.get(done[0].substituted_exercise_id) ?? 'otro ejercicio'}</span>
+                  </p>
+                )}
+                <div className="divide-y divide-border/60">
+                  {done.map(s => (
+                    <div key={s.set_number} className="flex items-baseline gap-3 py-1.5 text-sm">
+                      <span className="w-14 shrink-0 text-muted-foreground">Serie {s.set_number}</span>
+                      <span className="font-mono font-medium tabular-nums text-foreground">
+                        {Number(s.weight_kg) > 0 ? `${s.weight_kg} kg` : 'Peso corporal'}
+                        {' × '}
+                        {s.duration_seconds ? formatDuration(s.duration_seconds) : s.reps}
+                      </span>
+                      {s.rpe ? <span className="ml-auto font-mono text-xs tabular-nums text-muted-foreground">RPE {s.rpe}</span> : null}
+                    </div>
+                  ))}
+                </div>
+              </div>
               {fb && (
                 <div className="mt-3 space-y-2 rounded-xl border border-accent bg-accent/50 p-3">
                   <p className="flex items-center gap-1 text-xs font-medium uppercase text-accent-foreground">
