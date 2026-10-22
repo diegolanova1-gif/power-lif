@@ -321,7 +321,7 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, las
         </p>
         {!expanded && !isDone && lastWeight !== null && (
           <p className="mt-1 font-mono text-xs tabular-nums text-muted-foreground/70">
-            Último: {lastWeight > 0 ? `${lastWeight} kg` : 'peso corporal'}{lastReps !== null ? ` × ${lastReps} reps` : ''}
+            Mejor: {lastWeight > 0 ? `${lastWeight} kg` : 'peso corporal'}{lastReps !== null ? ` × ${lastReps} reps` : ''}
           </p>
         )}
         {expanded && p.note && <p className="mt-2 rounded-md bg-accent px-2 py-1.5 text-sm text-accent-foreground">{p.note}</p>}

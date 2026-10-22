@@ -135,8 +135,8 @@ export function LogView({ initialData }: LogViewProps) {
   function saveSets(exerciseId: string, sets: LoggedSet[]) {
     setSetsByKey(prev => ({ ...prev, [setsKey(currentDay.week, currentDay.day, exerciseId)]: sets }))
     if (sets.length) {
-      const last = sets.at(-1)!.weight_kg
-      setLastWeightByExercise(prev => ({ ...prev, [exerciseId]: last }))
+      const maxW = Math.max(...sets.map(s => s.weight_kg))
+      setLastWeightByExercise(prev => ({ ...prev, [exerciseId]: Math.max(prev[exerciseId] ?? 0, maxW) }))
     }
     const next = currentDay.exercises.find(
       e => e.exercise_id !== exerciseId && !setsByKey[setsKey(currentDay.week, currentDay.day, e.exercise_id)]?.length

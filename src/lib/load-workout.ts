@@ -51,8 +51,8 @@ export async function loadWorkout(supabase: { auth: any; from: any }): Promise<W
       .select('exercise_id, weight_kg, reps')
       .eq('athlete_id', user.id)
       .in('exercise_id', exerciseIds)
-      .order('completed_at', { ascending: false })
-      .limit(exerciseIds.length),
+      .order('weight_kg', { ascending: false })
+      .limit(exerciseIds.length * 10),
     supabase.from('estimated_1rm').select('exercise_id, estimated_1rm').eq('athlete_id', user.id).in('exercise_id', exerciseIds),
   ])
 
@@ -116,9 +116,17 @@ export async function loadWorkout(supabase: { auth: any; from: any }): Promise<W
   const lastWeight: Record<string, number> = {}
   const lastReps: Record<string, number> = {}
   for (const h of history ?? []) {
-    if (!(h.exercise_id in lastWeight)) {
-      lastWeight[h.exercise_id] = Number(h.weight_kg)
+    const w = Number(h.weight_kg)
+    if (w > (lastWeight[h.exercise_id] ?? 0)) {
+      lastWeight[h.exercise_id] = w
       if (h.reps != null) lastReps[h.exercise_id] = Number(h.reps)
+    }
+  }
+  for (const s of sets ?? []) {
+    const w = Number(s.weight_kg)
+    if (w > (lastWeight[s.exercise_id] ?? 0)) {
+      lastWeight[s.exercise_id] = w
+      if (s.reps != null) lastReps[s.exercise_id] = Number(s.reps)
     }
   }
 
