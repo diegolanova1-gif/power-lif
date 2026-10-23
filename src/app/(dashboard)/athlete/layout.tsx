@@ -5,11 +5,12 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Dumbbell, BarChart, History, LayoutDashboard, Lightbulb, User, UserRound, Trophy } from 'lucide-react'
+import { Dumbbell, BarChart, History, LayoutDashboard, User, UserRound, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SignOutItem } from '@/components/layout/sign-out-item'
 import { FabMenu } from '@/components/layout/fab-menu'
 import { FeedbackDialog } from '@/components/layout/feedback-dialog'
+import { FeedbackMenuItem } from '@/components/layout/feedback-menu-item'
 import { OneTimeNotice } from '@/components/athlete/one-time-notice'
 import { ProfilePrompt } from '@/components/athlete/profile-prompt'
 
@@ -168,12 +169,7 @@ export default async function AthleteLayout({
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem render={<div />}>
-                    <FeedbackDialog>
-                      <Lightbulb className="h-4 w-4" />
-                      Sugerencias
-                    </FeedbackDialog>
-                  </DropdownMenuItem>
+                  <FeedbackMenuItem />
                   <DropdownMenuSeparator />
                   <SignOutItem />
                 </DropdownMenuContent>
@@ -186,6 +182,7 @@ export default async function AthleteLayout({
       <main className="mx-auto max-w-7xl px-4 pt-8 pb-24 sm:px-6 lg:px-8">
         {children}
       </main>
+      <FeedbackDialog />
       <FabMenu
         items={navigation.map(item => ({
           name: item.name,
