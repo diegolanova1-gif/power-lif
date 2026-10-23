@@ -63,7 +63,26 @@ export async function deleteFeedbackMedia(mediaId: string) {
   return { success: true }
 }
 
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getAdminUserId } from '@/lib/auth/admin'
+
 const FEEDBACK_TYPES = ['suggestion', 'bug', 'feature', 'error', 'other'] as const
+
+export async function updateFeedbackStatus(id: string, status: string) {
+  const adminId = await getAdminUserId()
+  if (!adminId) return { error: 'No autorizado' }
+  if (!['reviewed', 'resolved'].includes(status)) return { error: 'Estado inválido' }
+
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('user_feedback')
+    .update({ status })
+    .eq('id', id)
+
+  if (error) return { error: error.message }
+  revalidatePath('/admin/feedback')
+  return { success: true }
+}
 
 export async function submitUserFeedback(type: string, message: string) {
   if (!FEEDBACK_TYPES.includes(type as any) || !message.trim()) {

@@ -17,22 +17,3 @@ CREATE POLICY "Users can read own feedback"
   ON user_feedback FOR SELECT
   USING (auth.uid() = user_id);
 
-CREATE OR REPLACE FUNCTION public.is_admin()
-RETURNS boolean
-LANGUAGE sql
-SECURITY DEFINER
-STABLE
-AS $$
-  SELECT COALESCE(
-    (SELECT is_admin FROM public.profiles WHERE id = auth.uid()),
-    false
-  )
-$$;
-
-CREATE POLICY "Admin can read all feedback"
-  ON user_feedback FOR SELECT
-  USING (public.is_admin());
-
-CREATE POLICY "Admin can update feedback"
-  ON user_feedback FOR UPDATE
-  USING (public.is_admin());

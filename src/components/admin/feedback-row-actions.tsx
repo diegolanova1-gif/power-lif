@@ -2,8 +2,8 @@
 
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
+import { updateFeedbackStatus } from '@/actions/feedback'
 
 const NEXT_STATUS: Record<string, string> = {
   pending: 'reviewed',
@@ -21,10 +21,9 @@ export function FeedbackRowActions({ id, currentStatus }: { id: string; currentS
 
   async function advance() {
     if (!next) return
-    const supabase = createClient()
-    const { error } = await supabase.from('user_feedback').update({ status: next }).eq('id', id)
-    if (error) {
-      toast.error(error.message)
+    const res = await updateFeedbackStatus(id, next)
+    if (res.error) {
+      toast.error(res.error)
       return
     }
     router.refresh()
