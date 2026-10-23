@@ -5,10 +5,11 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { LayoutDashboard, Users, FileText, BarChart, User, Settings, MessageSquare, Trophy, Shield } from 'lucide-react'
+import { LayoutDashboard, Users, FileText, BarChart, Lightbulb, User, Settings, MessageSquare, Trophy, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SignOutItem } from '@/components/layout/sign-out-item'
 import { FabMenu } from '@/components/layout/fab-menu'
+import { FeedbackDialog } from '@/components/layout/feedback-dialog'
 
 export default async function DashboardLayout({
   children,
@@ -147,6 +148,13 @@ export default async function DashboardLayout({
                       </Link>
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem render={<div />}>
+                    <FeedbackDialog>
+                      <Lightbulb className="h-4 w-4" />
+                      Sugerencias
+                    </FeedbackDialog>
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <SignOutItem />
                 </DropdownMenuContent>

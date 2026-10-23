@@ -18,9 +18,14 @@ export default async function AdminLayout({
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <span className="text-xl font-bold text-foreground">Power Routine · Admin</span>
-            <Link href="/coach" className="text-sm font-medium text-muted-foreground hover:text-foreground">
-              Volver a mi panel
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link href="/admin/feedback" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+                Feedback
+              </Link>
+              <Link href="/coach" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+                Volver a mi panel
+              </Link>
+            </div>
           </div>
         </div>
       </header>

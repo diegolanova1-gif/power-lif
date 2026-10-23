@@ -5,10 +5,11 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Dumbbell, BarChart, History, LayoutDashboard, User, UserRound, Trophy } from 'lucide-react'
+import { Dumbbell, BarChart, History, LayoutDashboard, Lightbulb, User, UserRound, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SignOutItem } from '@/components/layout/sign-out-item'
 import { FabMenu } from '@/components/layout/fab-menu'
+import { FeedbackDialog } from '@/components/layout/feedback-dialog'
 import { OneTimeNotice } from '@/components/athlete/one-time-notice'
 import { ProfilePrompt } from '@/components/athlete/profile-prompt'
 
@@ -165,6 +166,13 @@ export default async function AthleteLayout({
                       <Trophy className="h-4 w-4" />
                       Mis logros
                     </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem render={<div />}>
+                    <FeedbackDialog>
+                      <Lightbulb className="h-4 w-4" />
+                      Sugerencias
+                    </FeedbackDialog>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <SignOutItem />

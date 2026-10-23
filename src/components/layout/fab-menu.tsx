@@ -4,8 +4,9 @@ import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 're
 import { flushSync } from 'react-dom'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Dumbbell } from 'lucide-react'
+import { Dumbbell, Timer } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { FloatingStopwatch } from './floating-stopwatch'
 
 export interface FabMenuItem {
   name: string
@@ -21,6 +22,7 @@ export interface FabMenuItem {
 // fans the same options already in the top nav out in an arc when tapped.
 export function FabMenu({ items }: { items: FabMenuItem[] }) {
   const [open, setOpen] = useState(false)
+  const [showStopwatch, setShowStopwatch] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const pendingRef = useRef<(() => void) | null>(null)
@@ -81,10 +83,14 @@ export function FabMenu({ items }: { items: FabMenuItem[] }) {
     })
   }
 
-  const n = items.length
+  const n = items.length + 1
   const spreadDeg = n > 1 ? Math.min(170, 24 * (n - 1)) : 0
   const startDeg = 90 + spreadDeg / 2
   const radius = 104
+  const swDeg = n === 1 ? 90 : startDeg - (spreadDeg / (n - 1)) * items.length
+  const swRad = (swDeg * Math.PI) / 180
+  const swX = Math.cos(swRad) * radius
+  const swY = -Math.sin(swRad) * radius
 
   return (
     <div
@@ -138,6 +144,24 @@ export function FabMenu({ items }: { items: FabMenuItem[] }) {
         })}
 
         <button
+          type="button"
+          onClick={() => { setShowStopwatch(s => !s); setOpen(false) }}
+          style={{
+            transform: open ? `translate(${swX}px, ${swY}px) scale(1)` : 'translate(0px, 0px) scale(0.3)',
+            transitionDelay: open ? `${items.length * 30}ms` : '0ms',
+          }}
+          className={cn(
+            'absolute bottom-0 left-1/2 -ml-6 flex h-12 w-12 items-center justify-center rounded-full shadow-md ring-1 ring-foreground/10 transition-all duration-300 ease-out',
+            open ? 'opacity-100' : 'pointer-events-none opacity-0',
+            showStopwatch ? 'bg-primary text-primary-foreground' : 'bg-card text-foreground hover:bg-muted'
+          )}
+          aria-label="Cronómetro"
+          title="Cronómetro"
+        >
+          <Timer className="h-5 w-5" />
+        </button>
+
+        <button
           ref={buttonRef}
           type="button"
           onClick={() => setOpen(o => !o)}
@@ -148,6 +172,7 @@ export function FabMenu({ items }: { items: FabMenuItem[] }) {
           <Dumbbell className={cn('h-6 w-6 transition-transform duration-300', open && 'rotate-90')} />
         </button>
       </div>
+      {showStopwatch && <FloatingStopwatch onClose={() => setShowStopwatch(false)} />}
     </div>
   )
 }

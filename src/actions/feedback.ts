@@ -62,3 +62,22 @@ export async function deleteFeedbackMedia(mediaId: string) {
   revalidatePath('/coach/reviews')
   return { success: true }
 }
+
+const FEEDBACK_TYPES = ['suggestion', 'bug', 'feature', 'error', 'other'] as const
+
+export async function submitUserFeedback(type: string, message: string) {
+  if (!FEEDBACK_TYPES.includes(type as any) || !message.trim()) {
+    return { error: 'Datos inválidos' }
+  }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const { error } = await supabase
+    .from('user_feedback')
+    .insert({ user_id: user.id, type, message: message.trim() })
+
+  if (error) return { error: error.message }
+  return { success: true }
+}
