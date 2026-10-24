@@ -10,7 +10,7 @@ export function DeleteAccountMenuItem() {
 
   return (
     <>
-      <DropdownMenuItem onClick={() => setOpen(true)} className="text-destructive focus:text-destructive">
+      <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setOpen(true) }} className="text-destructive focus:text-destructive">
         <Trash2 className="h-4 w-4" />
         Dar de baja mi cuenta
       </DropdownMenuItem>
