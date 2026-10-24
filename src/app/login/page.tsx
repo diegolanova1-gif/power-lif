@@ -6,10 +6,32 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
 import { Loader2, Mail, Lock, AlertCircle, ArrowLeft, Dumbbell, User, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import { whatsappLink, WHATSAPP_MESSAGES } from '@/lib/contact'
+
+const loginTheme = {
+  background: 'radial-gradient(ellipse at 50% 50%, #15142a 0%, #0b0b0f 60%) fixed, #0b0b0f',
+  '--background': '#0b0b0f',
+  '--foreground': '#f4f4f5',
+  '--card': '#16161b',
+  '--card-foreground': '#f4f4f5',
+  '--primary': '#6360ff',
+  '--primary-foreground': '#ffffff',
+  '--muted': '#1e1e26',
+  '--muted-foreground': '#a1a1aa',
+  '--border': 'rgba(255,255,255,0.08)',
+  '--input': 'rgba(255,255,255,0.15)',
+  '--ring': '#a5a3ff',
+  '--destructive': '#ef4444',
+  '--accent': '#1e1e26',
+  '--accent-foreground': '#f4f4f5',
+  '--secondary': '#1e1e26',
+  '--secondary-foreground': '#f4f4f5',
+  '--popover': '#16161b',
+  '--popover-foreground': '#f4f4f5',
+  '--success': '#22c55e',
+} as React.CSSProperties
 
 export default function LoginPage({ searchParams }: { searchParams: Promise<{ as?: string; error?: string }> }) {
   const params = use(searchParams)
@@ -21,7 +43,6 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ as
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [isMagicLink, setIsMagicLink] = useState(false)
 
   const supabase = createClient()
 
@@ -53,32 +74,13 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ as
     setLoading(false)
   }
 
-  async function handleMagicLink(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-
-    const { error } = await supabase.auth.signInWithOtp({
-      email: email.trim().toLowerCase(),
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-        shouldCreateUser: false,
-      },
-    })
-
-    if (error) {
-      toast.error(error.message)
-    } else {
-      toast.success('Revisa tu email para el enlace mágico')
-    }
-    setLoading(false)
-  }
 
   if (!role) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/[0.06] via-background to-background px-4 py-12">
-        <Card className="w-full max-w-md animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <div className="min-h-screen flex items-center justify-center px-4 py-12" style={loginTheme}>
+        <Card className="w-full max-w-md animate-in fade-in slide-in-from-bottom-2 duration-500 shadow-[0_0_80px_rgba(99,96,255,0.12)]">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-sm">
+            <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-[0_8px_30px_rgba(99,96,255,0.4)]">
               <Dumbbell className="h-7 w-7 text-primary-foreground" />
             </div>
             <CardTitle className="text-2xl font-extrabold tracking-tight">Power Routine</CardTitle>
@@ -91,7 +93,7 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ as
                 <span>Tu cuenta está desactivada. Contacta al administrador.</span>
               </div>
             )}
-            <Button type="button" size="lg" className="w-full justify-start gap-3" onClick={() => setRole('coach')}>
+            <Button type="button" size="lg" className="w-full justify-start gap-3 shadow-[0_10px_40px_rgba(99,96,255,0.3)]" onClick={() => setRole('coach')}>
               <Dumbbell className="h-5 w-5" />
               Soy coach
             </Button>
@@ -118,8 +120,8 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ as
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/[0.06] via-background to-background px-4 py-12">
-      <Card className="w-full max-w-md relative animate-in fade-in slide-in-from-bottom-2 duration-500">
+    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={loginTheme}>
+      <Card className="w-full max-w-md relative animate-in fade-in slide-in-from-bottom-2 duration-500 shadow-[0_0_80px_rgba(99,96,255,0.12)]">
         <CardHeader className="text-center">
           <Button
             type="button"
@@ -130,7 +132,7 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ as
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-sm">
+          <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-[0_8px_30px_rgba(99,96,255,0.4)]">
             <Dumbbell className="h-7 w-7 text-primary-foreground" />
           </div>
           <CardTitle className="text-2xl font-extrabold tracking-tight">Power Routine</CardTitle>
@@ -143,7 +145,7 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ as
               <span>Tu cuenta está desactivada. Contacta al administrador.</span>
             </div>
           )}
-          <form onSubmit={isMagicLink ? handleMagicLink : handleEmailLogin} className="space-y-4">
+          <form onSubmit={handleEmailLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
@@ -161,52 +163,34 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ as
               </div>
             </div>
 
-            {!isMagicLink && (
-              <div className="space-y-2">
-                <Label htmlFor="password">Contraseña</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10"
-                    required
-                    disabled={loading}
-                  />
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Contraseña</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10"
+                  required
+                  disabled={loading}
+                />
               </div>
-            )}
+            </div>
 
-            {isMagicLink && (
-              <p className="text-sm text-muted-foreground text-center">
-                Te enviaremos un enlace mágico a {email}
-              </p>
-            )}
-
-            <Button type="submit" className="w-full" disabled={loading} size="lg">
+            <Button type="submit" className="w-full shadow-[0_10px_40px_rgba(99,96,255,0.3)]" disabled={loading} size="lg">
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {isMagicLink ? 'Enviando...' : 'Iniciando sesión...'}
+                  Iniciando sesión...
                 </>
-              ) : isMagicLink ? (
-                'Enviar enlace mágico'
               ) : (
                 'Iniciar sesión'
               )}
             </Button>
           </form>
-
-          <Separator className="my-4" />
-
-          <div className="flex justify-center gap-2">
-            <Button variant="ghost" size="sm" onClick={() => setIsMagicLink(!isMagicLink)}>
-              {isMagicLink ? 'Usar contraseña' : 'Usar enlace mágico'}
-            </Button>
-          </div>
 
           {isAthlete ? (
             <p className="text-center text-sm text-muted-foreground">
