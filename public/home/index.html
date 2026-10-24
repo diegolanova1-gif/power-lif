@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Power Routine: rutinas semana a semana, registro real de cada serie, revisiones y ranking de equipo para entrenadores de musculación, fuerza y personal trainers." />
+    <meta name="theme-color" content="#0b0b0f" />
+    <title>Power Routine</title>
+
+    <link rel="icon" type="image/svg+xml" href="/home/favicon.svg" />
+    <link rel="apple-touch-icon" href="/home/favicon.svg" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Power Routine" />
+    <meta property="og:title" content="Power Routine — Vos armás la rutina. Ellos dicen que la hicieron. Ahora vas a saberlo." />
+    <meta property="og:description" content="Tu alumno registra cada serie desde el celular. Vos ves indicado vs. hecho, revisás observaciones y medís el progreso. Sin Excel." />
+    <meta property="og:image" content="https://power-lif.vercel.app/home/og.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Power Routine — Vos armás la rutina. Ellos dicen que la hicieron. Ahora vas a saberlo." />
+    <meta property="og:locale" content="es_AR" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Power Routine — Vos armás la rutina. Ellos dicen que la hicieron. Ahora vas a saberlo." />
+    <meta name="twitter:description" content="Registro real de cada serie, revisiones y ranking de equipo para entrenadores." />
+    <meta name="twitter:image" content="https://power-lif.vercel.app/home/og.png" />
+    <meta name="twitter:image:alt" content="Power Routine — Vos armás la rutina. Ellos dicen que la hicieron. Ahora vas a saberlo." />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <script type="module" crossorigin src="/home/assets/index-C7TUdTmD.js"></script>
+    <link rel="stylesheet" crossorigin href="/home/assets/index-CYYAykIn.css">
+  </head>
+  <body>
+    <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+
+    <header class="topbar">
+      <span class="wordmark">Power Routine</span>
+      <a class="login-link" href="/login">Ingresar</a>
+    </header>
+
+    <!-- El botón: protagonista fijo en el centro durante toda la página -->
+    <div class="core-wrap">
+      <svg class="blueprint" viewBox="-260 -260 520 520" aria-hidden="true">
+        <g class="bp-grid">
+          <line x1="-260" y1="-64" x2="260" y2="-64" /><line x1="-260" y1="64" x2="260" y2="64" />
+          <line x1="-64" y1="-260" x2="-64" y2="260" /><line x1="64" y1="-260" x2="64" y2="260" />
+        </g>
+        <circle class="bp-dash" r="64" />
+        <circle class="bp-dash" r="96" />
+        <g class="bp-handles">
+          <line x1="-40" y1="-64" x2="40" y2="-64" /><line x1="-40" y1="64" x2="40" y2="64" />
+          <line x1="-64" y1="-40" x2="-64" y2="40" /><line x1="64" y1="-40" x2="64" y2="40" />
+          <rect x="-4" y="-68" width="8" height="8" /><rect x="-4" y="60" width="8" height="8" />
+          <rect x="-68" y="-4" width="8" height="8" /><rect x="60" y="-4" width="8" height="8" />
+          <circle cx="-40" cy="-64" r="3.5" /><circle cx="40" cy="-64" r="3.5" />
+          <circle cx="-40" cy="64" r="3.5" /><circle cx="40" cy="64" r="3.5" />
+          <circle cx="-64" cy="-40" r="3.5" /><circle cx="-64" cy="40" r="3.5" />
+          <circle cx="64" cy="-40" r="3.5" /><circle cx="64" cy="40" r="3.5" />
+        </g>
+        <g class="bp-dim">
+          <line x1="-64" y1="128" x2="64" y2="128" />
+          <line x1="-64" y1="120" x2="-64" y2="136" /><line x1="64" y1="120" x2="64" y2="136" />
+          <text x="-112" y="104" text-anchor="end">TU</text>
+          <text x="-112" y="120" text-anchor="end">SISTEMA</text>
+          <text x="112" y="104" text-anchor="start">EN UN</text>
+          <text x="112" y="120" text-anchor="start">BOTÓN</text>
+        </g>
+      </svg>
+
+      <svg class="ring" viewBox="-100 -100 200 200" aria-hidden="true"></svg>
+
+      <nav class="fan" aria-label="Secciones del sistema" hidden></nav>
+
+      <button type="button" class="core" aria-label="Ir al final y abrir las secciones del sistema">
+        <span class="core-wire" aria-hidden="true"></span>
+        <!-- Capas del botón: se muestran separadas ("vista explotada") y se ensamblan al scrollear -->
+        <span class="core-stack" aria-hidden="true">
+          <span class="ly ly-shadow"><span class="ly-label">Progreso</span></span>
+          <span class="ly ly-base"><span class="ly-label">Rutinas</span></span>
+          <span class="ly ly-fill"><span class="ly-label">Tu equipo</span></span>
+          <span class="ly ly-gloss"><span class="ly-label">Récords</span></span>
+          <span class="ly ly-icon">
+            <svg class="core-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M17.596 12.768a2 2 0 1 0 2.829-2.829l-1.768-1.767a2 2 0 0 0 2.828-2.829l-2.828-2.828a2 2 0 0 0-2.829 2.828l-1.767-1.768a2 2 0 1 0-2.829 2.829z" />
+              <path d="m2.5 21.5 1.4-1.4" /><path d="m20.1 3.9 1.4-1.4" />
+              <path d="M5.343 21.485a2 2 0 1 0 2.829-2.828l1.767 1.768a2 2 0 1 0 2.829-2.829l-6.364-6.364a2 2 0 1 0-2.829 2.829l1.768 1.767a2 2 0 0 0-2.828 2.829z" />
+              <path d="m9.6 14.4 4.8-4.8" />
+            </svg>
+            <span class="ly-label">Un toque</span>
+          </span>
+        </span>
+      </button>
+    </div>
+
+    <main id="main-content">
+      <!-- ============ HERO ============ -->
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-top">
+          <p class="eyebrow">Para entrenadores que programan en serio</p>
+          <h1 id="hero-title">Vos armás la rutina.<br /><span class="dim">Ellos dicen que la hicieron. Ahora vas a saberlo.</span></h1>
+        </div>
+        <div class="hero-bottom">
+          <a class="cta" data-cta="hero" href="#" target="_blank" rel="noopener noreferrer">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .1-1.3c0-.1-.2-.2-.4-.3Z"/></svg>
+            Hablar por WhatsApp
+          </a>
+          <p class="micro">La app donde tus alumnos registran cada serie y vos ves el progreso real. Te respondo yo, Diego.</p>
+          <p class="scroll-hint" aria-hidden="true">Scrolleá: todo tu sistema entra en este botón</p>
+        </div>
+        <!-- Los 3 modos de la app (theme-selector.tsx): el botón los recorre al scrollear -->
+        <div class="themes">
+          <p class="themes-caption">Su app, su estilo. Tu método, intacto.</p>
+          <p class="themes-caption">Modos</p>
+          <ul>
+            <li data-theme="original"><span class="swatch" aria-hidden="true"></span>Original</li>
+            <li data-theme="rosa"><span class="swatch" aria-hidden="true"></span>Cande</li>
+            <li data-theme="oscuro"><span class="swatch" aria-hidden="true"></span>Oscuro</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ============ CAOS ============ -->
+      <section class="chapter chapter-chaos" data-chapter="caos" aria-labelledby="chaos-title">
+        <p class="giant" aria-hidden="true">Desorden</p>
+        <div class="ch-text absorb">
+          <p class="eyebrow">Lo que pasa hoy</p>
+          <h2 id="chaos-title">WhatsApp, Excel y la palabra del alumno.</h2>
+        </div>
+        <ul class="chips">
+          <li class="absorb">"Le mandé la rutina el lunes. ¿La hizo?"</li>
+          <li class="absorb">Un Excel por alumno, ninguno al día</li>
+          <li class="absorb">"Me costó la sentadilla" (una semana después)</li>
+          <li class="absorb">Cero dato real: no sabés si progresa o si te lo dice</li>
+          <li class="absorb">Audios, fotos y rutinas mezclados en el chat</li>
+        </ul>
+      </section>
+
+      <!-- ============ 01 PROGRAMÁS ============ -->
+      <section class="chapter" data-chapter="programas" data-index="0" aria-labelledby="ch-1">
+        <p class="giant" aria-hidden="true">Programás</p>
+        <div class="ch-card">
+          <div class="ch-text absorb">
+            <span class="step-index">01</span>
+            <h2 id="ch-1">Programás</h2>
+            <p>Armás el bloque una vez: semanas, series, reps o rango, kg o %RM, RPE, descanso y una nota técnica por ejercicio. Duplicás la semana y ajustás la carga.</p>
+            <ul class="specs">
+              <li>Plantillas: Torso/Pierna, PPL, Full Body, Fuerza 5×5</li>
+              <li>Cada alumno con su copia, editable</li>
+            </ul>
+          </div>
+          <figure class="device absorb">
+            <img src="/home/screens/builder-786.webp" srcset="/home/screens/builder-786.webp 786w, /home/screens/builder.webp 1179w" sizes="300px" width="393" height="852" loading="lazy" alt="Constructor de rutinas: semana 1 de 8, sentadilla 4×5 con 100 kg, RPE 8 y nota para el alumno." />
+          </figure>
+        </div>
+      </section>
+
+      <!-- ============ 02 REGISTRA ============ -->
+      <section class="chapter" data-chapter="registra" data-index="1" aria-labelledby="ch-2">
+        <p class="giant" aria-hidden="true">Registra</p>
+        <div class="ch-card">
+          <div class="ch-text absorb">
+            <span class="step-index">02</span>
+            <h2 id="ch-2">Tu alumno registra</h2>
+            <p>Abre la app y ve la sesión del día. Marca cada ejercicio: "hecho tal cual" o qué cambió. Si algo no salió, elige el motivo y te deja una observación o un video.</p>
+            <ul class="specs">
+              <li>Peso, reps y RPE por serie</li>
+              <li>Motivo rápido: dolor, cansancio, no llegó a las reps</li>
+            </ul>
+          </div>
+          <figure class="device absorb">
+            <img src="/home/screens/registrar-786.webp" srcset="/home/screens/registrar-786.webp 786w, /home/screens/registrar.webp 1179w" sizes="300px" width="393" height="852" loading="lazy" alt="Pantalla del alumno: sesión del domingo con 2 de 4 ejercicios hechos y la nota del coach." />
+          </figure>
+        </div>
+      </section>
+
+      <!-- ============ 03 REVISÁS ============ -->
+      <section class="chapter" data-chapter="revisas" data-index="2" aria-labelledby="ch-3">
+        <p class="giant" aria-hidden="true">Revisás</p>
+        <div class="ch-card">
+          <div class="ch-text absorb">
+            <span class="step-index">03</span>
+            <h2 id="ch-3">Revisás</h2>
+            <p>Indicado vs. hecho, serie por serie. Lo que necesita tu ojo te llega a una bandeja de revisiones. Respondés ahí mismo y tu alumno ve tu respuesta.</p>
+            <ul class="specs">
+              <li>Pautado 4×4 · 105 kg → hizo 4, 4, 4, 3</li>
+              <li>Fotos y videos por ejercicio</li>
+            </ul>
+          </div>
+          <figure class="device absorb">
+            <img src="/home/screens/revisiones-786.webp" srcset="/home/screens/revisiones-786.webp 786w, /home/screens/revisiones.webp 1179w" sizes="300px" width="393" height="852" loading="lazy" alt="Bandeja de revisiones del coach: un alumno marcó dolor de hombro en press con pausa, con sus 4 series registradas." />
+          </figure>
+        </div>
+      </section>
+
+      <!-- ============ 04 MEDÍS ============ -->
+      <section class="chapter" data-chapter="medis" data-index="3" aria-labelledby="ch-4">
+        <p class="giant" aria-hidden="true">Medís</p>
+        <div class="ch-card">
+          <div class="ch-text absorb">
+            <span class="step-index">04</span>
+            <h2 id="ch-4">Medís</h2>
+            <p>Fuerza estimada en sus ejercicios clave, volumen, adherencia y racha de cada alumno. Calculado de lo que registró, no de lo que te contó.</p>
+            <ul class="specs">
+              <li>Su máximo estimado, sin testearlo</li>
+              <li>Accesorios: mejor peso por sesión</li>
+            </ul>
+          </div>
+          <figure class="device absorb">
+            <img src="/home/screens/analytics-786.webp" srcset="/home/screens/analytics-786.webp 786w, /home/screens/analytics.webp 1179w" sizes="300px" width="393" height="852" loading="lazy" alt="Analytics de un alumno: total estimado 624,7 kg, adherencia 86% y racha de 24 días." />
+          </figure>
+        </div>
+      </section>
+
+      <!-- ============ 05 COMPITEN ============ -->
+      <section class="chapter" data-chapter="compiten" data-index="4" aria-labelledby="ch-5">
+        <p class="giant" aria-hidden="true">Compiten</p>
+        <div class="ch-card">
+          <div class="ch-text absorb">
+            <span class="step-index">05</span>
+            <h2 id="ch-5">Compiten</h2>
+            <p>Armás equipos y elegís el ejercicio líder. El ranking combina fuerza actual y progreso, así compite también el que recién empieza. Tu alumno ve solo lo que aprobaste.</p>
+            <ul class="specs">
+              <li>Compite la fuerza y también el progreso</li>
+              <li>Logros por constancia</li>
+              <li>Videos y observaciones quedan entre vos y tu alumno</li>
+            </ul>
+          </div>
+          <figure class="device absorb">
+            <img src="/home/screens/ranking-786.webp" srcset="/home/screens/ranking-786.webp 786w, /home/screens/ranking.webp 1179w" sizes="300px" width="393" height="852" loading="lazy" alt="Ranking oficial del equipo aprobado por el coach, con la posición de la alumna y su score." />
+          </figure>
+        </div>
+      </section>
+
+      <!-- ============ TESTIMONIOS: espejo de Desorden, las opiniones se meten en el botón ============ -->
+      <section class="chapter chapter-chaos chapter-proof" data-chapter="testimonios" aria-labelledby="proof-title">
+        <p class="giant" aria-hidden="true">Alumnos</p>
+        <div class="ch-text absorb">
+          <p class="eyebrow">Lo que dicen los alumnos</p>
+          <h2 id="proof-title">Tus alumnos la van a usar.<br /><span class="dim">Los míos ya la usan.</span></h2>
+        </div>
+        <ul class="chips">
+          <li class="absorb">“Cada lunes tengo mi rutina actualizada”<span class="chip-who">Alumna</span></li>
+          <li class="absorb">“Todo organizado en un solo lugar”<span class="chip-who">Alumno</span></li>
+          <li class="absorb">“Si no puedo hacer un ejercicio, mi profe adapta la rutina”<span class="chip-who">Alumna</span></li>
+          <li class="absorb">“¡Cualquiera puede hacerlo!”<span class="chip-who">Alumno</span></li>
+        </ul>
+      </section>
+
+      <!-- ============ POWER ROUTINE: por qué lo creé ============ -->
+      <section class="chapter chapter-origin" data-chapter="origen" aria-labelledby="origin-title">
+        <p class="giant" aria-hidden="true">Power</p>
+        <div class="ch-text absorb">
+          <p class="eyebrow">Power Routine</p>
+          <h2 id="origin-title">Lo armé para mis alumnos.<br /><span class="dim">Hoy es para los tuyos.</span></h2>
+        </div>
+        <figure class="origin-sign absorb">
+          <blockquote>Power Routine nació para resolver un problema propio: el tiempo que me llevaba planificar las rutinas de mis alumnos. Hoy lo comparto con otros profesionales para que ahorren ese tiempo y sigan el progreso de cada alumno con datos reales.</blockquote>
+          <figcaption>
+            <span class="origin-avatar" aria-hidden="true">DM</span>
+            <span class="origin-who">
+              <strong>Diego Macedo</strong>
+              <span>Profesor de Educación Física · Personal Trainer · Vibe Coder</span>
+            </span>
+          </figcaption>
+        </figure>
+      </section>
+
+      <!-- ============ FINAL ============ -->
+      <section class="final" aria-labelledby="final-title">
+        <div class="final-top">
+          <h2 id="final-title">Todo tu sistema,<br /><span class="dim">en un botón.</span></h2>
+        </div>
+        <p class="tap-hint" aria-live="polite">Tocá el botón</p>
+        <div class="final-bottom">
+          <a class="cta" data-cta="final" href="#" target="_blank" rel="noopener noreferrer">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 0 0 1.8-1.2 2.2 2.2 0 0 0 .1-1.3c0-.1-.2-.2-.4-.3Z"/></svg>
+            Hablar por WhatsApp
+          </a>
+          <p class="micro">Sin compromiso. Sin formularios. · Capturas con datos de demostración.</p>
+        </div>
+      </section>
+
+      <!-- ============ FOOTER LEGAL ============ -->
+      <footer style="border-top:1px solid var(--border);padding:24px var(--gutter);text-align:center;font-size:.78rem;color:var(--text-faint)">
+        <div style="display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 12px">
+          <span>© 2026 Power Routine</span>
+          <span style="opacity:.4">·</span>
+          <a href="/terminos" style="color:var(--text-dim);text-decoration:none">Términos y Condiciones</a>
+          <span style="opacity:.4">·</span>
+          <a href="/privacidad" style="color:var(--text-dim);text-decoration:none">Política de Privacidad</a>
+        </div>
+      </footer>
+    </main>
+
+    <!-- Sección reabierta desde el abanico: nace del botón, como en la app -->
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" hidden>
+      <button type="button" class="sheet-close" aria-label="Volver al botón">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+      </button>
+      <div class="sheet-body"></div>
+    </div>
+
+  </body>
+</html>
