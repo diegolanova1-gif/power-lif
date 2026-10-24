@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, Mail, Lock, AlertCircle, ArrowLeft, Dumbbell, User, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
+import Link from 'next/link'
 import { whatsappLink, WHATSAPP_MESSAGES } from '@/lib/contact'
 
 const loginTheme = {
@@ -115,6 +116,11 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ as
             </p>
           </CardFooter>
         </Card>
+        <div className="mt-6 flex items-center gap-3 text-xs text-muted-foreground">
+          <Link href="/terminos" className="hover:text-foreground transition-colors">Términos</Link>
+          <span>·</span>
+          <Link href="/privacidad" className="hover:text-foreground transition-colors">Privacidad</Link>
+        </div>
       </div>
     )
   }
@@ -211,6 +217,11 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ as
           )}
         </CardContent>
       </Card>
+      <div className="mt-6 flex items-center gap-3 text-xs text-muted-foreground">
+        <Link href="/terminos" className="hover:text-foreground transition-colors">Términos</Link>
+        <span>·</span>
+        <Link href="/privacidad" className="hover:text-foreground transition-colors">Privacidad</Link>
+      </div>
     </div>
   )
 }

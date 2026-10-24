@@ -13,6 +13,7 @@ import { FeedbackDialog } from '@/components/layout/feedback-dialog'
 import { FeedbackMenuItem } from '@/components/layout/feedback-menu-item'
 import { OneTimeNotice } from '@/components/athlete/one-time-notice'
 import { ProfilePrompt } from '@/components/athlete/profile-prompt'
+import { LegalFooter } from '@/components/layout/legal-footer'
 
 // Nota puntual para una sola alumna — no es un sistema de anuncios general.
 // Se guarda en athlete_notices así no vuelve a aparecer, ni a ella ni (por
@@ -182,6 +183,7 @@ export default async function AthleteLayout({
       <main className="mx-auto max-w-7xl px-4 pt-8 pb-24 sm:px-6 lg:px-8">
         {children}
       </main>
+      <LegalFooter />
       <FeedbackDialog />
       <FabMenu
         items={navigation.map(item => ({

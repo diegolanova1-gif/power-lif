@@ -11,6 +11,7 @@ import { SignOutItem } from '@/components/layout/sign-out-item'
 import { FabMenu } from '@/components/layout/fab-menu'
 import { FeedbackDialog } from '@/components/layout/feedback-dialog'
 import { FeedbackMenuItem } from '@/components/layout/feedback-menu-item'
+import { LegalFooter } from '@/components/layout/legal-footer'
 
 export default async function DashboardLayout({
   children,
@@ -163,6 +164,7 @@ export default async function DashboardLayout({
       <main className="mx-auto max-w-7xl px-4 pt-8 pb-24 sm:px-6 lg:px-8">
         {children}
       </main>
+      <LegalFooter />
       <FeedbackDialog />
       <FabMenu
         items={navigation.map(item => ({
