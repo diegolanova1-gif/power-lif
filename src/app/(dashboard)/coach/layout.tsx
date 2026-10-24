@@ -5,13 +5,12 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { LayoutDashboard, Users, FileText, BarChart, User, Settings, MessageSquare, Trophy, Shield } from 'lucide-react'
+import { LayoutDashboard, Users, FileText, BarChart, UserRound, Settings, MessageSquare, Trophy, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SignOutItem } from '@/components/layout/sign-out-item'
 import { FabMenu } from '@/components/layout/fab-menu'
 import { FeedbackDialog } from '@/components/layout/feedback-dialog'
 import { FeedbackMenuItem } from '@/components/layout/feedback-menu-item'
-import { DeleteAccountMenuItem } from '@/components/layout/delete-account-menu-item'
 import { LegalFooter } from '@/components/layout/legal-footer'
 
 export default async function DashboardLayout({
@@ -61,6 +60,7 @@ export default async function DashboardLayout({
     { name: 'Analytics', href: '/coach/analytics', icon: BarChart },
     { name: 'Revisiones', href: '/coach/reviews', icon: MessageSquare, badge: pendingReviews ?? 0 },
     { name: 'Teams', href: '/coach/teams', icon: Trophy },
+    { name: 'Perfil', href: '/coach/profile', icon: UserRound },
     ...(profile.is_admin ? [{ name: 'Admin', href: '/admin', icon: Shield }] : []),
   ]
 
@@ -143,6 +143,12 @@ export default async function DashboardLayout({
                       Teams
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link href="/coach/profile" className="flex items-center gap-2">
+                      <UserRound className="h-4 w-4" />
+                      Mi perfil
+                    </Link>
+                  </DropdownMenuItem>
                   {profile.is_admin && (
                     <DropdownMenuItem>
                       <Link href="/admin" className="flex items-center gap-2">
@@ -153,7 +159,6 @@ export default async function DashboardLayout({
                   )}
                   <DropdownMenuSeparator />
                   <FeedbackMenuItem />
-                  <DeleteAccountMenuItem />
                   <DropdownMenuSeparator />
                   <SignOutItem />
                 </DropdownMenuContent>

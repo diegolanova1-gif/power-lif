@@ -2,11 +2,12 @@
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Eye, EyeOff, Loader2, LogOut } from 'lucide-react'
+import { Eye, EyeOff, Loader2, LogOut, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createClient } from '@/lib/supabase/client'
+import { DeleteAccountDialog } from '@/components/layout/delete-account-dialog'
 
 interface AccountSectionProps {
   athleteId: string
@@ -24,6 +25,7 @@ export function AccountSection({ athleteId, fullName, email }: AccountSectionPro
   const [repeat, setRepeat] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [savingPassword, setSavingPassword] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
   async function saveName(e: React.FormEvent) {
     e.preventDefault()
@@ -113,11 +115,16 @@ export function AccountSection({ athleteId, fullName, email }: AccountSectionPro
           </Button>
         </form>
 
-        <div className="border-t border-border pt-5">
+        <div className="flex flex-wrap gap-3 border-t border-border pt-5">
           <Button type="button" variant="ghost" className="text-destructive hover:text-destructive" onClick={signOut}>
             <LogOut className="mr-2 h-4 w-4" />
             Cerrar sesión
           </Button>
+          <Button type="button" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setDeleteOpen(true)}>
+            <Trash2 className="mr-2 h-4 w-4" />
+            Dar de baja mi cuenta
+          </Button>
+          <DeleteAccountDialog open={deleteOpen} onOpenChange={setDeleteOpen} />
         </div>
       </div>
     </section>
