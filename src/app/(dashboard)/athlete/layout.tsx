@@ -14,6 +14,7 @@ import { FeedbackMenuItem } from '@/components/layout/feedback-menu-item'
 import { OneTimeNotice } from '@/components/athlete/one-time-notice'
 import { ProfilePrompt } from '@/components/athlete/profile-prompt'
 import { LegalFooter } from '@/components/layout/legal-footer'
+import { DeleteAccountMenuItem } from '@/components/layout/delete-account-menu-item'
 
 // Nota puntual para una sola alumna — no es un sistema de anuncios general.
 // Se guarda en athlete_notices así no vuelve a aparecer, ni a ella ni (por
@@ -171,6 +172,7 @@ export default async function AthleteLayout({
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <FeedbackMenuItem />
+                  <DeleteAccountMenuItem />
                   <DropdownMenuSeparator />
                   <SignOutItem />
                 </DropdownMenuContent>

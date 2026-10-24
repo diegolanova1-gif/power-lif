@@ -11,6 +11,7 @@ import { SignOutItem } from '@/components/layout/sign-out-item'
 import { FabMenu } from '@/components/layout/fab-menu'
 import { FeedbackDialog } from '@/components/layout/feedback-dialog'
 import { FeedbackMenuItem } from '@/components/layout/feedback-menu-item'
+import { DeleteAccountMenuItem } from '@/components/layout/delete-account-menu-item'
 import { LegalFooter } from '@/components/layout/legal-footer'
 
 export default async function DashboardLayout({
@@ -152,6 +153,7 @@ export default async function DashboardLayout({
                   )}
                   <DropdownMenuSeparator />
                   <FeedbackMenuItem />
+                  <DeleteAccountMenuItem />
                   <DropdownMenuSeparator />
                   <SignOutItem />
                 </DropdownMenuContent>

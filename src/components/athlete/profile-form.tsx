@@ -95,6 +95,10 @@ export function ProfileForm({ athleteId, initial }: { athleteId: string; initial
 
   async function save(e: React.FormEvent) {
     e.preventDefault()
+    if (birthDate) {
+      const age = (Date.now() - new Date(birthDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+      if (age < 13) return toast.error('La edad mínima para usar la plataforma es 13 años. Consultá con tu coach.')
+    }
     const h = toNumber(height)
     const w = toNumber(bodyweight)
     if (h !== null && (Number.isNaN(h) || h < 100 || h > 250)) return toast.error('La altura va entre 100 y 250 cm')
