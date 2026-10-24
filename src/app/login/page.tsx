@@ -196,6 +196,12 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ as
                 'Iniciar sesión'
               )}
             </Button>
+            <p className="text-center text-[11px] text-muted-foreground/70">
+              Al iniciar sesión, aceptás los{' '}
+              <Link href="/terminos" className="underline hover:text-muted-foreground">Términos y Condiciones</Link>
+              {' '}y la{' '}
+              <Link href="/privacidad" className="underline hover:text-muted-foreground">Política de Privacidad</Link>.
+            </p>
           </form>
 
           {isAthlete ? (
