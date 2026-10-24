@@ -93,7 +93,8 @@ export async function submitUserFeedback(type: string, message: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
 
-  const { error } = await supabase
+  const admin = createAdminClient()
+  const { error } = await admin
     .from('user_feedback')
     .insert({ user_id: user.id, type, message: message.trim() })
 
