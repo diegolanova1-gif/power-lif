@@ -8,14 +8,18 @@ export const metadata: Metadata = {
 
 export default function PrivacidadPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen text-[#f4f4f5]" style={{ background: 'radial-gradient(ellipse at 50% 50%, #15142a 0%, #0b0b0f 60%) fixed, #0b0b0f', fontFamily: "'Inter', system-ui, sans-serif" }}>
+      <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-4 sm:px-6" style={{ background: 'rgba(11,11,15,0.85)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <Link href="/" className="text-xl font-extrabold tracking-tight text-[#f4f4f5]">Power Routine</Link>
+        <Link href="/login" className="text-sm font-medium text-[#a1a1aa] hover:text-[#f4f4f5] transition-colors">Ingresar</Link>
+      </header>
       <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors">
+        <Link href="/" className="inline-flex items-center gap-2 text-sm text-[#a1a1aa] hover:text-[#f4f4f5] mb-8 transition-colors">
           <ArrowLeft className="h-4 w-4" />
           Volver
         </Link>
 
-        <article className="prose prose-sm prose-invert max-w-none [&_h1]:text-2xl [&_h1]:font-extrabold [&_h1]:tracking-tight [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-10 [&_h2]:mb-3 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mt-6 [&_p]:text-muted-foreground [&_p]:leading-relaxed [&_li]:text-muted-foreground [&_strong]:text-foreground [&_table]:w-full [&_th]:text-left [&_th]:text-foreground [&_th]:text-sm [&_th]:font-semibold [&_th]:pb-2 [&_th]:border-b [&_th]:border-border [&_td]:text-muted-foreground [&_td]:text-sm [&_td]:py-2 [&_td]:border-b [&_td]:border-border/50">
+        <article className="prose prose-sm prose-invert max-w-none [&_h1]:text-2xl [&_h1]:font-extrabold [&_h1]:tracking-tight [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mt-10 [&_h2]:mb-3 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mt-6 [&_p]:text-[#a1a1aa] [&_p]:leading-relaxed [&_li]:text-[#a1a1aa] [&_strong]:text-[#f4f4f5] [&_a]:text-[#a5a3ff] [&_a]:hover:text-[#6360ff] [&_table]:w-full [&_th]:text-left [&_th]:text-[#f4f4f5] [&_th]:text-sm [&_th]:font-semibold [&_th]:pb-2 [&_th]:border-b [&_th]:border-[rgba(255,255,255,0.08)] [&_td]:text-[#a1a1aa] [&_td]:text-sm [&_td]:py-2 [&_td]:border-b [&_td]:border-[rgba(255,255,255,0.04)]">
           <h1>Política de Privacidad</h1>
           <p className="!text-muted-foreground text-sm">Última actualización: 24 de octubre de 2026</p>
 
@@ -154,6 +158,18 @@ export default function PrivacidadPage() {
           </ul>
         </article>
       </div>
+      <footer className="border-t py-6 text-center text-xs" style={{ borderColor: 'rgba(255,255,255,0.08)', color: '#71717a' }}>
+        <div className="mx-auto max-w-3xl px-4 flex flex-col items-center gap-2">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4">
+            <span>© {new Date().getFullYear()} Power Routine — Diego Macedo</span>
+            <span className="hidden sm:inline opacity-40">·</span>
+            <Link href="/terminos" className="text-[#a1a1aa] hover:text-[#f4f4f5] transition-colors no-underline">Términos y Condiciones</Link>
+            <span className="hidden sm:inline opacity-40">·</span>
+            <Link href="/privacidad" className="text-[#a1a1aa] hover:text-[#f4f4f5] transition-colors no-underline">Política de Privacidad</Link>
+          </div>
+          <span>Contacto: WhatsApp +54 9 11 3875-3141</span>
+        </div>
+      </footer>
     </div>
   )
 }
