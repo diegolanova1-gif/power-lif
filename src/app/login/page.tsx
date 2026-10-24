@@ -78,7 +78,7 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ as
 
   if (!role) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 py-12" style={loginTheme}>
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12" style={loginTheme}>
         <Card className="w-full max-w-md animate-in fade-in slide-in-from-bottom-2 duration-500 shadow-[0_0_80px_rgba(99,96,255,0.12)]">
           <CardHeader className="text-center">
             <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-[0_8px_30px_rgba(99,96,255,0.4)]">
@@ -126,7 +126,7 @@ export default function LoginPage({ searchParams }: { searchParams: Promise<{ as
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12" style={loginTheme}>
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12" style={loginTheme}>
       <Card className="w-full max-w-md relative animate-in fade-in slide-in-from-bottom-2 duration-500 shadow-[0_0_80px_rgba(99,96,255,0.12)]">
         <CardHeader className="text-center">
           <Button
