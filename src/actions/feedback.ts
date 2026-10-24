@@ -94,11 +94,9 @@ export async function submitUserFeedback(type: string, message: string) {
   if (!user) return { error: 'No autenticado' }
 
   const admin = createAdminClient()
-  const { error } = await admin.rpc('submit_user_feedback', {
-    p_user_id: user.id,
-    p_type: type,
-    p_message: message.trim(),
-  })
+  const { error } = await admin
+    .from('user_feedback')
+    .insert({ user_id: user.id, type, message: message.trim() })
 
   if (error) return { error: error.message }
   return { success: true }
