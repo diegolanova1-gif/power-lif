@@ -60,8 +60,19 @@ export default function TerminosPage() {
           </ul>
           <p><strong>Power Routine no brinda asesoramiento médico, nutricional ni diagnósticos de salud.</strong> La plataforma es una herramienta de gestión de entrenamiento. Cualquier decisión relacionada con la salud debe ser consultada con un profesional médico.</p>
 
-          <h2>5. Precio y forma de pago</h2>
+          <h2>5. Precio, membresía y forma de pago</h2>
           <p>El servicio es pago. Los precios y formas de pago se comunican al Coach al momento de la contratación. Las modificaciones de precio se notifican con 30 días de anticipación.</p>
+
+          <h3>5.1 Ciclo de membresía</h3>
+          <p>La membresía del Coach tiene un ciclo de <strong>30 días corridos</strong> desde la fecha de activación o última renovación. Al vencer el período:</p>
+          <ul>
+            <li>Se otorga un <strong>período de gracia de 5 días corridos</strong> durante el cual el Coach puede seguir utilizando el servicio con recordatorios diarios de renovación.</li>
+            <li>Transcurridos los 5 días de gracia sin renovación, el acceso del Coach queda <strong>bloqueado</strong> hasta que se renueve la membresía.</li>
+            <li>Durante el bloqueo, los datos del Coach y sus Atletas se conservan íntegros.</li>
+          </ul>
+
+          <h3>5.2 Renovación</h3>
+          <p>La renovación se gestiona a través del administrador por WhatsApp. Al renovar, el nuevo período de 30 días <strong>se cuenta desde la fecha de vencimiento del período anterior</strong>, no desde la fecha de pago. Los días de gracia no extienden el siguiente período.</p>
 
           <h2>6. Derecho de arrepentimiento</h2>
           <p>De acuerdo con el artículo 34 de la Ley 24.240 de Defensa del Consumidor, el Coach tiene derecho a revocar la contratación dentro de los 10 (diez) días corridos desde la aceptación del servicio, sin necesidad de justificación y sin penalidad alguna.</p>
@@ -75,7 +86,7 @@ export default function TerminosPage() {
             <li>Se desactivará el acceso del Coach y sus Atletas.</li>
             <li>Los datos serán tratados conforme a la Política de Privacidad.</li>
             <li>La baja se procesará dentro de las 24 horas hábiles.</li>
-            <li>Se enviará una constancia de baja por correo electrónico.</li>
+            <li>Se notificará al administrador (en caso de baja de Coach) o al Coach (en caso de baja de Atleta) mediante un aviso dentro de la plataforma.</li>
           </ul>
 
           <h2>8. Obligaciones del usuario</h2>

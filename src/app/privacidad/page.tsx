@@ -41,7 +41,25 @@ export default function PrivacidadPage() {
             </tbody>
           </table>
 
-          <h3>2.2 Datos de perfil del Atleta</h3>
+          <h3>2.2 Datos de perfil del Coach</h3>
+          <table>
+            <thead>
+              <tr><th>Dato</th><th>Obligatorio</th><th>Finalidad</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Teléfono</td><td>No</td><td>Contacto profesional</td></tr>
+              <tr><td>WhatsApp</td><td>No</td><td>Contacto con Atletas</td></tr>
+              <tr><td>Ciudad</td><td>No</td><td>Ubicación profesional</td></tr>
+              <tr><td>Gimnasio / Centro de entrenamiento</td><td>No</td><td>Referencia laboral</td></tr>
+              <tr><td>Biografía profesional</td><td>No</td><td>Presentación al Atleta</td></tr>
+              <tr><td>Especialización</td><td>No</td><td>Categorización del perfil</td></tr>
+              <tr><td>Años de experiencia</td><td>No</td><td>Información profesional</td></tr>
+              <tr><td>Certificaciones</td><td>No</td><td>Acreditación profesional</td></tr>
+              <tr><td>Estado de membresía</td><td>Automático</td><td>Gestión del ciclo de facturación (30 días)</td></tr>
+            </tbody>
+          </table>
+
+          <h3>2.3 Datos de perfil del Atleta</h3>
           <table>
             <thead>
               <tr><th>Dato</th><th>Obligatorio</th><th>Finalidad</th></tr>
@@ -55,7 +73,7 @@ export default function PrivacidadPage() {
             </tbody>
           </table>
 
-          <h3>2.3 Datos de entrenamiento</h3>
+          <h3>2.4 Datos de entrenamiento</h3>
           <table>
             <thead>
               <tr><th>Dato</th><th>Finalidad</th></tr>
@@ -76,6 +94,8 @@ export default function PrivacidadPage() {
             <li>Enviar notificaciones relacionadas con el servicio.</li>
             <li>Responder consultas y solicitudes de los usuarios.</li>
             <li>Mejorar la plataforma en base al feedback recibido.</li>
+            <li>Gestionar el ciclo de membresía del Coach (facturación, gracia, bloqueo).</li>
+            <li>Notificar al Coach o al administrador cuando un usuario da de baja su cuenta.</li>
           </ul>
           <p><strong>No utilizamos los datos para:</strong></p>
           <ul>
