@@ -29,6 +29,11 @@ export function ProgressView({ data }: { data: ProgressData }) {
   const [selectedExercise, setSelectedExercise] = useState(data.exercises[0]?.exercise_id ?? '')
   const [timeRange, setTimeRange] = useState<'all' | '3m' | '6m' | '1y'>('all')
 
+  const exerciseItems = useMemo(() =>
+    Object.fromEntries(data.exercises.map(ex => [ex.exercise_id, ex.exercise_name])),
+    [data.exercises]
+  )
+
   const exercise = data.exercises.find(e => e.exercise_id === selectedExercise)
 
   const { series, showingOneRM } = useMemo(() => {
@@ -79,6 +84,7 @@ export function ProgressView({ data }: { data: ProgressData }) {
           value={selectedExercise || undefined}
           onValueChange={v => v && setSelectedExercise(v)}
           disabled={data.exercises.length === 0}
+          items={exerciseItems}
         >
           <SelectTrigger className="w-full sm:w-72">
             <SelectValue placeholder="Elegí un ejercicio" />
