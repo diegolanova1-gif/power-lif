@@ -71,7 +71,7 @@ export function AssignRoutineDialog({ routineId, routineName, athletes, defaultA
               </SelectTrigger>
               <SelectContent>
                 {athletes.map(a => (
-                  <SelectItem key={a.id} value={a.id}>{a.full_name || 'Sin nombre'}</SelectItem>
+                  <SelectItem key={a.id} value={a.id} label={a.full_name || 'Sin nombre'}>{a.full_name || 'Sin nombre'}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

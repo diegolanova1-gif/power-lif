@@ -85,7 +85,7 @@ export function ProgressView({ data }: { data: ProgressData }) {
           </SelectTrigger>
           <SelectContent>
             {data.exercises.map(ex => (
-              <SelectItem key={ex.exercise_id} value={ex.exercise_id}>
+              <SelectItem key={ex.exercise_id} value={ex.exercise_id} label={ex.exercise_name}>
                 {ex.exercise_name}
               </SelectItem>
             ))}

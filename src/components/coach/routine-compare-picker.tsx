@@ -31,7 +31,7 @@ export function RoutineComparePicker({ routines, a, b }: RoutineComparePickerPro
           </SelectTrigger>
           <SelectContent>
             {routines.map(r => (
-              <SelectItem key={r.id} value={r.id} disabled={r.id === (side === 'a' ? b : a)}>
+              <SelectItem key={r.id} value={r.id} label={r.name} disabled={r.id === (side === 'a' ? b : a)}>
                 {r.name}
               </SelectItem>
             ))}

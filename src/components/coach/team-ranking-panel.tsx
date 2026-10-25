@@ -113,7 +113,7 @@ export function TeamRankingPanel({
             </SelectTrigger>
             <SelectContent>
               {exercises.map(e => (
-                <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
+                <SelectItem key={e.id} value={e.id} label={e.name}>{e.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>

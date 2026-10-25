@@ -141,7 +141,7 @@ export function TeamLeaderboard({ teamId, currentUserId }: { teamId: string; cur
           </SelectTrigger>
           <SelectContent>
             {exercises.filter(e => !e.is_competition_lift).map(e => (
-              <SelectItem key={e.exercise_id} value={e.exercise_id}>{e.exercise_name}</SelectItem>
+              <SelectItem key={e.exercise_id} value={e.exercise_id} label={e.exercise_name}>{e.exercise_name}</SelectItem>
             ))}
           </SelectContent>
         </Select>
