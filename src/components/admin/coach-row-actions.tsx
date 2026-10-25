@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Check, Copy, KeyRound, Loader2, RefreshCw } from 'lucide-react'
+import { Check, Copy, KeyRound, Loader2, RefreshCw, CreditCard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -25,6 +25,7 @@ interface Coach {
   plan: 'basic' | 'pro'
   student_limit: number | null
   active: boolean
+  current_period_end: string | null
 }
 
 async function patchCoach(id: string, body: Record<string, unknown>) {
@@ -44,6 +45,23 @@ export function CoachRowActions({ coach, isSelf }: { coach: Coach; isSelf: boole
   const [savingLimit, setSavingLimit] = useState(false)
   const [changingPlan, setChangingPlan] = useState(false)
   const [togglingActive, setTogglingActive] = useState(false)
+  const [renewing, setRenewing] = useState(false)
+
+  const periodEnd = coach.current_period_end ? new Date(coach.current_period_end) : null
+  const expired = periodEnd ? periodEnd.getTime() < Date.now() : false
+
+  async function handleRenew() {
+    setRenewing(true)
+    try {
+      await patchCoach(coach.id, { renew_membership: true })
+      toast.success('Membresía renovada por 30 días')
+      router.refresh()
+    } catch (error) {
+      toast.error((error as Error).message)
+    } finally {
+      setRenewing(false)
+    }
+  }
 
   async function handlePlanChange(next: PlanId) {
     setChangingPlan(true)
@@ -113,6 +131,19 @@ export function CoachRowActions({ coach, isSelf }: { coach: Coach; isSelf: boole
           {savingLimit ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Guardar'}
         </Button>
       </div>
+
+      {!isSelf && (
+        <Button
+          size="sm"
+          variant={expired ? 'default' : 'outline'}
+          onClick={handleRenew}
+          disabled={renewing}
+          title={periodEnd ? `Vence: ${periodEnd.toLocaleDateString('es-AR')}` : 'Sin período'}
+        >
+          {renewing ? <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> : <CreditCard className="mr-1 h-3.5 w-3.5" />}
+          Renovar
+        </Button>
+      )}
 
       <Switch
         checked={coach.active}

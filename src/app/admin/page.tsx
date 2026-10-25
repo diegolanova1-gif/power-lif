@@ -18,6 +18,7 @@ interface CoachRow {
   active: boolean
   is_admin: boolean
   created_at: string
+  current_period_end: string | null
   athleteCount: number
 }
 
@@ -29,7 +30,7 @@ export default async function AdminPage() {
 
   const { data: coaches } = await admin
     .from('profiles')
-    .select('id, full_name, email, plan, student_limit, active, is_admin, created_at')
+    .select('id, full_name, email, plan, student_limit, active, is_admin, created_at, current_period_end')
     .eq('role', 'coach')
     .order('created_at', { ascending: false })
 
@@ -85,6 +86,7 @@ export default async function AdminPage() {
                     <TableHead>Email</TableHead>
                     <TableHead>Plan</TableHead>
                     <TableHead>Alumnos</TableHead>
+                    <TableHead>Membresía</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
@@ -99,6 +101,16 @@ export default async function AdminPage() {
                         {coach.student_limit === null
                           ? `${coach.athleteCount} · sin límite`
                           : `${coach.athleteCount} / ${coach.student_limit}`}
+                      </TableCell>
+                      <TableCell>
+                        {coach.current_period_end ? (() => {
+                          const end = new Date(coach.current_period_end)
+                          const days = Math.ceil((end.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+                          if (days > 5) return <Badge variant="success">{days}d</Badge>
+                          if (days > 0) return <Badge variant="warning">{days}d</Badge>
+                          if (days > -5) return <Badge variant="destructive">Gracia {5 + days}d</Badge>
+                          return <Badge variant="destructive">Bloqueado</Badge>
+                        })() : <span className="text-muted-foreground text-xs">—</span>}
                       </TableCell>
                       <TableCell>
                         <Badge variant={coach.active ? 'success' : 'destructive'}>

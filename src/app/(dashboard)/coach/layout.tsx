@@ -12,6 +12,8 @@ import { FabMenu } from '@/components/layout/fab-menu'
 import { FeedbackDialog } from '@/components/layout/feedback-dialog'
 import { FeedbackMenuItem } from '@/components/layout/feedback-menu-item'
 import { LegalFooter } from '@/components/layout/legal-footer'
+import { DeletionNotices } from '@/components/layout/deletion-notices'
+import { MembershipBanner } from '@/components/coach/membership-banner'
 
 export default async function DashboardLayout({
   children,
@@ -39,7 +41,7 @@ export default async function DashboardLayout({
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, full_name, avatar_url, is_admin')
+    .select('role, full_name, avatar_url, is_admin, current_period_end')
     .eq('id', user.id)
     .single()
 
@@ -52,6 +54,12 @@ export default async function DashboardLayout({
     .from('exercise_feedback')
     .select('id', { count: 'exact', head: true })
     .is('reviewed_at', null)
+
+  const { data: deletionNotices } = await supabase
+    .from('account_deletions')
+    .select('id, deleted_user_name, deleted_user_role, deleted_at')
+    .is('seen_at', null)
+    .order('deleted_at', { ascending: false })
 
   const navigation = [
     { name: 'Dashboard', href: '/coach', icon: LayoutDashboard },
@@ -169,6 +177,8 @@ export default async function DashboardLayout({
       </header>
       {/* pb-24 keeps content clear of the fixed dumbbell FAB (h-14 at bottom-6, ~80px footprint) */}
       <main className="mx-auto max-w-7xl px-4 pt-8 pb-24 sm:px-6 lg:px-8">
+        {profile.current_period_end && !profile.is_admin && <MembershipBanner periodEnd={profile.current_period_end} />}
+        {deletionNotices && deletionNotices.length > 0 && <DeletionNotices notices={deletionNotices} />}
         {children}
       </main>
       <LegalFooter />

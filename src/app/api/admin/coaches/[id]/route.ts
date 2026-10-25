@@ -21,7 +21,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (!validation.success) {
       return NextResponse.json({ error: validation.error.issues[0].message }, { status: 400 })
     }
-    const { password, ...fields } = validation.data
+    const { password, renew_membership, ...fields } = validation.data
 
     if (id === adminId && fields.active === false) {
       return NextResponse.json({ error: 'No puedes desactivar tu propia cuenta' }, { status: 400 })
@@ -31,6 +31,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { data: target } = await admin.from('profiles').select('role').eq('id', id).maybeSingle()
     if (target?.role !== 'coach') {
       return NextResponse.json({ error: 'Coach no encontrado' }, { status: 404 })
+    }
+
+    if (renew_membership) {
+      const { data: coach } = await admin.from('profiles').select('current_period_end').eq('id', id).single()
+      const periodEnd = coach?.current_period_end ? new Date(coach.current_period_end) : new Date()
+      const base = periodEnd < new Date() ? periodEnd : new Date()
+      const nextEnd = new Date(base.getTime() + 30 * 24 * 60 * 60 * 1000)
+      const { error } = await admin.from('profiles').update({ current_period_end: nextEnd.toISOString() }).eq('id', id)
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
     if (Object.keys(fields).length > 0) {

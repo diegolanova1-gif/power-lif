@@ -18,6 +18,7 @@ export const updateCoachSchema = z
     student_limit: studentLimitSchema.optional(),
     active: z.boolean().optional(),
     password: z.string().trim().min(8, 'Mínimo 8 caracteres').max(72).optional(),
+    renew_membership: z.boolean().optional(),
   })
   .refine(v => Object.keys(v).length > 0, 'Nada para actualizar')
 
