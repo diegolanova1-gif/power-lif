@@ -26,9 +26,9 @@ const STATUS_STYLE: Record<ComplianceStatus, { label: string; className: string 
   none: { label: 'Sin registrar', className: 'bg-card text-muted-foreground border-border' },
 }
 
-function StatusBadge({ status }: { status: ComplianceStatus }) {
+function StatusBadge({ status, percent }: { status: ComplianceStatus; percent?: number }) {
   if (status === 'done') return <span className="flex items-center gap-1 text-sm font-medium text-success"><CheckCircle2 className="h-4 w-4" /> Hecho</span>
-  if (status === 'partial') return <span className="flex items-center gap-1 text-sm font-medium text-warning-foreground"><AlertTriangle className="h-4 w-4" /> Parcial</span>
+  if (status === 'partial') return <span className="flex items-center gap-1 text-sm font-medium text-warning-foreground"><AlertTriangle className="h-4 w-4" /> Parcial{percent != null && ` ${percent}%`}</span>
   return <span className="flex items-center gap-1 text-sm text-muted-foreground"><Circle className="h-4 w-4" /> Sin registrar</span>
 }
 
@@ -130,17 +130,20 @@ export default async function AthleteFollowUpPage({
       .filter(s => s.week === week && s.day === day && s.exercise_id === exerciseId)
       .sort((a, b) => a.set_number - b.set_number)
 
-  const statusOf = (week: number, day: number): ComplianceStatus => {
+  const dayInfo = (week: number, day: number): { status: ComplianceStatus; percent: number } => {
     const daySets = (sets ?? []).filter(s => s.week === week && s.day === day)
-    if (!daySets.length) return 'none'
+    if (!daySets.length) return { status: 'none', percent: 0 }
     const dayPlan = scheduleForWeek(structure, week).find(d => d.day === day)
-    if (!dayPlan) return 'done'
+    if (!dayPlan) return { status: 'done', percent: 100 }
+    const totalSets = dayPlan.exercises.reduce((sum, ex) => sum + ex.sets, 0)
+    const loggedSets = dayPlan.exercises.reduce((sum, ex) => sum + daySets.filter(s => s.exercise_id === ex.exercise_id).length, 0)
     const statuses = dayPlan.exercises.map(ex => {
       const logged = daySets.filter(s => s.exercise_id === ex.exercise_id)
       return exerciseCompliance(ex, logged)
     })
-    return sessionCompliance(statuses)
+    return { status: sessionCompliance(statuses), percent: totalSets ? Math.round((loggedSets / totalSets) * 100) : 100 }
   }
+  const statusOf = (week: number, day: number) => dayInfo(week, day).status
 
   // Selected session: from the URL, else where the athlete is now
   const week = Math.min(Math.max(Number(query.week) || assignment.current_week || 1, 1), totalWeeks)
@@ -381,12 +384,13 @@ export default async function AthleteFollowUpPage({
               : weekdayName(day)}
             {plan?.name && plan.name !== weekdayName(day) && <span className="font-normal text-muted-foreground"> · {plan.name}</span>}
           </h2>
-          <StatusBadge status={statusOf(week, day)} />
+          <StatusBadge status={dayInfo(week, day).status} percent={dayInfo(week, day).percent} />
         </div>
 
         {plan?.exercises.map((ex, i) => {
           const done = setsFor(week, day, ex.exercise_id)
           const status = exerciseCompliance(ex, done)
+          const exPercent = ex.sets ? Math.round((done.length / ex.sets) * 100) : 100
           const fb = sessionFeedback.find(f => f.exercise_id === ex.exercise_id)
           const media = ((fb?.media as unknown as { id: string; storage_path: string; media_type: MediaType; created_at: string }[]) ?? [])
             .sort((a, b) => a.created_at.localeCompare(b.created_at))
@@ -401,7 +405,7 @@ export default async function AthleteFollowUpPage({
             >
               <div className="flex items-start justify-between gap-3">
                 <p className="font-semibold text-foreground">{nameById.get(ex.exercise_id) ?? 'Ejercicio'}</p>
-                <StatusBadge status={status} />
+                <StatusBadge status={status} percent={exPercent} />
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
                 Indicado:{' '}

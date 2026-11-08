@@ -244,7 +244,7 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, las
     )
     if (ok) {
       setEditing(false)
-      toast.success(done.length ? 'Guardado' : 'Series borradas')
+      toast.success('Guardado')
     }
   }
 
