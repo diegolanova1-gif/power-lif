@@ -148,7 +148,8 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, las
     })
   }
 
-  async function persist(sets: LoggedSet[]) {
+  async function persist(sets: LoggedSet[], { intentionalClear = false } = {}) {
+    if (!sets.length && !intentionalClear) return false
     setSaving(true)
     try {
       const key = {
@@ -249,7 +250,7 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, las
   }
 
   async function undo() {
-    if (await persist([])) toast.success('Deshecho')
+    if (await persist([], { intentionalClear: true })) toast.success('Deshecho')
   }
 
   const updateRow = (i: number, patch: Partial<Row>) => setRows(prev => prev.map((r, j) => (j === i ? { ...r, ...patch } : r)))
