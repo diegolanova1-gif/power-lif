@@ -25,10 +25,6 @@ export function exerciseCompliance(p: PrescribedExercise, logged: LoggedSetLike[
   return logged.length >= p.sets ? 'done' : 'partial'
 }
 
-export function exerciseCompliancePercent(p: PrescribedExercise, logged: LoggedSetLike[]): number {
-  if (p.sets === 0) return logged.length > 0 ? 100 : 0
-  return Math.min(100, Math.round((logged.length / p.sets) * 100))
-}
 
 /** All sets were logged, but reps/duration or kg fell short of the prescription — still "done", just worth the coach's attention. */
 export function repsShortfall(p: PrescribedExercise, logged: LoggedSetLike[]): boolean {

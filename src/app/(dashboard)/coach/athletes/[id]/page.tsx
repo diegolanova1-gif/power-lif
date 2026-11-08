@@ -348,7 +348,7 @@ export default async function AthleteFollowUpPage({
                       key={d}
                       href={`/coach/athletes/${id}?week=${w}&day=${d}`}
                       scroll={false}
-                      title={`${realDateByDay.has(`${w}-${d}`) ? capitalize(format(dateFor(w, d), 'EEEE', { locale: es })) : weekdayName(d)} ${format(dateFor(w, d), 'd MMM', { locale: es })} · ${STATUS_STYLE[status].label}${todayCell ? ' · Hoy' : ''}`}
+                      title={`${realDateByDay.has(`${w}-${d}`) ? capitalize(format(dateFor(w, d), 'EEEE', { locale: es })) : weekdayName(d)} ${format(dateFor(w, d), 'd MMM', { locale: es })} · ${STATUS_STYLE[status].label}${status === 'partial' ? ` ${dayInfo(w, d).percent}%` : ''}${todayCell ? ' · Hoy' : ''}`}
                       className={cn(
                         'relative flex h-12 w-full flex-col items-center justify-center gap-0.5 rounded-xl border text-xs font-medium leading-none',
                         STATUS_STYLE[status].className,
@@ -384,7 +384,7 @@ export default async function AthleteFollowUpPage({
               : weekdayName(day)}
             {plan?.name && plan.name !== weekdayName(day) && <span className="font-normal text-muted-foreground"> · {plan.name}</span>}
           </h2>
-          <StatusBadge status={dayInfo(week, day).status} percent={dayInfo(week, day).percent} />
+          {(() => { const di = dayInfo(week, day); return <StatusBadge status={di.status} percent={di.percent} /> })()}
         </div>
 
         {plan?.exercises.map((ex, i) => {
