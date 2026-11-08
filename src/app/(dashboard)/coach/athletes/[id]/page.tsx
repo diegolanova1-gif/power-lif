@@ -4,7 +4,7 @@ import { ArrowLeft, CheckCircle2, AlertTriangle, ChevronDown, Circle, MessageSqu
 import { createClient } from '@/lib/supabase/server'
 import { MediaGrid } from '@/components/media-grid'
 import { FeedbackReply } from '@/components/coach/feedback-reply'
-import { exerciseCompliance, type ComplianceStatus } from '@/lib/calculations/compliance'
+import { exerciseCompliance, sessionCompliance, type ComplianceStatus } from '@/lib/calculations/compliance'
 import { formatReps, formatDuration, scheduleForWeek, type RoutineStructure } from '@/lib/validations/routine'
 import { MEDIA_BUCKET, SIGNED_URL_TTL_SECONDS, signedUrlMap, type MediaType } from '@/lib/media'
 import { FEEDBACK_REASONS } from '@/lib/feedback-reason'
@@ -130,8 +130,17 @@ export default async function AthleteFollowUpPage({
       .filter(s => s.week === week && s.day === day && s.exercise_id === exerciseId)
       .sort((a, b) => a.set_number - b.set_number)
 
-  const statusOf = (week: number, day: number): ComplianceStatus =>
-    (sets ?? []).some(s => s.week === week && s.day === day) ? 'done' : 'none'
+  const statusOf = (week: number, day: number): ComplianceStatus => {
+    const daySets = (sets ?? []).filter(s => s.week === week && s.day === day)
+    if (!daySets.length) return 'none'
+    const dayPlan = scheduleForWeek(structure, week).find(d => d.day === day)
+    if (!dayPlan) return 'done'
+    const statuses = dayPlan.exercises.map(ex => {
+      const logged = daySets.filter(s => s.exercise_id === ex.exercise_id)
+      return exerciseCompliance(ex, logged)
+    })
+    return sessionCompliance(statuses)
+  }
 
   // Selected session: from the URL, else where the athlete is now
   const week = Math.min(Math.max(Number(query.week) || assignment.current_week || 1, 1), totalWeeks)

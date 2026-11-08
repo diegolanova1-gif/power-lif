@@ -20,8 +20,14 @@ export interface LoggedSetLike {
  * that shortfall is flagged to the coach separately, see `repsShortfall`).
  * partial: fewer sets logged than prescribed. none: nothing logged.
  */
-export function exerciseCompliance(_p: PrescribedExercise, logged: LoggedSetLike[]): ComplianceStatus {
-  return logged.length > 0 ? 'done' : 'none'
+export function exerciseCompliance(p: PrescribedExercise, logged: LoggedSetLike[]): ComplianceStatus {
+  if (logged.length === 0) return 'none'
+  return logged.length >= p.sets ? 'done' : 'partial'
+}
+
+export function exerciseCompliancePercent(p: PrescribedExercise, logged: LoggedSetLike[]): number {
+  if (p.sets === 0) return logged.length > 0 ? 100 : 0
+  return Math.min(100, Math.round((logged.length / p.sets) * 100))
 }
 
 /** All sets were logged, but reps/duration or kg fell short of the prescription — still "done", just worth the coach's attention. */
@@ -35,6 +41,6 @@ export function repsShortfall(p: PrescribedExercise, logged: LoggedSetLike[]): b
 
 export function sessionCompliance(statuses: ComplianceStatus[]): ComplianceStatus {
   if (statuses.length === 0 || statuses.every(s => s === 'none')) return 'none'
-  if (statuses.some(s => s === 'done')) return 'done'
-  return 'none'
+  if (statuses.every(s => s === 'done')) return 'done'
+  return 'partial'
 }

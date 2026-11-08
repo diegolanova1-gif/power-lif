@@ -197,6 +197,10 @@ export function ExerciseLogCard({ prescription: p, logged, e1rm, lastWeight, las
 
   async function saveEdited() {
     const done = rows.filter(r => r.done)
+    if (!done.length) {
+      toast.error('Marcá al menos una serie antes de guardar (usá "Deshacer" para borrar)')
+      return
+    }
     const invalid = isTimed
       ? done.find(r => !/^\d+$/.test(r.duration.trim()) || Number(r.duration) < 1 || Number.isNaN(parseKg(r.weight)))
       : done.find(r => !/^\d+$/.test(r.reps.trim()) || Number(r.reps) < 1 || Number.isNaN(parseKg(r.weight)))

@@ -89,24 +89,28 @@ export function LogView({ initialData }: LogViewProps) {
   const currentDay = days[currentDayIndex]
   const doneCount = currentDay ? currentDay.exercises.filter(e => setsByKey[setsKey(currentDay.week, currentDay.day, e.exercise_id)]?.length).length : 0
   const total = currentDay ? currentDay.exercises.length : 0
+  const totalSets = currentDay ? currentDay.exercises.reduce((sum, e) => sum + e.sets, 0) : 0
+  const loggedSets = currentDay ? currentDay.exercises.reduce((sum, e) => sum + (setsByKey[setsKey(currentDay.week, currentDay.day, e.exercise_id)]?.length ?? 0), 0) : 0
+  const setsPercent = totalSets ? Math.round((loggedSets / totalSets) * 100) : 0
   const currentLoggedFlag = currentDay ? `${currentDay.week}-${currentDay.day}` in realDateByDay : false
   const showExtraDayPrompt =
     !!weekProgress &&
     currentDayIndex === pointerIndex &&
     !currentLoggedFlag &&
     weekProgress.currentWeekDays >= weekProgress.currentWeekRequired
-  const allDone = total > 0 && doneCount === total
+  const allExercisesTouched = total > 0 && doneCount === total
+  const allDone = allExercisesTouched && loggedSets >= totalSets
 
   const refreshedForDay = useRef<string | null>(null)
   useEffect(() => {
     if (!currentDay) return
     const key = `${currentDay.week}-${currentDay.day}`
-    if (allDone && !currentLoggedFlag && refreshedForDay.current !== key) {
+    if (allExercisesTouched && !currentLoggedFlag && refreshedForDay.current !== key) {
       refreshedForDay.current = key
       refresh(false, false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allDone, currentLoggedFlag, currentDay?.week, currentDay?.day])
+  }, [allExercisesTouched, currentLoggedFlag, currentDay?.week, currentDay?.day])
 
   const [openId, setOpenId] = useState<string | null>(null)
   useEffect(() => {
@@ -211,22 +215,26 @@ export function LogView({ initialData }: LogViewProps) {
 
       <div className="space-y-2">
         <div className="flex items-baseline justify-between text-sm">
-          <span className="font-medium text-foreground">{doneCount} de {total} ejercicios</span>
+          <span className="font-medium text-foreground">{loggedSets} de {totalSets} series ({setsPercent}%)</span>
           {allDone && <span className="font-medium text-success">Completo</span>}
+          {!allDone && loggedSets > 0 && <span className="font-medium text-warning">Parcial</span>}
         </div>
         <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-          <div className={`h-full rounded-full transition-all duration-500 ease-out ${allDone ? 'bg-success' : 'bg-primary'}`} style={{ width: `${total ? (doneCount / total) * 100 : 0}%` }} />
+          <div className={`h-full rounded-full transition-all duration-500 ease-out ${allDone ? 'bg-success' : loggedSets > 0 ? 'bg-warning' : 'bg-primary'}`} style={{ width: `${setsPercent}%` }} />
         </div>
       </div>
 
-      {allDone && (
-        <div className="animate-in fade-in slide-in-from-bottom-2 flex flex-col items-center gap-3 rounded-xl bg-card px-5 py-5 text-center ring-1 ring-success/30 duration-500 sm:flex-row sm:text-left">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-success/15">
-            <PartyPopper className="h-5 w-5 text-success" />
+      {allExercisesTouched && (
+        <div className={cn(
+          'animate-in fade-in slide-in-from-bottom-2 flex flex-col items-center gap-3 rounded-xl bg-card px-5 py-5 text-center duration-500 sm:flex-row sm:text-left ring-1',
+          allDone ? 'ring-success/30' : 'ring-warning/30'
+        )}>
+          <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-full', allDone ? 'bg-success/15' : 'bg-warning/15')}>
+            <PartyPopper className={cn('h-5 w-5', allDone ? 'text-success' : 'text-warning')} />
           </div>
           <div className="flex-1">
-            <p className="font-semibold text-foreground">¡Entrenamiento completo!</p>
-            <p className="text-sm text-muted-foreground">Tu coach ya puede ver lo que hiciste.</p>
+            <p className="font-semibold text-foreground">{allDone ? '¡Entrenamiento completo!' : `Sesión registrada (${setsPercent}%)`}</p>
+            <p className="text-sm text-muted-foreground">{allDone ? 'Tu coach ya puede ver lo que hiciste.' : 'Algunas series quedaron pendientes. Tu coach ya puede ver lo que hiciste.'}</p>
           </div>
           {currentDayIndex < days.length - 1 && (
             <Button variant="outline" onClick={() => goTo(currentDayIndex + 1)}>
