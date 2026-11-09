@@ -733,11 +733,29 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
                         onChange={e => updateExercise(dayIndex, exIndex, { duration_seconds: parseOptionalNumber(e.target.value) })}
                       />
                     ) : (
-                      <Input
-                        type="text" placeholder="ej: 8-12"
-                        value={ex.repsText}
-                        onChange={e => updateExercise(dayIndex, exIndex, { repsText: e.target.value })}
-                      />
+                      <div className="flex items-center gap-1">
+                        <Input
+                          type="number" inputMode="numeric" min={1} max={100} placeholder="8"
+                          className="w-16 text-center"
+                          value={ex.repsText.split('-')[0] || ''}
+                          onChange={e => {
+                            const min = e.target.value.replace(/\D/g, '')
+                            const max = ex.repsText.split('-')[1] || ''
+                            updateExercise(dayIndex, exIndex, { repsText: max ? `${min}-${max}` : min })
+                          }}
+                        />
+                        <span className="text-muted-foreground text-sm">-</span>
+                        <Input
+                          type="number" inputMode="numeric" min={1} max={100} placeholder="12"
+                          className="w-16 text-center"
+                          value={ex.repsText.split('-')[1] || ''}
+                          onChange={e => {
+                            const max = e.target.value.replace(/\D/g, '')
+                            const min = ex.repsText.split('-')[0] || ''
+                            updateExercise(dayIndex, exIndex, { repsText: max ? `${min}-${max}` : min })
+                          }}
+                        />
+                      </div>
                     )}
                   </div>
                   <div className="col-span-2 space-y-1 sm:col-span-1">
