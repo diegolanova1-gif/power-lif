@@ -31,7 +31,8 @@ export function RoutineStartPicker({ exercises, templates, athleteName, onPick }
   const suffix = athleteName ? ` · ${athleteName}` : ''
 
   function pickPreset(presetId: string) {
-    const preset = ROUTINE_PRESETS.find(p => p.id === presetId)!
+    const preset = ROUTINE_PRESETS.find(p => p.id === presetId)
+    if (!preset) return
     const { structure, missing } = buildPresetStructure(preset, exercises)
     if (missing.length) {
       toast.info(`No están en tu catálogo: ${missing.join(', ')}. Puedes agregarlos o elegir otros.`)

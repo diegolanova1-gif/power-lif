@@ -30,27 +30,35 @@ export default async function CoachDashboard() {
 
   const coachId = user?.id || ''
 
+  const { data: athletes } = await supabase
+    .from('coach_athletes')
+    .select('athlete_id, profiles:athlete_id(full_name, avatar_url)')
+    .eq('coach_id', coachId)
+
+  const athleteIds = (athletes ?? []).map((a: any) => a.athlete_id as string)
+
   const [
-    { data: athletes },
     athleteAlerts,
     { data: routines },
     { count: pendingReviews },
     { data: activeRoutines },
   ] = await Promise.all([
-    supabase
-      .from('coach_athletes')
-      .select('athlete_id, profiles:athlete_id(full_name, avatar_url)')
-      .eq('coach_id', coachId),
     user ? getAthleteAlerts(supabase, user.id) : Promise.resolve([]),
     supabase.from('routines').select('id').eq('coach_id', coachId),
-    supabase
-      .from('exercise_feedback')
-      .select('id', { count: 'exact', head: true })
-      .is('reviewed_at', null),
-    supabase
-      .from('athlete_routines')
-      .select('id, athlete_id, status')
-      .in('status', ['active', 'completed']),
+    athleteIds.length
+      ? supabase
+          .from('exercise_feedback')
+          .select('id', { count: 'exact', head: true })
+          .is('reviewed_at', null)
+          .in('athlete_id', athleteIds)
+      : Promise.resolve({ count: 0 } as any),
+    athleteIds.length
+      ? supabase
+          .from('athlete_routines')
+          .select('id, athlete_id, status')
+          .in('athlete_id', athleteIds)
+          .in('status', ['active', 'completed'])
+      : Promise.resolve({ data: [] } as any),
   ])
 
   const pending = pendingReviews ?? 0

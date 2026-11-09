@@ -147,11 +147,7 @@ export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week
         .single()
       if (error) throw error
 
-      // Subir de nuevo reemplaza lo anterior de esta observación (no acumula)
-      if (files.length > 0 && media.length > 0) {
-        await supabase.storage.from(MEDIA_BUCKET).remove(media.map(m => m.storage_path))
-        await supabase.from('exercise_media').delete().in('id', media.map(m => m.id))
-      }
+      const oldMedia = files.length > 0 ? [...media] : []
 
       for (const [i, file] of files.entries()) {
         setProgress(`Subiendo ${i + 1} de ${files.length}...`)
@@ -172,6 +168,11 @@ export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week
           await supabase.storage.from(MEDIA_BUCKET).remove([path])
           throw rowError
         }
+      }
+
+      if (oldMedia.length > 0) {
+        await supabase.storage.from(MEDIA_BUCKET).remove(oldMedia.map(m => m.storage_path))
+        await supabase.from('exercise_media').delete().in('id', oldMedia.map(m => m.id))
       }
 
       toast.success('Enviado a tu coach')

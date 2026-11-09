@@ -11,7 +11,7 @@ export type SetLog = Pick<SetRow, 'exercise_id' | 'week' | 'weight_kg' | 'reps'>
  * Volume = weight_kg * reps
  */
 export function calculateVolume(sets: SetLog[]): number {
-  return sets.reduce((sum, set) => sum + set.weight_kg * set.reps, 0)
+  return sets.reduce((sum, set) => sum + set.weight_kg * (set.reps ?? 0), 0)
 }
 
 /**
@@ -22,7 +22,7 @@ export function calculateVolumeByExercise(sets: SetLog[]): Map<string, number> {
 
   for (const set of sets) {
     const current = volumes.get(set.exercise_id) || 0
-    volumes.set(set.exercise_id, current + set.weight_kg * set.reps)
+    volumes.set(set.exercise_id, current + set.weight_kg * (set.reps ?? 0))
   }
 
   return volumes
@@ -36,7 +36,7 @@ export function calculateWeeklyVolume(sets: SetLog[]): Map<number, number> {
 
   for (const set of sets) {
     const current = weekly.get(set.week) || 0
-    weekly.set(set.week, current + set.weight_kg * set.reps)
+    weekly.set(set.week, current + set.weight_kg * (set.reps ?? 0))
   }
 
   return weekly
@@ -55,7 +55,7 @@ export function calculateVolumeByExerciseAndWeek(sets: SetLog[]): Map<string, Ma
       result.set(set.exercise_id, exerciseMap)
     }
     const current = exerciseMap.get(set.week) || 0
-    exerciseMap.set(set.week, current + set.weight_kg * set.reps)
+    exerciseMap.set(set.week, current + set.weight_kg * (set.reps ?? 0))
   }
 
   return result
@@ -96,7 +96,7 @@ export function calculateVolumeByIntensityZone(
     if (!oneRM || oneRM === 0) continue
 
     const intensity = (set.weight_kg / oneRM) * 100
-    const volume = set.weight_kg * set.reps
+    const volume = set.weight_kg * (set.reps ?? 0)
 
     if (intensity < 60) zones.zone1 += volume
     else if (intensity < 70) zones.zone2 += volume

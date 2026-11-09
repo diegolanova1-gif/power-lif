@@ -95,7 +95,9 @@ export async function loadProgress(supabase: { auth: any; from: any }): Promise<
 
   const volumeRaw = volumeResult.data ?? []
   const weekly: Record<number, number> = {}
-  for (const set of volumeRaw) weekly[set.week] = (weekly[set.week] || 0) + set.weight_kg * set.reps
+  for (const set of volumeRaw) {
+    if (set.reps != null) weekly[set.week] = (weekly[set.week] || 0) + set.weight_kg * set.reps
+  }
   const volume = Object.entries(weekly).map(([w, v]) => ({ week: Number(w), volume: v }))
 
   const dateStrs = (adherenceSets ?? []).map((s: any) => String(s.completed_at).split('T')[0])

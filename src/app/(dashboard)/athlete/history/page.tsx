@@ -40,6 +40,8 @@ export default async function AthleteHistoryPage() {
 
   const sessionMap = new Map<string, HistorySession>()
 
+  const rpeAccum = new Map<string, { sum: number; count: number }>()
+
   ;(sets || []).forEach((set: any) => {
     const date = set.completed_at.split('T')[0]
     const key = `${set.week}-${set.day}-${date}`
@@ -60,7 +62,11 @@ export default async function AthleteHistoryPage() {
     if (set.reps !== null) session.total_volume += set.weight_kg * set.reps
     session.total_sets += 1
     if (set.rpe) {
-      session.avg_rpe = session.avg_rpe === null ? set.rpe : (session.avg_rpe + set.rpe) / 2
+      const acc = rpeAccum.get(key) ?? { sum: 0, count: 0 }
+      acc.sum += set.rpe
+      acc.count += 1
+      rpeAccum.set(key, acc)
+      session.avg_rpe = acc.sum / acc.count
     }
 
     let exercise = session.exercises.find(e => e.exercise_id === set.exercise_id)

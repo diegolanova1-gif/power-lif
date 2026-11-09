@@ -36,7 +36,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (renew_membership) {
       const { data: coach } = await admin.from('profiles').select('current_period_end').eq('id', id).single()
       const periodEnd = coach?.current_period_end ? new Date(coach.current_period_end) : new Date()
-      const base = periodEnd < new Date() ? periodEnd : new Date()
+      const base = periodEnd > new Date() ? periodEnd : new Date()
       const nextEnd = new Date(base.getTime() + 30 * 24 * 60 * 60 * 1000)
       const { error } = await admin.from('profiles').update({ current_period_end: nextEnd.toISOString() }).eq('id', id)
       if (error) return NextResponse.json({ error: error.message }, { status: 500 })

@@ -45,7 +45,7 @@ export default async function AthletesPage() {
           .select('athlete_id, completed_at')
           .in('athlete_id', athleteIds)
           .order('completed_at', { ascending: false })
-          .limit(athleteIds.length),
+          .limit(athleteIds.length * 10),
       ])
     : [{ data: [] as any[] }, { data: [] as any[] }]
 

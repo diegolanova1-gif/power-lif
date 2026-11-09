@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     .in('status', ['active', 'completed'])
     .order('assigned_at', { ascending: false })
     .limit(1)
-    .single()
+    .maybeSingle()
 
   const structure = assigned?.structure as RoutineStructure | null
   const routine = assigned && { ...assigned, sessions_per_week: structure?.schedule?.length }
