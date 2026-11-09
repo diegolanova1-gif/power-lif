@@ -734,7 +734,7 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
                       />
                     ) : (
                       <Input
-                        placeholder="ej: 8-12"
+                        type="text" placeholder="ej: 8-12"
                         value={ex.repsText}
                         onChange={e => updateExercise(dayIndex, exIndex, { repsText: e.target.value })}
                       />
