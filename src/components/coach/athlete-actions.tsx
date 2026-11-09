@@ -53,16 +53,16 @@ export function AthleteActions({ athleteId, athleteName, routineId }: AthleteAct
         <div className="flex flex-wrap gap-2">
           {routineId && (
             <Button size="sm" variant="outline" nativeButton={false} render={<Link href={`/coach/routines/${routineId}/edit`} />}>
-              <Pencil className="mr-1.5 h-4 w-4" />
+              <Pencil className="h-4 w-4" />
               Editar su rutina
             </Button>
           )}
           <Button size="sm" variant="outline" nativeButton={false} render={<Link href={`/coach/routines/new?athlete=${athleteId}`} />}>
-            <Plus className="mr-1.5 h-4 w-4" />
+            <Plus className="h-4 w-4" />
             Nueva rutina personalizada
           </Button>
           <Button size="sm" variant="outline" nativeButton={false} render={<Link href={`/coach/routines?assign=${athleteId}`} />}>
-            <LayoutTemplate className="mr-1.5 h-4 w-4" />
+            <LayoutTemplate className="h-4 w-4" />
             Asignar una plantilla
           </Button>
         </div>
@@ -72,19 +72,19 @@ export function AthleteActions({ athleteId, athleteName, routineId }: AthleteAct
         <p className="mb-1.5 px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">Alumno</p>
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant="outline" nativeButton={false} render={<a href="#historial" />}>
-            <History className="mr-1.5 h-4 w-4" />
+            <History className="h-4 w-4" />
             Ver historial
           </Button>
           <Button size="sm" variant="outline" nativeButton={false} render={<Link href={`/coach/analytics?athlete=${athleteId}`} />}>
-            <BarChart className="mr-1.5 h-4 w-4" />
+            <BarChart className="h-4 w-4" />
             Ver estadísticas
           </Button>
           <Button size="sm" variant="outline" onClick={() => setResetOpen(true)}>
-            <KeyRound className="mr-1.5 h-4 w-4" />
+            <KeyRound className="h-4 w-4" />
             Cambiar contraseña
           </Button>
           <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={removeAthlete} disabled={removing}>
-            <Trash2 className="mr-1.5 h-4 w-4" />
+            <Trash2 className="h-4 w-4" />
             Eliminar alumno
           </Button>
         </div>

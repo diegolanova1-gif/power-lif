@@ -118,7 +118,7 @@ export function TeamRankingPanel({
             </SelectContent>
           </Select>
           <Button size="sm" onClick={handleCalculate} disabled={!leadExerciseId || calculating}>
-            {calculating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {calculating ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             Calcular ranking
           </Button>
         </div>
@@ -140,7 +140,7 @@ export function TeamRankingPanel({
                   </div>
                   {!r.approved_at && (
                     <Button size="sm" variant="outline" onClick={() => handleApprove(r.id)} disabled={approvingId === r.id}>
-                      {approvingId === r.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                      {approvingId === r.id ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                       Aprobar y publicar
                     </Button>
                   )}

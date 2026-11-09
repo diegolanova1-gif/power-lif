@@ -101,7 +101,7 @@ export function CreateAthleteDialog({ children, triggerClassName, onCreated }: C
             <DialogFooter>
               {credentials.created && (
                 <Button variant="outline" onClick={copyCredentials}>
-                  {copied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   Copiar datos
                 </Button>
               )}
@@ -111,7 +111,7 @@ export function CreateAthleteDialog({ children, triggerClassName, onCreated }: C
               <p className="text-sm font-medium text-foreground">Siguiente paso: su rutina</p>
               <p className="mt-1 text-sm text-muted-foreground">Arma un plan personalizado para {credentials.name}: desde cero, con un modelo o una plantilla tuya.</p>
               <Button className="mt-3 w-full" nativeButton={false} render={<Link href={`/coach/routines/new?athlete=${credentials.athleteId}`} />}>
-                <Dumbbell className="mr-2 h-4 w-4" />
+                <Dumbbell className="h-4 w-4" />
                 Armar su rutina ahora
               </Button>
             </div>
@@ -176,7 +176,7 @@ export function CreateAthleteDialog({ children, triggerClassName, onCreated }: C
               </div>
               <DialogFooter>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
-                  {form.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  {form.formState.isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                   Crear alumno
                 </Button>
               </DialogFooter>

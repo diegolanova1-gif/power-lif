@@ -34,7 +34,7 @@ export function CreateTeamDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button />}>
-        <Plus className="mr-2 h-4 w-4" />
+        <Plus className="h-4 w-4" />
         Nuevo Team
       </DialogTrigger>
       <DialogContent>
@@ -49,7 +49,7 @@ export function CreateTeamDialog() {
           </div>
           <DialogFooter>
             <Button type="submit" disabled={saving || !name.trim()}>
-              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               Crear team
             </Button>
           </DialogFooter>
@@ -78,7 +78,7 @@ export function DeleteTeamButton({ teamId, teamName }: { teamId: string; teamNam
   return (
     <Dialog>
       <DialogTrigger render={<Button variant="outline" className="text-destructive" />}>
-        <Trash2 className="mr-2 h-4 w-4" />
+        <Trash2 className="h-4 w-4" />
         Eliminar team
       </DialogTrigger>
       <DialogContent>
@@ -89,7 +89,7 @@ export function DeleteTeamButton({ teamId, teamName }: { teamId: string; teamNam
         <DialogFooter>
           <DialogClose render={<Button variant="outline" />}>Cancelar</DialogClose>
           <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
-            {deleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             Eliminar
           </Button>
         </DialogFooter>

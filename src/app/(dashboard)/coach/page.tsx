@@ -80,7 +80,7 @@ export default async function CoachDashboard() {
         </div>
         <Link href="/coach/athletes">
           <Button size="sm" variant="outline">
-            <Plus className="mr-1.5 h-4 w-4" />
+            <Plus className="h-4 w-4" />
             Nuevo alumno
           </Button>
         </Link>

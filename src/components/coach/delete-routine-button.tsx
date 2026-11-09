@@ -41,7 +41,7 @@ export function DeleteRoutineButton({ routineId, routineName }: { routineId: str
         <DialogFooter>
           <DialogClose render={<Button variant="outline" />}>Cancelar</DialogClose>
           <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
-            {deleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             Eliminar
           </Button>
         </DialogFooter>

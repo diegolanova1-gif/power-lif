@@ -109,18 +109,18 @@ export function CoachAccountSection({ coachId, fullName, email }: CoachAccountSe
             </div>
           </div>
           <Button type="submit" variant="outline" disabled={savingPassword || password === ''}>
-            {savingPassword ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {savingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             Actualizar contraseña
           </Button>
         </form>
 
         <div className="flex flex-wrap gap-3 border-t border-border pt-5">
           <Button type="button" variant="ghost" className="text-destructive hover:text-destructive" onClick={signOut}>
-            <LogOut className="mr-2 h-4 w-4" />
+            <LogOut className="h-4 w-4" />
             Cerrar sesión
           </Button>
           <Button type="button" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => setDeleteOpen(true)}>
-            <Trash2 className="mr-2 h-4 w-4" />
+            <Trash2 className="h-4 w-4" />
             Dar de baja mi cuenta
           </Button>
           <DeleteAccountDialog open={deleteOpen} onOpenChange={setDeleteOpen} />

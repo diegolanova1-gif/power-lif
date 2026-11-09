@@ -31,7 +31,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
           <BarChart className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
           <p className="text-sm text-muted-foreground">Agregá alumnos para ver sus estadísticas</p>
           <Button className="mt-4" nativeButton={false} render={<Link href="/coach/athletes" />}>
-            <UserPlus className="mr-2 h-4 w-4" />
+            <UserPlus className="h-4 w-4" />
             Ir a alumnos
           </Button>
         </div>

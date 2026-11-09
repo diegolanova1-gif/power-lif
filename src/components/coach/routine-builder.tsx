@@ -475,7 +475,7 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
         </div>
         {schedule.length === 0 && (
           <Button type="submit" disabled={saving}>
-            {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             {saving ? 'Guardando...' : athlete && !routine ? 'Guardar y asignar' : 'Guardar rutina'}
           </Button>
         )}
@@ -592,7 +592,7 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Button type="button" size="sm" onClick={duplicateWeekToNext}>
-                <Copy className="mr-1 h-4 w-4" />
+                <Copy className="h-4 w-4" />
                 Duplicar semana {currentWeek + 1} → {currentWeek + 2}
               </Button>
               {currentWeek < weeks - 1 && (
@@ -602,7 +602,7 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
               )}
               {weeks > 1 && (
                 <Button type="button" size="sm" variant="ghost" className="text-destructive" onClick={removeWeek}>
-                  <Trash2 className="mr-1 h-4 w-4" />
+                  <Trash2 className="h-4 w-4" />
                   Eliminar semana {currentWeek + 1}
                 </Button>
               )}
@@ -612,7 +612,7 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
                 Editando la <span className="font-mono font-semibold tabular-nums text-foreground">semana {currentWeek + 1}</span> de <span className="font-mono tabular-nums">{weeks}</span>
               </span>
               <Button type="submit" size="sm" disabled={saving}>
-                {saving ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Save className="mr-1.5 h-4 w-4" />}
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 <span className="sm:hidden">{saving ? 'Guardando…' : 'Guardar'}</span>
                 <span className="hidden sm:inline">{saving ? 'Guardando...' : athlete && !routine ? 'Guardar y asignar' : 'Guardar rutina'}</span>
               </Button>
@@ -667,7 +667,7 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
                   </SelectContent>
                 </Select>
                 <Button type="button" variant="ghost" size="sm" className="text-muted-foreground" onClick={() => duplicateDay(dayIndex)} disabled={schedule.length >= 7}>
-                  <Copy className="mr-1 h-4 w-4" />
+                  <Copy className="h-4 w-4" />
                   Duplicar
                 </Button>
                 <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => removeDay(dayIndex)} aria-label={`Quitar ${weekdayName(day.day)}`}>
@@ -734,7 +734,7 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
                       />
                     ) : (
                       <Input
-                        inputMode="numeric" placeholder="ej: 8-12"
+                        inputMode="text" placeholder="ej: 8-12"
                         value={ex.repsText}
                         onChange={e => updateExercise(dayIndex, exIndex, { repsText: e.target.value })}
                       />
@@ -820,7 +820,7 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
               </div>
             ))}
             <Button type="button" variant="outline" size="sm" onClick={() => addExercise(dayIndex)}>
-              <Plus className="mr-1 h-4 w-4" />
+              <Plus className="h-4 w-4" />
               Agregar ejercicio al {weekdayName(day.day).toLowerCase()}
             </Button>
           </CardContent>

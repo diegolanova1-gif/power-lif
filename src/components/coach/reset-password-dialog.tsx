@@ -65,7 +65,7 @@ function ResetPasswordContent({ athlete, onClose }: { athlete: { id: string; ful
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={copy}>
-                {copied ? <Check className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 Copiar datos
               </Button>
               <Button onClick={onClose}>Listo</Button>
@@ -89,7 +89,7 @@ function ResetPasswordContent({ athlete, onClose }: { athlete: { id: string; ful
             </div>
             <DialogFooter>
               <Button onClick={save} disabled={saving || password.trim().length < 8}>
-                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                 Cambiar contraseña
               </Button>
             </DialogFooter>

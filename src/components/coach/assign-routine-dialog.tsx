@@ -54,7 +54,7 @@ export function AssignRoutineDialog({ routineId, routineName, athletes, defaultA
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button variant="outline" size="sm" disabled={athletes.length === 0} />}>
-        <UserPlus className="mr-1 h-4 w-4" />
+        <UserPlus className="h-4 w-4" />
         Asignar
       </DialogTrigger>
       <DialogContent>
@@ -83,7 +83,7 @@ export function AssignRoutineDialog({ routineId, routineName, athletes, defaultA
         </div>
         <DialogFooter>
           <Button onClick={handleAssign} disabled={saving}>
-            {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             Asignar rutina
           </Button>
         </DialogFooter>

@@ -168,17 +168,17 @@ export function ReviewCard({ item, defaultOpen = false }: { item: ReviewItem; de
             {item.reviewedAt ? (
               <>
                 <Button size="sm" onClick={() => save(true)} disabled={saving}>
-                  {saving ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
                   Guardar respuesta
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => save(false)} disabled={saving}>
-                  <RotateCcw className="mr-1 h-4 w-4" />
+                  <RotateCcw className="h-4 w-4" />
                   Volver a pendiente
                 </Button>
               </>
             ) : (
               <Button size="sm" onClick={() => save(true)} disabled={saving}>
-                {saving ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-1 h-4 w-4" />}
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                 {reply.trim() ? 'Responder y marcar revisado' : 'Marcar revisado'}
               </Button>
             )}

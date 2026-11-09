@@ -83,7 +83,7 @@ export function AthletesList({ initialAthletes, plan, studentLimit }: AthletesLi
           </p>
         </div>
         <CreateAthleteDialog onCreated={onCreated}>
-          <UserPlus className="mr-2 h-4 w-4" />
+          <UserPlus className="h-4 w-4" />
           Nuevo alumno
         </CreateAthleteDialog>
       </div>
@@ -120,7 +120,7 @@ export function AthletesList({ initialAthletes, plan, studentLimit }: AthletesLi
           <p className="text-sm text-muted-foreground">{search ? 'No se encontraron alumnos' : 'Todavía no tenés alumnos.'}</p>
           {!search && (
             <CreateAthleteDialog triggerClassName="mt-4" onCreated={onCreated}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="h-4 w-4" />
               Crear primer alumno
             </CreateAthleteDialog>
           )}
@@ -159,7 +159,7 @@ export function AthletesList({ initialAthletes, plan, studentLimit }: AthletesLi
                   nativeButton={false}
                   render={<Link href={`/coach/routines/new?athlete=${athlete.id}`} />}
                 >
-                  <Dumbbell className="mr-1 h-4 w-4" />
+                  <Dumbbell className="h-4 w-4" />
                   Armar rutina
                 </Button>
               )}

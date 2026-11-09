@@ -46,7 +46,7 @@ export function FeedbackReply({ feedbackId, coachReply, reviewedAt }: FeedbackRe
       />
       <div className="flex items-center gap-2">
         <Button type="button" size="sm" onClick={send} disabled={saving}>
-          {saving ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Send className="mr-1 h-4 w-4" />}
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           {reply.trim() ? 'Responder' : 'Marcar como visto'}
         </Button>
         {saved && (

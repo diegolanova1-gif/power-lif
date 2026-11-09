@@ -153,7 +153,7 @@ export function CoachProfileForm({ coachId, initial }: { coachId: string; initia
       </section>
 
       <Button type="submit" size="lg" className="h-12 w-full text-base sm:w-auto sm:self-start" disabled={saving}>
-        {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
         {saving ? 'Guardando…' : 'Guardar perfil'}
       </Button>
     </form>

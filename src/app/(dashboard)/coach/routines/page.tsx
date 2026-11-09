@@ -75,18 +75,18 @@ export default async function RoutinesPage({ searchParams }: { searchParams: Pro
         <div className="flex flex-wrap gap-2">
           {!assignTarget && routines && routines.length >= 2 && (
             <Button variant="outline" nativeButton={false} render={<Link href={`/coach/routines/compare?a=${routines[0].id}&b=${routines[1].id}`} />}>
-              <GitCompare className="mr-2 h-4 w-4" />
+              <GitCompare className="h-4 w-4" />
               Comparar últimas dos
             </Button>
           )}
           {assignTarget && (
             <Button variant="outline" nativeButton={false} render={<Link href={`/coach/routines/new?athlete=${assignTarget.id}`} />}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="h-4 w-4" />
               Crear desde cero
             </Button>
           )}
           <Button nativeButton={false} render={<Link href="/coach/routines/new" />}>
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="h-4 w-4" />
             Nueva plantilla
           </Button>
         </div>

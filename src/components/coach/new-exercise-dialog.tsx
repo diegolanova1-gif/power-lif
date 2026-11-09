@@ -51,7 +51,7 @@ export function NewExerciseDialog({ onCreated }: { onCreated: (exercise: Exercis
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button type="button" variant="outline" />}>
-        <Plus className="mr-2 h-4 w-4" />
+        <Plus className="h-4 w-4" />
         Nuevo ejercicio
       </DialogTrigger>
       <DialogContent>
@@ -84,7 +84,7 @@ export function NewExerciseDialog({ onCreated }: { onCreated: (exercise: Exercis
         </div>
         <DialogFooter>
           <Button type="button" onClick={handleCreate} disabled={saving || name.trim().length < 2}>
-            {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             Crear ejercicio
           </Button>
         </DialogFooter>
