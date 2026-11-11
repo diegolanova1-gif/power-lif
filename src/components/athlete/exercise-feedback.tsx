@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 import { FEEDBACK_REASONS, SELECTABLE_FEEDBACK_REASONS, type FeedbackReason } from '@/lib/feedback-reason'
 import {
   MEDIA_BUCKET,
-  MAX_MEDIA_BYTES,
+
   SIGNED_URL_TTL_SECONDS,
   buildMediaPath,
   formatBytes,
@@ -108,10 +108,6 @@ export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week
     const valid = picked.filter(file => {
       if (!getMediaType(file)) {
         toast.error(`${file.name}: solo fotos o videos`)
-        return false
-      }
-      if (file.size > MAX_MEDIA_BYTES) {
-        toast.error(`${file.name} pesa ${formatBytes(file.size)}. Máximo ${formatBytes(MAX_MEDIA_BYTES)}: grábalo más corto o en menor calidad.`)
         return false
       }
       return true
@@ -314,7 +310,7 @@ export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week
           {progress ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Send className="mr-1 h-4 w-4" />}
           {progress ?? 'Enviar a mi coach'}
         </Button>
-        <span className="text-xs text-muted-foreground">Máx. {formatBytes(MAX_MEDIA_BYTES)} por archivo</span>
+        <span className="text-xs text-muted-foreground">Se comprime automáticamente</span>
       </div>
     </div>
   )

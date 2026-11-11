@@ -1,7 +1,7 @@
 // Exercise photos/videos stored in the private `exercise-media` bucket.
 // Path convention (enforced by storage RLS): {athlete_id}/{feedback_id}/{file}
 export const MEDIA_BUCKET = 'exercise-media'
-export const MAX_MEDIA_BYTES = 50 * 1024 * 1024
+export const MAX_MEDIA_BYTES = Infinity
 export const SIGNED_URL_TTL_SECONDS = 60 * 60
 
 export type MediaType = 'image' | 'video'
