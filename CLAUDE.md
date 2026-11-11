@@ -229,7 +229,7 @@ Cada paso: alcance → criterio de terminado → modelo recomendado. Un paso a l
 - [ ] Planes: cantidad de alumnos por tier y precios.
 - [ ] Número de WhatsApp para CTA y upgrades.
 - [x] Retención: 14 días o al revisar; repetir reemplaza.
-- [ ] Fórmula exacta del ranking combinado.
+- [x] Fórmula del ranking combinado: 60% fuerza actual + 40% progreso, normalizado min-max dentro del team.
 - [x] Motivo al no completar: opcional, chips (Dolor/molestia, Cansancio, Otro), no bloquea.
 - [ ] ¿Límite de rutinas/semanas históricas por alumno?
 - [ ] Pagos y método de upgrade.
