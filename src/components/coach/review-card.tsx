@@ -50,6 +50,7 @@ export function ReviewCard({ item, defaultOpen = false }: { item: ReviewItem; de
       toast.error(result.error)
       return
     }
+    if (markReviewed) setMedia([])
     toast.success(markReviewed ? 'Marcado como revisado' : 'Vuelve a pendientes')
   }
 
