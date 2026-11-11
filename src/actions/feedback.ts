@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { MEDIA_BUCKET } from '@/lib/media'
 
 const replySchema = z.object({
@@ -34,17 +35,18 @@ export async function replyToFeedback(input: z.infer<typeof replySchema>) {
   if (!data?.length) return { error: 'Observación no encontrada o sin permisos' }
 
   if (markReviewed) {
-    const { data: mediaRows } = await supabase
+    const admin = createAdminClient()
+    const { data: mediaRows } = await admin
       .from('exercise_media')
       .select('id, storage_path')
       .eq('feedback_id', feedbackId)
       .is('deleted_at', null)
 
     if (mediaRows?.length) {
-      await supabase.storage.from(MEDIA_BUCKET).remove(mediaRows.map(m => m.storage_path))
-      await supabase
+      await admin.storage.from(MEDIA_BUCKET).remove(mediaRows.map(m => m.storage_path))
+      await admin
         .from('exercise_media')
-        .update({ deleted_at: new Date().toISOString() })
+        .delete()
         .in('id', mediaRows.map(m => m.id))
     }
   }
@@ -79,7 +81,6 @@ export async function deleteFeedbackMedia(mediaId: string) {
   return { success: true }
 }
 
-import { createAdminClient } from '@/lib/supabase/admin'
 import { getAdminUserId } from '@/lib/auth/admin'
 
 const FEEDBACK_TYPES = ['suggestion', 'bug', 'feature', 'error', 'other'] as const
