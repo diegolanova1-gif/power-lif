@@ -19,6 +19,7 @@ import {
   signedUrlMap,
   type MediaType,
 } from '@/lib/media'
+import { compressMedia } from '@/lib/compress-media'
 
 interface ExerciseFeedbackProps {
   athleteId: string
@@ -127,7 +128,23 @@ export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week
 
     setProgress('Guardando...')
     try {
+      // Compress media before uploading
+      const compressed: File[] = []
+      for (const [i, file] of files.entries()) {
+        const type = getMediaType(file)
+        if (!type) { compressed.push(file); continue }
+        try {
+          const out = await compressMedia(file, type, (label, ratio) => {
+            setProgress(`${label} (${i + 1}/${files.length}) ${Math.round(ratio * 100)}%`)
+          })
+          compressed.push(out)
+        } catch {
+          compressed.push(file)
+        }
+      }
+
       // New content goes back to "pending" so the coach sees it again
+      setProgress('Guardando...')
       const { data: fb, error } = await supabase
         .from('exercise_feedback')
         .upsert(
@@ -147,10 +164,10 @@ export function ExerciseFeedback({ athleteId, athleteRoutineId, exerciseId, week
         .single()
       if (error) throw error
 
-      const oldMedia = files.length > 0 ? [...media] : []
+      const oldMedia = compressed.length > 0 ? [...media] : []
 
-      for (const [i, file] of files.entries()) {
-        setProgress(`Subiendo ${i + 1} de ${files.length}...`)
+      for (const [i, file] of compressed.entries()) {
+        setProgress(`Subiendo ${i + 1} de ${compressed.length}...`)
         const path = buildMediaPath(athleteId, fb.id, file)
         const { error: uploadError } = await supabase.storage
           .from(MEDIA_BUCKET)

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { MEDIA_BUCKET } from '@/lib/media'
 
-const RETENTION_DAYS = 14
+const RETENTION_DAYS = 7
 
 // Vercel Cron (daily): purges storage files whose observation was already
 // reviewed by the coach, or that are older than RETENTION_DAYS. The DB row
