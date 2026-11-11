@@ -33,6 +33,22 @@ export async function replyToFeedback(input: z.infer<typeof replySchema>) {
   if (error) return { error: error.message }
   if (!data?.length) return { error: 'Observación no encontrada o sin permisos' }
 
+  if (markReviewed) {
+    const { data: mediaRows } = await supabase
+      .from('exercise_media')
+      .select('id, storage_path')
+      .eq('feedback_id', feedbackId)
+      .is('deleted_at', null)
+
+    if (mediaRows?.length) {
+      await supabase.storage.from(MEDIA_BUCKET).remove(mediaRows.map(m => m.storage_path))
+      await supabase
+        .from('exercise_media')
+        .update({ deleted_at: new Date().toISOString() })
+        .in('id', mediaRows.map(m => m.id))
+    }
+  }
+
   revalidatePath('/coach/reviews')
   revalidatePath('/coach', 'layout')
   return { success: true }
