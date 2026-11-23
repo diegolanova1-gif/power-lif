@@ -11,7 +11,7 @@ import { ExerciseLogCard, type LoggedSet, type Prescription } from '@/components
 import { ExtraDayDialog } from '@/components/athlete/extra-day-dialog'
 import { weekdayName, weekdayShort } from '@/lib/weekdays'
 import { exerciseCompliance } from '@/lib/calculations/compliance'
-import { dateForWeekDay, isToday } from '@/lib/schedule-dates'
+import { makeDateResolver, isToday } from '@/lib/schedule-dates'
 import { celebrateNewMilestones } from '@/lib/celebrate-milestones'
 import { loadWorkout, setsKey, type DayData, type WorkoutData } from '@/lib/load-workout'
 import { format } from 'date-fns'
@@ -153,11 +153,16 @@ export function LogView({ initialData }: LogViewProps) {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const dateOf = (w: number, d: number) => {
-    const iso = realDateByDay[`${w}-${d}`]
-    if (iso) return new Date(iso)
-    return startedAt ? dateForWeekDay(startedAt, w, d) : null
-  }
+  const resolveDate = startedAt
+    ? makeDateResolver({
+        startedAt,
+        totalWeeks: Math.max(...days.map(x => x.week)),
+        logged: Object.fromEntries(Object.entries(realDateByDay).map(([k, v]) => [k, new Date(v)])),
+        currentWeek: days[pointerIndex]?.week ?? 1,
+        currentWeekDays: days.filter(x => x.week === (days[pointerIndex]?.week ?? 1)).map(x => x.day),
+      })
+    : null
+  const dateOf = (w: number, d: number) => (resolveDate ? resolveDate(w, d) : null)
   const isLogged = (w: number, d: number) => `${w}-${d}` in realDateByDay
   const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 

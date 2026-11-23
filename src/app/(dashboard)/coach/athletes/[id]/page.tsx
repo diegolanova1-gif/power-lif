@@ -13,7 +13,7 @@ import { weekdayName, weekdayShort } from '@/lib/weekdays'
 import { cn } from '@/lib/utils'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { dateForWeekDay, isToday as isTodayDate } from '@/lib/schedule-dates'
+import { makeDateResolver, isToday as isTodayDate } from '@/lib/schedule-dates'
 import { getStreakAndAchievements } from '@/lib/server/achievements'
 import { StreakAchievements } from '@/components/athlete/streak-achievements'
 import { AthleteActions } from '@/components/coach/athlete-actions'
@@ -122,7 +122,13 @@ export default async function AthleteFollowUpPage({
     const completed = new Date(s.completed_at)
     if (!existing || completed < existing) realDateByDay.set(key, completed)
   }
-  const dateFor = (w: number, d: number) => realDateByDay.get(`${w}-${d}`) ?? dateForWeekDay(assignment.started_at, w, d)
+  const dateFor = makeDateResolver({
+    startedAt: assignment.started_at,
+    totalWeeks,
+    logged: Object.fromEntries(realDateByDay),
+    currentWeek: assignment.current_week,
+    currentWeekDays: scheduleForWeek(structure, assignment.current_week).map(d => d.day),
+  })
   const isToday = (w: number, d: number) => isTodayDate(dateFor(w, d))
 
   const setsFor = (week: number, day: number, exerciseId: string) =>
