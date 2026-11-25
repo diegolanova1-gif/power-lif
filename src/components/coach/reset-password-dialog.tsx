@@ -24,6 +24,7 @@ function ResetPasswordContent({ athlete, onClose }: { athlete: { id: string; ful
   const [saving, setSaving] = useState(false)
   const [done, setDone] = useState<{ email: string; password: string } | null>(null)
   const [copied, setCopied] = useState(false)
+  const [confirming, setConfirming] = useState(false)
 
   async function save() {
     setSaving(true)
@@ -87,12 +88,24 @@ function ResetPasswordContent({ athlete, onClose }: { athlete: { id: string; ful
               </div>
               <p className="text-xs text-muted-foreground">Mínimo 8 caracteres.</p>
             </div>
-            <DialogFooter>
-              <Button onClick={save} disabled={saving || password.trim().length < 8}>
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                Cambiar contraseña
-              </Button>
-            </DialogFooter>
+            {confirming ? (
+              <div className="space-y-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm">
+                <p>¿Seguro que querés cambiar la contraseña de {athlete.full_name || 'tu alumno'}? La anterior dejará de funcionar.</p>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setConfirming(false)} disabled={saving}>Volver</Button>
+                  <Button onClick={save} disabled={saving}>
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                    Sí, cambiar
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <DialogFooter>
+                <Button onClick={() => setConfirming(true)} disabled={password.trim().length < 8}>
+                  Cambiar contraseña
+                </Button>
+              </DialogFooter>
+            )}
           </>
         )}
       </DialogContent>
