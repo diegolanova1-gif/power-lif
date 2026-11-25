@@ -177,7 +177,7 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
   const [deloadWeeks, setDeloadWeeks] = useState(initial?.deload_weeks?.join(', ') ?? '')
   // One schedule per week; training days are the same in every week
   const [weeksData, setWeeksData] = useState<BuilderDay[][]>(initial ? toBuilderWeeks(initial) : [[]])
-  const [currentWeek, setCurrentWeek] = useState(0)
+  const [currentWeek, setCurrentWeek] = useState(() => (initial ? Math.max(toBuilderWeeks(initial).length - 1, 0) : 0))
   const [saving, setSaving] = useState(false)
   const [exercises, setExercises] = useState(initialExercises)
 
