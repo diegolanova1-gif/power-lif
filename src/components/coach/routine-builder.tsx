@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { toast } from 'sonner'
-import { Plus, Trash2, Loader2, ArrowLeft, Copy, Video, ExternalLink, Save } from 'lucide-react'
+import { Plus, Trash2, Loader2, ArrowLeft, Copy, Video, ExternalLink, Save, MoreHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -19,6 +20,16 @@ import { cn } from '@/lib/utils'
 import { routineStructureSchema, formatReps, scheduleForWeek, ROUTINE_GOALS, type RoutineStructure } from '@/lib/validations/routine'
 import { NewExerciseDialog } from '@/components/coach/new-exercise-dialog'
 import { RoutineStartPicker, type RoutineTemplate, type StartChoice } from '@/components/coach/routine-start-picker'
+
+const DAY_BG: Record<number, string> = {
+  1: 'bg-sky-50 dark:bg-sky-950/30',
+  2: 'bg-emerald-50 dark:bg-emerald-950/30',
+  3: 'bg-amber-50 dark:bg-amber-950/30',
+  4: 'bg-rose-50 dark:bg-rose-950/30',
+  5: 'bg-teal-50 dark:bg-teal-950/30',
+  6: 'bg-orange-50 dark:bg-orange-950/30',
+  7: 'bg-lime-50 dark:bg-lime-950/30',
+}
 
 export interface ExerciseOption {
   id: string
@@ -183,6 +194,32 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
 
   const weeks = weeksData.length
   const schedule = weeksData[currentWeek] ?? []
+
+  const weeksScrollRef = useRef<HTMLDivElement>(null)
+  const [weeksFade, setWeeksFade] = useState({ left: false, right: false })
+  const hasSchedule = schedule.length > 0
+
+  useEffect(() => {
+    const el = weeksScrollRef.current
+    if (!el) return
+    const update = () => {
+      const left = el.scrollLeft > 4
+      const right = el.scrollLeft + el.clientWidth < el.scrollWidth - 4
+      setWeeksFade(prev => (prev.left === left && prev.right === right ? prev : { left, right }))
+    }
+    el.children[currentWeek]?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+    update()
+    el.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('resize', update)
+    return () => {
+      el.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+    }
+  }, [currentWeek, weeks, hasSchedule])
+
+  const weeksMask = weeksFade.left || weeksFade.right
+    ? `linear-gradient(to right, ${weeksFade.left ? 'transparent, black 28px' : 'black, black'}, ${weeksFade.right ? 'black calc(100% - 28px), transparent' : 'black, black'})`
+    : undefined
 
   // Edits apply to the week being viewed
   function setSchedule(updater: (prev: BuilderDay[]) => BuilderDay[]) {
@@ -573,56 +610,65 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
       </Card>
 
       {schedule.length > 0 && (
-        <Card className="sticky top-16 z-30 border-primary/30 shadow-sm">
-          <CardContent className="space-y-3 pt-4">
-            <div className="flex gap-2 overflow-x-auto pb-1">
+        <Card className="sticky top-16 z-30 gap-0 border-primary/30 py-2 shadow-sm">
+          <CardContent className="flex items-center gap-2 px-3">
+            <div
+              ref={weeksScrollRef}
+              className="flex min-w-0 flex-1 gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              style={{ maskImage: weeksMask, WebkitMaskImage: weeksMask }}
+            >
               {weeksData.map((_, i) => (
                 <button
                   key={i}
                   type="button"
                   onClick={() => setCurrentWeek(i)}
                   className={cn(
-                    'shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
+                    'shrink-0 rounded-full border px-2.5 py-1 text-sm font-medium transition-colors',
                     i === currentWeek ? 'border-primary bg-primary text-primary-foreground' : 'bg-card text-muted-foreground hover:bg-muted'
                   )}
                 >
-                  Semana {i + 1}
+                  <span className="sm:hidden">Sem {i + 1}</span>
+                  <span className="hidden sm:inline">Semana {i + 1}</span>
                 </button>
               ))}
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button type="button" size="sm" onClick={duplicateWeekToNext}>
-                <Copy className="h-4 w-4" />
-                Duplicar semana {currentWeek + 1} → {currentWeek + 2}
-              </Button>
-              {currentWeek < weeks - 1 && (
-                <Button type="button" size="sm" variant="outline" onClick={copyWeekToRemaining}>
-                  Copiar a todas las siguientes
-                </Button>
-              )}
-              {weeks > 1 && (
-                <Button type="button" size="sm" variant="ghost" className="text-destructive" onClick={removeWeek}>
-                  <Trash2 className="h-4 w-4" />
-                  Eliminar semana {currentWeek + 1}
-                </Button>
-              )}
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm text-muted-foreground">
-                Editando la <span className="font-mono font-semibold tabular-nums text-foreground">semana {currentWeek + 1}</span> de <span className="font-mono tabular-nums">{weeks}</span>
-              </span>
-              <Button type="submit" size="sm" disabled={saving}>
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                <span className="sm:hidden">{saving ? 'Guardando…' : 'Guardar'}</span>
-                <span className="hidden sm:inline">{saving ? 'Guardando...' : athlete && !routine ? 'Guardar y asignar' : 'Guardar rutina'}</span>
-              </Button>
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger render={<Button type="button" variant="ghost" size="icon" className="h-8 w-8 shrink-0" aria-label="Acciones de la semana" />}>
+                <MoreHorizontal className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuItem onClick={duplicateWeekToNext}>
+                  <Copy className="mr-2 h-4 w-4" />
+                  Duplicar semana {currentWeek + 1} → {currentWeek + 2}
+                </DropdownMenuItem>
+                {currentWeek < weeks - 1 && (
+                  <DropdownMenuItem onClick={copyWeekToRemaining}>
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copiar a todas las siguientes
+                  </DropdownMenuItem>
+                )}
+                {weeks > 1 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-destructive" onClick={removeWeek}>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Eliminar semana {currentWeek + 1}
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button type="submit" size="sm" className="shrink-0" disabled={saving}>
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              <span className="sm:hidden">{saving ? 'Guardando…' : 'Guardar'}</span>
+              <span className="hidden sm:inline">{saving ? 'Guardando...' : athlete && !routine ? 'Guardar y asignar' : 'Guardar rutina'}</span>
+            </Button>
           </CardContent>
         </Card>
       )}
 
       {schedule.map((day, dayIndex) => (
-        <Card key={day.day}>
+        <Card key={day.day} className={DAY_BG[day.day] ?? 'bg-muted/40'}>
           <CardHeader>
             <div className="flex flex-wrap items-center gap-3">
               <CardTitle className="text-xl">{weekdayName(day.day)}</CardTitle>
@@ -678,7 +724,7 @@ export function RoutineBuilder({ exercises: initialExercises, routine, athlete, 
           </CardHeader>
           <CardContent className="space-y-3">
             {day.exercises.map((ex, exIndex) => (
-              <div key={exIndex} className="rounded-xl border border-l-4 border-l-primary bg-primary/5 p-3">
+              <div key={exIndex} className="rounded-xl border border-l-4 border-l-primary bg-primary/10 p-3">
                 <div className="flex items-end gap-2">
                   <div className="flex-1 space-y-1">
                     <Label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
