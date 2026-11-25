@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Loader2, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { Info, Loader2, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import type { Trend } from '@/lib/calculations/progression'
 import {
   LineChart,
@@ -58,6 +58,18 @@ const LIFTS = [
   { category: 'deadlift', label: 'Peso muerto', color: '#f59e0b' },
 ] as const
 
+const LIFT_INFO = 'Es el mejor 1RM estimado en el período elegido. El 1RM es el peso máximo para una sola repetición; acá no se levantó realmente: se calcula con la fórmula de Epley sumando las repeticiones en reserva (RIR) de cada serie registrada.'
+
+const INFO: Record<string, string> = {
+  total: 'Suma del mejor 1RM estimado de sentadilla, banca y peso muerto en el período elegido. Solo aparece cuando hay datos de los tres levantamientos.',
+  squat: `Sentadilla: ${LIFT_INFO}`,
+  bench: `Banca: ${LIFT_INFO}`,
+  deadlift: `Peso muerto: ${LIFT_INFO}`,
+  volume: 'Peso total movido en las últimas 12 semanas: la suma de kg × repeticiones de todas las series registradas.',
+  adherence: 'Porcentaje de sesiones realizadas sobre las pautadas desde que arrancó la rutina. "Esta semana" muestra los días entrenados sobre los pautados en la semana actual.',
+  streak: 'Días entrenados con la sesión completa, contados por semana calendario (lunes a domingo). Una semana cerrada sin llegar a los días pautados corta la racha; la semana en curso suma en caliente.',
+}
+
 const RANGES = { all: 'Todo el historial', '3m': 'Últimos 3 meses', '6m': 'Últimos 6 meses', '1y': 'Último año' }
 type Range = keyof typeof RANGES
 
@@ -81,6 +93,8 @@ export function AthleteAnalytics({
   const [stats, setStats] = useState<Stats | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [selectedProgressExercise, setSelectedProgressExercise] = useState<string | null>(null)
+  const [info, setInfo] = useState<string | null>(null)
+  const toggleInfo = (key: string) => setInfo(prev => (prev === key ? null : key))
 
   useEffect(() => {
     let cancelled = false
@@ -197,44 +211,93 @@ export function AthleteAnalytics({
       ) : (
         <>
           <section className="rounded-2xl bg-card p-5 ring-1 ring-foreground/10">
-            <p className="text-sm font-medium text-muted-foreground">Total estimado</p>
-            <p className="mt-1 font-mono text-5xl font-semibold tabular-nums tracking-tight text-foreground">
-              {total !== null ? total.toFixed(1) : '—'}
-              {total !== null && <span className="ml-1 text-xl font-normal text-muted-foreground">kg</span>}
-            </p>
+            <button
+              type="button"
+              onClick={() => toggleInfo('total')}
+              aria-expanded={info === 'total'}
+              className={cn('-m-2 block rounded-xl p-2 text-left transition-colors', info === 'total' ? 'bg-muted' : 'hover:bg-muted/50')}
+            >
+              <span className="flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
+                Total estimado
+                <Info className="h-3.5 w-3.5" />
+              </span>
+              <span className="mt-1 block font-mono text-5xl font-semibold tabular-nums tracking-tight text-foreground">
+                {total !== null ? total.toFixed(1) : '—'}
+                {total !== null && <span className="ml-1 text-xl font-normal text-muted-foreground">kg</span>}
+              </span>
+            </button>
             <div className="mt-4 grid grid-cols-3 gap-3">
               {LIFTS.map(l => (
-                <div key={l.category}>
-                  <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                <button
+                  key={l.category}
+                  type="button"
+                  onClick={() => toggleInfo(l.category)}
+                  aria-expanded={info === l.category}
+                  className={cn('-m-1.5 rounded-lg p-1.5 text-left transition-colors', info === l.category ? 'bg-muted' : 'hover:bg-muted/50')}
+                >
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                     <span className="h-2 w-2 rounded-full" style={{ backgroundColor: l.color }} />
                     {l.label}
-                  </p>
-                  <p className="mt-0.5 font-mono text-lg font-semibold tabular-nums text-foreground">
+                    <Info className="h-3 w-3" />
+                  </span>
+                  <span className="mt-0.5 block font-mono text-lg font-semibold tabular-nums text-foreground">
                     {best[l.category] !== null ? `${best[l.category]!.toFixed(1)} kg` : '—'}
-                  </p>
-                </div>
+                  </span>
+                </button>
               ))}
             </div>
+            {info && INFO[info] && ['total', 'squat', 'bench', 'deadlift'].includes(info) && (
+              <p className="mt-4 rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">{INFO[info]}</p>
+            )}
           </section>
 
-          <section className="grid grid-cols-3 gap-3">
-            <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
-              <p className="text-sm font-medium text-muted-foreground">Volumen</p>
-              <p className="mt-1 font-mono text-2xl font-semibold tabular-nums tracking-tight text-foreground">
-                {Math.round(stats.volume.totalVolume).toLocaleString('es-AR')}
-              </p>
-              <p className="text-xs text-muted-foreground">kg · 12 semanas</p>
+          <section className="flex flex-col gap-3">
+            <div className="grid grid-cols-3 gap-3">
+              <button
+                type="button"
+                onClick={() => toggleInfo('volume')}
+                aria-expanded={info === 'volume'}
+                className={cn('rounded-2xl p-4 text-left ring-1 ring-foreground/10 transition-colors', info === 'volume' ? 'bg-muted' : 'bg-card hover:bg-muted/50')}
+              >
+                <span className="flex items-center gap-1 text-sm font-medium text-muted-foreground">
+                  Volumen
+                  <Info className="h-3.5 w-3.5" />
+                </span>
+                <span className="mt-1 block font-mono text-2xl font-semibold tabular-nums tracking-tight text-foreground">
+                  {Math.round(stats.volume.totalVolume).toLocaleString('es-AR')}
+                </span>
+                <span className="block text-xs text-muted-foreground">kg · 12 semanas</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleInfo('adherence')}
+                aria-expanded={info === 'adherence'}
+                className={cn('rounded-2xl p-4 text-left ring-1 ring-foreground/10 transition-colors', info === 'adherence' ? 'bg-muted' : 'bg-card hover:bg-muted/50')}
+              >
+                <span className="flex items-center gap-1 text-sm font-medium text-muted-foreground">
+                  Adherencia
+                  <Info className="h-3.5 w-3.5" />
+                </span>
+                <span className="mt-1 block font-mono text-2xl font-semibold tabular-nums tracking-tight text-foreground">{stats.adherence.overall}%</span>
+                <span className="block text-xs text-muted-foreground">esta semana {stats.adherence.currentWeekDays}/{stats.adherence.currentWeekRequired}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleInfo('streak')}
+                aria-expanded={info === 'streak'}
+                className={cn('rounded-2xl p-4 text-left ring-1 ring-foreground/10 transition-colors', info === 'streak' ? 'bg-muted' : 'bg-card hover:bg-muted/50')}
+              >
+                <span className="flex items-center gap-1 text-sm font-medium text-muted-foreground">
+                  Racha
+                  <Info className="h-3.5 w-3.5" />
+                </span>
+                <span className="mt-1 block font-mono text-2xl font-semibold tabular-nums tracking-tight text-foreground">{stats.adherence.streak}</span>
+                <span className="block text-xs text-muted-foreground">{stats.adherence.streak === 1 ? 'día' : 'días'} seguidos</span>
+              </button>
             </div>
-            <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
-              <p className="text-sm font-medium text-muted-foreground">Adherencia</p>
-              <p className="mt-1 font-mono text-2xl font-semibold tabular-nums tracking-tight text-foreground">{stats.adherence.overall}%</p>
-              <p className="text-xs text-muted-foreground">esta semana {stats.adherence.currentWeekDays}/{stats.adherence.currentWeekRequired}</p>
-            </div>
-            <div className="rounded-2xl bg-card p-4 ring-1 ring-foreground/10">
-              <p className="text-sm font-medium text-muted-foreground">Racha</p>
-              <p className="mt-1 font-mono text-2xl font-semibold tabular-nums tracking-tight text-foreground">{stats.adherence.streak}</p>
-              <p className="text-xs text-muted-foreground">{stats.adherence.streak === 1 ? 'día' : 'días'} seguidos</p>
-            </div>
+            {info && INFO[info] && ['volume', 'adherence', 'streak'].includes(info) && (
+              <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">{INFO[info]}</p>
+            )}
           </section>
 
           <section className="flex flex-col gap-3">

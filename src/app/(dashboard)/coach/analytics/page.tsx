@@ -22,7 +22,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground">Analytics</h1>
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">Rendimiento</h1>
         <p className="mt-1 text-sm text-muted-foreground">Cómo viene cada alumno</p>
       </div>
 

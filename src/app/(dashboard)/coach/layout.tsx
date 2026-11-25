@@ -65,7 +65,7 @@ export default async function DashboardLayout({
     { name: 'Dashboard', href: '/coach', icon: LayoutDashboard },
     { name: 'Alumnos', href: '/coach/athletes', icon: Users },
     { name: 'Rutinas', href: '/coach/routines', icon: FileText },
-    { name: 'Analytics', href: '/coach/analytics', icon: BarChart },
+    { name: 'Rendimiento', href: '/coach/analytics', icon: BarChart },
     { name: 'Revisiones', href: '/coach/reviews', icon: MessageSquare, badge: pendingReviews ?? 0 },
     { name: 'Teams', href: '/coach/teams', icon: Trophy },
     { name: 'Perfil', href: '/coach/profile', icon: UserRound },
@@ -136,7 +136,7 @@ export default async function DashboardLayout({
                   <DropdownMenuItem>
                     <Link href="/coach/analytics" className="flex items-center gap-2">
                       <BarChart className="h-4 w-4" />
-                      Analytics
+                      Rendimiento
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
